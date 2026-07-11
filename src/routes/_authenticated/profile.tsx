@@ -49,13 +49,6 @@ function ProfilePage() {
     qc.invalidateQueries({ queryKey: ["profile", user!.id] });
   };
 
-  const becomeProvider = async () => {
-    const { error } = await supabase.from("user_roles").insert({ user_id: user!.id, role: "provider" });
-    if (error) return toast.error(error.message);
-    toast.success("You can now list your services!");
-    qc.invalidateQueries({ queryKey: ["roles", user!.id] });
-    navigate({ to: "/dashboard" });
-  };
 
   const signOut = async () => {
     await qc.cancelQueries();
