@@ -44,7 +44,7 @@ function BookingsPage() {
     },
   });
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: "pending" | "accepted" | "rejected" | "completed" | "cancelled") => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success(`Booking ${status}`);
