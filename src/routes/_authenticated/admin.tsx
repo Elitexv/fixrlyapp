@@ -118,6 +118,64 @@ function AdminPage() {
       </div>
 
       <section className="px-4 mt-2">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-bold">Provider requests</h2>
+          <span className="text-[10px] font-bold uppercase text-brand/40">
+            {requests.filter((r: any) => r.status === "pending").length} pending
+          </span>
+        </div>
+        <div className="space-y-2">
+          {requests.length === 0 && (
+            <div className="text-xs text-brand/50 bg-surface p-3 rounded-xl border border-brand/5">No requests yet.</div>
+          )}
+          {requests.map((r: any) => (
+            <div key={r.id} className="bg-surface p-3 rounded-xl border border-brand/5 space-y-2">
+              <div className="flex justify-between items-start gap-2">
+                <div className="min-w-0">
+                  <div className="font-bold text-sm truncate">{r.business_name}</div>
+                  <div className="text-xs text-brand/60 truncate">
+                    {[r.city, r.zip].filter(Boolean).join(" · ") || "—"}
+                  </div>
+                  {r.phone && <div className="text-xs text-brand/60">📞 {r.phone}</div>}
+                </div>
+                <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${
+                  r.status === "pending" ? "bg-amber-100 text-amber-700"
+                  : r.status === "approved" ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+                }`}>{r.status}</span>
+              </div>
+              {r.bio && <p className="text-xs text-brand/70 line-clamp-2">{r.bio}</p>}
+              <div className="flex gap-2 flex-wrap">
+                {r.service_id_url && (
+                  <button onClick={() => viewDoc(r.service_id_url)} className="text-[10px] font-bold uppercase flex items-center gap-1 px-2 py-1 rounded bg-canvas border border-brand/10">
+                    <IdCard className="size-3" /> Service ID
+                  </button>
+                )}
+                {r.national_id_url && (
+                  <button onClick={() => viewDoc(r.national_id_url)} className="text-[10px] font-bold uppercase flex items-center gap-1 px-2 py-1 rounded bg-canvas border border-brand/10">
+                    <FileText className="size-3" /> National ID
+                  </button>
+                )}
+              </div>
+              {r.status === "pending" && (
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => approve(r.id)} className="flex-1 py-2 rounded-lg bg-green-600 text-white text-xs font-bold flex items-center justify-center gap-1">
+                    <Check className="size-3.5" /> Approve
+                  </button>
+                  <button onClick={() => reject(r.id)} className="flex-1 py-2 rounded-lg bg-red-600 text-white text-xs font-bold flex items-center justify-center gap-1">
+                    <X className="size-3.5" /> Reject
+                  </button>
+                </div>
+              )}
+              {r.status === "rejected" && r.review_notes && (
+                <div className="text-[11px] text-red-700 bg-red-50 rounded p-2">Note: {r.review_notes}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-4 mt-2">
         <h2 className="font-bold mb-2">Providers</h2>
         <div className="space-y-2">
           {providers.map((p: any) => (
