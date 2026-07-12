@@ -49,10 +49,45 @@ function AdminPage() {
     },
   });
 
+  const { data: requests = [] } = useQuery({
+    queryKey: ["admin-provider-requests"],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("provider_requests")
+        .select("*, applicant:profiles!provider_requests_user_id_fkey(full_name)")
+        .order("created_at", { ascending: false });
+      return (data ?? []) as any[];
+    },
+  });
+
   const toggle = async (id: string, is_active: boolean) => {
     const { error } = await supabase.from("provider_profiles").update({ is_active: !is_active }).eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["admin-providers"] });
+  };
+
+  const viewDoc = async (path: string) => {
+    const { data, error } = await supabase.storage.from("provider-docs").createSignedUrl(path, 300);
+    if (error || !data) return toast.error(error?.message ?? "Cannot open document");
+    window.open(data.signedUrl, "_blank");
+  };
+
+  const approve = async (id: string) => {
+    const { error } = await supabase.rpc("approve_provider_request", { _request_id: id });
+    if (error) return toast.error(error.message);
+    toast.success("Provider approved");
+    qc.invalidateQueries({ queryKey: ["admin-provider-requests"] });
+    qc.invalidateQueries({ queryKey: ["admin-providers"] });
+  };
+
+  const reject = async (id: string) => {
+    const notes = prompt("Reason for rejection (shown to applicant):", "");
+    if (notes === null) return;
+    const { error } = await supabase.rpc("reject_provider_request", { _request_id: id, _notes: notes });
+    if (error) return toast.error(error.message);
+    toast.success("Request rejected");
+    qc.invalidateQueries({ queryKey: ["admin-provider-requests"] });
   };
 
   if (rolesLoading) return <div className="min-h-screen grid place-items-center"><Loader2 className="animate-spin size-6 text-brand/40" /></div>;
