@@ -188,6 +188,81 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_requests: {
+        Row: {
+          address: string | null
+          availability_note: string | null
+          bio: string | null
+          business_name: string
+          category_ids: string[]
+          city: string | null
+          created_at: string
+          hourly_rate: number | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          national_id_url: string | null
+          phone: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          service_id_url: string | null
+          service_radius_km: number
+          status: Database["public"]["Enums"]["request_status"]
+          updated_at: string
+          user_id: string
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          availability_note?: string | null
+          bio?: string | null
+          business_name: string
+          category_ids?: string[]
+          city?: string | null
+          created_at?: string
+          hourly_rate?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          national_id_url?: string | null
+          phone?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_id_url?: string | null
+          service_radius_km?: number
+          status?: Database["public"]["Enums"]["request_status"]
+          updated_at?: string
+          user_id: string
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          availability_note?: string | null
+          bio?: string | null
+          business_name?: string
+          category_ids?: string[]
+          city?: string | null
+          created_at?: string
+          hourly_rate?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          national_id_url?: string | null
+          phone?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_id_url?: string | null
+          service_radius_km?: number
+          status?: Database["public"]["Enums"]["request_status"]
+          updated_at?: string
+          user_id?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_id: string | null
@@ -289,12 +364,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_provider_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      reject_provider_request: {
+        Args: { _notes: string; _request_id: string }
+        Returns: undefined
       }
     }
     Enums: {
@@ -305,6 +388,7 @@ export type Database = {
         | "rejected"
         | "completed"
         | "cancelled"
+      request_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -440,6 +524,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      request_status: ["pending", "approved", "rejected"],
     },
   },
 } as const
