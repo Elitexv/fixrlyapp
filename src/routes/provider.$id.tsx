@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { GoogleMap } from "@/components/GoogleMap";
 import { BottomNav } from "@/components/BottomNav";
-import { ArrowLeft, Star, MapPin, Loader2, Phone, Mail } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Loader2, Phone, Mail, Heart, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/provider/$id")({
