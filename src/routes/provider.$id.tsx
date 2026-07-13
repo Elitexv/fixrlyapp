@@ -49,6 +49,47 @@ function ProviderPage() {
     },
   });
 
+  const qc = useQueryClient();
+  const { data: followData } = useQuery({
+    queryKey: ["follows", id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("provider_follows" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("provider_id", id);
+      let following = false;
+      if (user) {
+        const { data: f } = await supabase
+          .from("provider_follows" as any)
+          .select("id")
+          .eq("provider_id", id)
+          .eq("follower_id", user.id)
+          .maybeSingle();
+        following = !!f;
+      }
+      return { count: count ?? 0, following };
+    },
+  });
+
+  const toggleFollow = async () => {
+    if (!user) return navigate({ to: "/auth", search: { redirect: `/provider/${id}` } });
+    if (followData?.following) {
+      const { error } = await supabase
+        .from("provider_follows" as any)
+        .delete()
+        .eq("provider_id", id)
+        .eq("follower_id", user.id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase
+        .from("provider_follows" as any)
+        .insert({ provider_id: id, follower_id: user.id });
+      if (error) return toast.error(error.message);
+      toast.success("Following");
+    }
+    qc.invalidateQueries({ queryKey: ["follows", id] });
+  };
+
   const [showBook, setShowBook] = useState(false);
 
   if (isLoading) {
