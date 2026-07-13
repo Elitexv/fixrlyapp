@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { GoogleMap } from "@/components/GoogleMap";
 import { BottomNav } from "@/components/BottomNav";
-import { ArrowLeft, Star, MapPin, Loader2, Phone, Mail } from "lucide-react";
+import { notifyProviderOfBooking } from "@/lib/booking-notifications.functions";
+import { ArrowLeft, Star, MapPin, Loader2, Phone, Mail, Heart, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/provider/$id")({
@@ -48,6 +50,47 @@ function ProviderPage() {
       return data as any[];
     },
   });
+
+  const qc = useQueryClient();
+  const { data: followData } = useQuery({
+    queryKey: ["follows", id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("provider_follows" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("provider_id", id);
+      let following = false;
+      if (user) {
+        const { data: f } = await supabase
+          .from("provider_follows" as any)
+          .select("id")
+          .eq("provider_id", id)
+          .eq("follower_id", user.id)
+          .maybeSingle();
+        following = !!f;
+      }
+      return { count: count ?? 0, following };
+    },
+  });
+
+  const toggleFollow = async () => {
+    if (!user) return navigate({ to: "/auth", search: { redirect: `/provider/${id}` } });
+    if (followData?.following) {
+      const { error } = await supabase
+        .from("provider_follows" as any)
+        .delete()
+        .eq("provider_id", id)
+        .eq("follower_id", user.id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase
+        .from("provider_follows" as any)
+        .insert({ provider_id: id, follower_id: user.id });
+      if (error) return toast.error(error.message);
+      toast.success("Following");
+    }
+    qc.invalidateQueries({ queryKey: ["follows", id] });
+  };
 
   const [showBook, setShowBook] = useState(false);
 
@@ -172,13 +215,25 @@ function ProviderPage() {
       </div>
 
       <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-border p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg mx-auto flex gap-2 items-center">
+          <button
+            onClick={toggleFollow}
+            className={`h-12 px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 border ${followData?.following ? "bg-brand text-white border-brand" : "bg-white border-brand/10 text-brand"}`}
+          >
+            <Heart className={`size-4 ${followData?.following ? "fill-white" : ""}`} />
+            {followData?.following ? "Following" : "Follow"}
+            {followData && followData.count > 0 && (
+              <span className="ml-1 text-[10px] opacity-70 flex items-center gap-0.5">
+                <Users className="size-3" /> {followData.count}
+              </span>
+            )}
+          </button>
           <button
             onClick={() => {
               if (!user) return navigate({ to: "/auth", search: { redirect: `/provider/${id}` } });
               setShowBook(true);
             }}
-            className="w-full py-3.5 bg-accent text-white rounded-xl text-sm font-bold shadow-lg shadow-accent/20"
+            className="flex-1 h-12 bg-accent text-white rounded-xl text-sm font-bold shadow-lg shadow-accent/20"
           >
             Book this pro
           </button>
@@ -209,6 +264,7 @@ function BookingModal({
   onClose: () => void;
 }) {
   const navigate = useNavigate();
+  const notify = useServerFn(notifyProviderOfBooking);
   const [categoryId, setCategoryId] = useState<string>(categories[0]?.id ?? "");
   const [scheduledAt, setScheduledAt] = useState<string>("");
   const [duration, setDuration] = useState<number>(1);
@@ -222,18 +278,26 @@ function BookingModal({
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Sign in required");
-      const { error } = await supabase.from("bookings").insert({
-        customer_id: u.user.id,
-        provider_id: providerId,
-        category_id: categoryId || null,
-        scheduled_at: new Date(scheduledAt).toISOString(),
-        duration_hours: duration,
-        address,
-        notes: notes || null,
-        total_price: hourlyRate ? hourlyRate * duration : null,
-      });
+      const { data: inserted, error } = await supabase
+        .from("bookings")
+        .insert({
+          customer_id: u.user.id,
+          provider_id: providerId,
+          category_id: categoryId || null,
+          scheduled_at: new Date(scheduledAt).toISOString(),
+          duration_hours: duration,
+          address,
+          notes: notes || null,
+          total_price: hourlyRate ? hourlyRate * duration : null,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
       toast.success("Booking requested!");
+      // fire-and-forget email notification
+      notify({ data: { bookingId: inserted.id } }).catch((err) =>
+        console.warn("[booking] notify failed", err),
+      );
       onClose();
       navigate({ to: "/bookings" });
     } catch (err: any) {

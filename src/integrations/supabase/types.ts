@@ -146,6 +146,42 @@ export type Database = {
           },
         ]
       }
+      provider_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          id: string
+          provider_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          id?: string
+          provider_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          id?: string
+          provider_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_follows_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_profiles: {
         Row: {
           address: string | null
