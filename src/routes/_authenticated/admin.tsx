@@ -175,17 +175,30 @@ function SettingsTab() {
     }
   }, [settings]);
 
-  const save = async (e: FormEvent) => {
+  const [saving, setSaving] = useState(false);
+
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("admin_settings").upsert({
-      id: "payments",
-      provider_fee_percent: Number(form.provider_fee_percent) || 0,
-      stripe_account_id: form.stripe_account_id,
-      payment_enabled: form.payment_enabled,
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Payment settings saved");
-    qc.invalidateQueries({ queryKey: ["admin-settings"] });
+    const percent = Number(form.provider_fee_percent || 0);
+    if (Number.isNaN(percent) || percent < 0 || percent > 100) {
+      return toast.error("Provider fee must be a number between 0 and 100");
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("admin_settings").upsert({
+        id: "payments",
+        provider_fee_percent: percent,
+        stripe_account_id: form.stripe_account_id,
+        payment_enabled: form.payment_enabled,
+      });
+      if (error) throw error;
+      toast.success("Payment settings saved");
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+    } catch (err: any) {
+      toast.error(err.message ?? "Save failed");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -225,8 +238,9 @@ function SettingsTab() {
             />
             Accept payments in the app
           </label>
-          <button type="submit" className="w-full rounded-2xl bg-accent px-4 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500">
-            Save payment settings
+          <button type="submit" disabled={saving} className="w-full rounded-2xl bg-accent px-4 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500 disabled:opacity-60 flex items-center justify-center gap-2">
+            {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+            <span>Save payment settings</span>
           </button>
         </div>
       </form>
