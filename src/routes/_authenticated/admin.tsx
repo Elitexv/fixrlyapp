@@ -3,12 +3,15 @@ import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, useRoles } from "@/lib/session";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BottomNav } from "@/components/BottomNav";
 import { GoogleMap } from "@/components/GoogleMap";
 import { toast } from "sonner";
 import {
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter,
+} from "@/components/ui/sidebar";
+import {
   Loader2, Check, X, FileText, IdCard, LayoutDashboard, Users, MapPin,
-  Briefcase, CalendarCheck, ClipboardList, Shield, ShieldOff, Power, CreditCard,
+  Briefcase, CalendarCheck, ClipboardList, Shield, ShieldOff, Power, CreditCard, Home, LogOut,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -18,14 +21,14 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Tab = "overview" | "requests" | "settings" | "users" | "providers" | "map" | "bookings";
 
-const tabs: { id: Tab; label: string; icon: any }[] = [
-  { id: "overview", label: "Dashboard", icon: LayoutDashboard },
-  { id: "requests", label: "Requests", icon: ClipboardList },
-  { id: "settings", label: "Settings", icon: CreditCard },
-  { id: "users", label: "Users", icon: Users },
-  { id: "providers", label: "Providers", icon: Briefcase },
-  { id: "map", label: "Map", icon: MapPin },
-  { id: "bookings", label: "Bookings", icon: CalendarCheck },
+const tabs: { id: Tab; label: string; icon: any; group: "main" | "manage" | "system" }[] = [
+  { id: "overview", label: "Dashboard", icon: LayoutDashboard, group: "main" },
+  { id: "requests", label: "Provider Requests", icon: ClipboardList, group: "main" },
+  { id: "bookings", label: "Bookings", icon: CalendarCheck, group: "main" },
+  { id: "users", label: "Manage Users", icon: Users, group: "manage" },
+  { id: "providers", label: "Manage Providers", icon: Briefcase, group: "manage" },
+  { id: "map", label: "Manage Map", icon: MapPin, group: "manage" },
+  { id: "settings", label: "Payments", icon: CreditCard, group: "system" },
 ];
 
 function AdminPage() {
@@ -39,59 +42,91 @@ function AdminPage() {
   }
   if (!isAdmin) {
     return (
-      <div className="min-h-screen grid place-items-center px-6 pb-24 text-center">
+      <div className="min-h-screen grid place-items-center px-6 text-center">
         <div>
           <h1 className="text-xl font-black">Admins only</h1>
           <p className="text-sm text-brand/60 mt-2">Ask a workspace admin to grant you the admin role.</p>
           <Link to="/" className="inline-block mt-4 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-bold">Home</Link>
         </div>
-        <BottomNav />
       </div>
     );
   }
 
+  const groups: { key: "main" | "manage" | "system"; label: string }[] = [
+    { key: "main", label: "Overview" },
+    { key: "manage", label: "Management" },
+    { key: "system", label: "System" },
+  ];
+
   return (
-    <div className="min-h-screen bg-canvas pb-32">
-      <header className="bg-brand text-white px-4 pt-6 pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-white/60">Admin console</div>
-            <h1 className="text-xl font-black">{tabs.find((t) => t.id === tab)?.label}</h1>
-          </div>
-          <Shield className="size-6 text-accent" />
-        </div>
-      </header>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-canvas">
+        <Sidebar collapsible="icon">
+          <SidebarContent>
+            <div className="px-4 pt-5 pb-3 flex items-center gap-2">
+              <div className="size-8 rounded-lg bg-brand grid place-items-center text-white"><Shield className="size-4" /></div>
+              <div className="group-data-[collapsible=icon]:hidden">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-brand/40">Nearby</div>
+                <div className="text-sm font-black">Admin Console</div>
+              </div>
+            </div>
+            {groups.map((g) => (
+              <SidebarGroup key={g.key}>
+                <SidebarGroupLabel>{g.label}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {tabs.filter((t) => t.group === g.key).map((t) => {
+                      const Icon = t.icon;
+                      return (
+                        <SidebarMenuItem key={t.id}>
+                          <SidebarMenuButton isActive={tab === t.id} onClick={() => setTab(t.id)}>
+                            <Icon className="size-4" />
+                            <span>{t.label}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </SidebarContent>
+          <SidebarFooter>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/"><Home className="size-4" /><span>Back to app</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={async () => { await supabase.auth.signOut(); location.href = "/auth"; }}>
+                  <LogOut className="size-4" /><span>Sign out</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        </Sidebar>
 
-      <nav className="sticky top-0 z-10 bg-surface border-b border-brand/5 overflow-x-auto no-scrollbar">
-        <div className="flex gap-1 px-2 py-2 min-w-max">
-          {tabs.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap ${active ? "bg-brand text-white" : "text-brand/60"}`}
-              >
-                <Icon className="size-3.5" /> {t.label}
-              </button>
-            );
-          })}
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 flex items-center gap-3 border-b border-brand/5 bg-white/90 backdrop-blur sticky top-0 z-20 px-4">
+            <SidebarTrigger />
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-brand/40">Admin</div>
+              <h1 className="text-sm font-black truncate">{tabs.find((t) => t.id === tab)?.label}</h1>
+            </div>
+          </header>
+          <main className="flex-1 px-4 py-5 max-w-6xl w-full mx-auto">
+            {tab === "overview" && <OverviewTab />}
+            {tab === "requests" && <RequestsTab />}
+            {tab === "settings" && <SettingsTab />}
+            {tab === "users" && <UsersTab />}
+            {tab === "providers" && <ProvidersTab />}
+            {tab === "map" && <MapTab />}
+            {tab === "bookings" && <BookingsTab />}
+          </main>
         </div>
-      </nav>
-
-      <div className="px-4 py-4">
-        {tab === "overview" && <OverviewTab />}
-        {tab === "requests" && <RequestsTab />}
-        {tab === "settings" && <SettingsTab />}
-        {tab === "users" && <UsersTab />}
-        {tab === "providers" && <ProvidersTab />}
-        {tab === "map" && <MapTab />}
-        {tab === "bookings" && <BookingsTab />}
       </div>
-
-      <BottomNav />
-    </div>
+    </SidebarProvider>
   );
 }
 
