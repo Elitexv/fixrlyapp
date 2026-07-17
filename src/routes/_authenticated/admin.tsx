@@ -28,7 +28,7 @@ const tabs: { id: Tab; label: string; icon: any; group: "main" | "manage" | "sys
   { id: "users", label: "Manage Users", icon: Users, group: "manage" },
   { id: "providers", label: "Manage Providers", icon: Briefcase, group: "manage" },
   { id: "map", label: "Manage Map", icon: MapPin, group: "manage" },
-  { id: "settings", label: "Payments", icon: CreditCard, group: "system" },
+  { id: "settings", label: "Manage Payment Provider", icon: CreditCard, group: "system" },
 ];
 
 function AdminPage() {
