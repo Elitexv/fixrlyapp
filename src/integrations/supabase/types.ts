@@ -441,30 +441,6 @@ export type Database = {
           },
         ]
       }
-      admin_settings: {
-        Row: {
-          id: string
-          provider_fee_percent: number | null
-          stripe_account_id: string | null
-          payment_enabled: boolean | null
-          updated_at: string | null
-        }
-        Insert: {
-          id: string
-          provider_fee_percent?: number | null
-          stripe_account_id?: string | null
-          payment_enabled?: boolean | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          provider_fee_percent?: number | null
-          stripe_account_id?: string | null
-          payment_enabled?: boolean | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       admin_users_overview: {
