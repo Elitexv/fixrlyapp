@@ -28,7 +28,7 @@ const tabs: { id: Tab; label: string; icon: any; group: "main" | "manage" | "sys
   { id: "users", label: "Manage Users", icon: Users, group: "manage" },
   { id: "providers", label: "Manage Providers", icon: Briefcase, group: "manage" },
   { id: "map", label: "Manage Map", icon: MapPin, group: "manage" },
-  { id: "settings", label: "Payments", icon: CreditCard, group: "system" },
+  { id: "settings", label: "Manage Payment Provider", icon: CreditCard, group: "system" },
 ];
 
 function AdminPage() {
@@ -178,18 +178,198 @@ function OverviewTab() {
 }
 
 function SettingsTab() {
+  const qc = useQueryClient();
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ["admin-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_settings" as any)
+        .select("*")
+        .eq("id", "payments")
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? {
+        id: "payments",
+        provider: "none",
+        mode: "sandbox",
+        publishable_key: "",
+        currency: "USD",
+        platform_fee_percent: 10,
+        payment_enabled: false,
+      }) as any;
+    },
+  });
+
+  const [form, setForm] = useState({
+    provider: "none",
+    mode: "sandbox",
+    publishable_key: "",
+    currency: "USD",
+    platform_fee_percent: "10",
+    payment_enabled: false,
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setForm({
+        provider: settings.provider ?? "none",
+        mode: settings.mode ?? "sandbox",
+        publishable_key: settings.publishable_key ?? "",
+        currency: settings.currency ?? "USD",
+        platform_fee_percent: String(settings.platform_fee_percent ?? 10),
+        payment_enabled: !!settings.payment_enabled,
+      });
+    }
+  }, [settings]);
+
+  const [saving, setSaving] = useState(false);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const fee = Number(form.platform_fee_percent || 0);
+    if (Number.isNaN(fee) || fee < 0 || fee > 100) return toast.error("Platform fee must be 0–100");
+    if (form.provider !== "none" && !form.publishable_key.trim())
+      return toast.error("Add a publishable key for the selected provider");
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("admin_settings" as any).upsert({
+        id: "payments",
+        provider: form.provider,
+        mode: form.mode,
+        publishable_key: form.publishable_key.trim() || null,
+        currency: form.currency.toUpperCase(),
+        platform_fee_percent: fee,
+        payment_enabled: form.payment_enabled,
+      });
+      if (error) throw error;
+      toast.success("Payment provider updated");
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+    } catch (err: any) {
+      toast.error(err.message ?? "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="p-8 grid place-items-center"><Loader2 className="animate-spin size-5 text-brand/40" /></div>;
+  }
+
+  const providers = [
+    { id: "none", label: "Disabled", desc: "Bookings run as free requests." },
+    { id: "stripe", label: "Stripe", desc: "Cards, wallets, subscriptions. Global reach." },
+    { id: "paddle", label: "Paddle", desc: "Merchant of record. Handles tax + compliance." },
+    { id: "manual", label: "Manual / Cash", desc: "Providers collect payment in person." },
+  ] as const;
+
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl bg-white/95 border border-brand/5 p-6 shadow-sm">
-        <div className="text-xs uppercase tracking-[0.24em] text-brand/50">Payments</div>
-        <h2 className="mt-2 text-lg font-semibold">Payment configuration</h2>
-        <p className="mt-2 text-sm text-brand/60">
-          Bookings currently run as free requests between customers and providers. Connect a payment provider (Stripe or Paddle) to start collecting bookings, deposits, and taking a platform fee.
+    <div className="space-y-4 max-w-2xl">
+      <div className="rounded-2xl bg-white p-5 border border-brand/5 shadow-sm">
+        <div className="text-[10px] uppercase tracking-[0.24em] text-brand/50 font-bold">Payment Provider</div>
+        <h2 className="mt-1 text-lg font-black">Configure how customers pay</h2>
+        <p className="mt-1 text-sm text-brand/60">
+          Live status: <span className={`font-bold ${form.payment_enabled ? "text-green-600" : "text-brand/60"}`}>
+            {form.payment_enabled ? `${form.provider.toUpperCase()} · ${form.mode}` : "Payments off"}
+          </span>
         </p>
-        <div className="mt-4 p-4 rounded-xl bg-canvas border border-brand/5 text-xs text-brand/60">
-          <b className="text-brand">Coming soon.</b> Ask to "enable Stripe" or "enable Paddle" and I'll wire up secure checkout, provider payouts, and receipts for the booking flow.
-        </div>
       </div>
+
+      <form onSubmit={save} className="rounded-2xl bg-white p-5 border border-brand/5 shadow-sm space-y-5">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest font-bold text-brand/40 mb-2">Provider</div>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {providers.map((p) => (
+              <button
+                type="button"
+                key={p.id}
+                onClick={() => setForm({ ...form, provider: p.id })}
+                className={`text-left p-3 rounded-xl border-2 transition ${
+                  form.provider === p.id ? "border-accent bg-accent/5" : "border-brand/10 hover:border-brand/20"
+                }`}
+              >
+                <div className="font-bold text-sm">{p.label}</div>
+                <div className="text-xs text-brand/60 mt-0.5">{p.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">Mode</span>
+            <select
+              value={form.mode}
+              onChange={(e) => setForm({ ...form, mode: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm outline-none focus:border-accent"
+            >
+              <option value="sandbox">Test (sandbox)</option>
+              <option value="live">Live</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">Currency</span>
+            <input
+              value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })}
+              maxLength={3}
+              className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm uppercase outline-none focus:border-accent"
+            />
+          </label>
+        </div>
+
+        {form.provider !== "none" && form.provider !== "manual" && (
+          <label className="block">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">
+              Publishable key ({form.provider})
+            </span>
+            <input
+              value={form.publishable_key}
+              onChange={(e) => setForm({ ...form, publishable_key: e.target.value })}
+              placeholder={form.provider === "stripe" ? "pk_test_..." : "pdl_pk_..."}
+              className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm font-mono outline-none focus:border-accent"
+            />
+            <span className="text-[11px] text-brand/50 mt-1 block">
+              Secret keys are stored separately as project secrets — never enter them here.
+            </span>
+          </label>
+        )}
+
+        <label className="block">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">Platform fee %</span>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="0.5"
+            value={form.platform_fee_percent}
+            onChange={(e) => setForm({ ...form, platform_fee_percent: e.target.value })}
+            className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm outline-none focus:border-accent"
+          />
+        </label>
+
+        <label className="flex items-start gap-3 p-3 rounded-xl border border-brand/10 bg-canvas cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.payment_enabled}
+            onChange={(e) => setForm({ ...form, payment_enabled: e.target.checked })}
+            className="mt-0.5 size-4"
+          />
+          <div>
+            <div className="font-bold text-sm">Accept payments in the app</div>
+            <div className="text-xs text-brand/60">When off, customers request bookings for free.</div>
+          </div>
+        </label>
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full rounded-xl bg-accent px-4 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 hover:bg-orange-500 disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {saving && <Loader2 className="size-4 animate-spin" />}
+          Save configuration
+        </button>
+      </form>
     </div>
   );
 }

@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          mode: string
+          payment_enabled: boolean
+          platform_fee_percent: number
+          provider: string
+          publishable_key: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id: string
+          mode?: string
+          payment_enabled?: boolean
+          platform_fee_percent?: number
+          provider?: string
+          publishable_key?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          mode?: string
+          payment_enabled?: boolean
+          platform_fee_percent?: number
+          provider?: string
+          publishable_key?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users_overview"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           address: string
