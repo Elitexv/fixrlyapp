@@ -92,6 +92,42 @@ function ProviderPage() {
     qc.invalidateQueries({ queryKey: ["follows", id] });
   };
 
+  const { data: reactions } = useQuery({
+    queryKey: ["reactions", id, user?.id],
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("provider_reactions" as any)
+        .select("reaction,user_id")
+        .eq("provider_id", id);
+      const list = (rows ?? []) as any[];
+      const likes = list.filter((r) => r.reaction === "like").length;
+      const dislikes = list.filter((r) => r.reaction === "dislike").length;
+      const mine = user ? list.find((r) => r.user_id === user.id)?.reaction ?? null : null;
+      return { likes, dislikes, mine: mine as "like" | "dislike" | null };
+    },
+  });
+
+  const react = async (kind: "like" | "dislike") => {
+    if (!user) return navigate({ to: "/auth", search: { redirect: `/provider/${id}` } });
+    if (reactions?.mine === kind) {
+      const { error } = await supabase
+        .from("provider_reactions" as any)
+        .delete()
+        .eq("provider_id", id)
+        .eq("user_id", user.id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase
+        .from("provider_reactions" as any)
+        .upsert(
+          { provider_id: id, user_id: user.id, reaction: kind },
+          { onConflict: "provider_id,user_id" },
+        );
+      if (error) return toast.error(error.message);
+    }
+    qc.invalidateQueries({ queryKey: ["reactions", id, user?.id] });
+  };
+
   const [showBook, setShowBook] = useState(false);
 
   if (isLoading) {
