@@ -226,6 +226,34 @@ function ProviderPage() {
           </div>
         )}
 
+        <div className="mt-4 bg-surface p-3 rounded-2xl border border-brand/5 flex items-center justify-between">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-brand/40">Reactions</div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => react("like")}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition ${
+                reactions?.mine === "like"
+                  ? "bg-green-600 text-white border-green-600"
+                  : "bg-white border-brand/10 text-brand hover:border-green-500"
+              }`}
+            >
+              <ThumbsUp className={`size-4 ${reactions?.mine === "like" ? "fill-white" : ""}`} />
+              {reactions?.likes ?? 0}
+            </button>
+            <button
+              onClick={() => react("dislike")}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition ${
+                reactions?.mine === "dislike"
+                  ? "bg-red-600 text-white border-red-600"
+                  : "bg-white border-brand/10 text-brand hover:border-red-500"
+              }`}
+            >
+              <ThumbsDown className={`size-4 ${reactions?.mine === "dislike" ? "fill-white" : ""}`} />
+              {reactions?.dislikes ?? 0}
+            </button>
+          </div>
+        </div>
+
         <div className="mt-6">
           <h2 className="font-bold text-lg mb-3">Reviews</h2>
           {reviews.length === 0 ? (
