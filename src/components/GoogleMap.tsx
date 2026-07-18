@@ -31,15 +31,19 @@ function loadMaps() {
   if (window.google?.maps) return Promise.resolve();
   if (window.__gmapLoading) return window.__gmapLoading;
   const channel = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
-  window.__gmapLoading = new Promise<void>((resolve, reject) => {
-    window.__initGoogleMap = () => resolve();
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=__initGoogleMap${channel ? `&channel=${channel}` : ""}`;
-    script.async = true;
-    script.defer = true;
-    script.onerror = () => reject(new Error("Failed to load Google Maps"));
-    document.head.appendChild(script);
-  });
+  window.__gmapLoading = (async () => {
+    const key = await resolveMapKey();
+    if (!key) throw new Error("Missing Google Maps browser key");
+    await new Promise<void>((resolve, reject) => {
+      window.__initGoogleMap = () => resolve();
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=__initGoogleMap${channel ? `&channel=${channel}` : ""}`;
+      script.async = true;
+      script.defer = true;
+      script.onerror = () => reject(new Error("Failed to load Google Maps"));
+      document.head.appendChild(script);
+    });
+  })();
   return window.__gmapLoading;
 }
 
