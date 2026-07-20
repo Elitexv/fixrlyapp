@@ -73,15 +73,38 @@ function BookingsPage() {
             </button>
           </div>
         )}
+        <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
+          {([
+            { k: "all", label: "All" },
+            { k: "hired", label: "Hired & paid" },
+            { k: "pending", label: "Pending" },
+            { k: "completed", label: "Completed" },
+          ] as const).map((f) => (
+            <button
+              key={f.k}
+              onClick={() => setFilter(f.k)}
+              className={`flex-none px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition ${filter === f.k ? "bg-brand text-white" : "bg-canvas text-brand/60 border border-brand/5"}`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </header>
 
       <div className="px-4 py-4 space-y-3">
-        {isLoading ? (
-          <div className="grid place-items-center py-16"><Loader2 className="size-6 animate-spin text-brand/40" /></div>
-        ) : bookings.length === 0 ? (
-          <div className="text-center text-sm text-brand/60 py-16">No bookings yet.</div>
-        ) : (
-          bookings.map((b) => (
+        {(() => {
+          const visible = bookings.filter((b) => {
+            if (filter === "all") return true;
+            if (filter === "hired") return ["accepted", "completed"].includes(b.status);
+            if (filter === "pending") return b.status === "pending";
+            if (filter === "completed") return b.status === "completed";
+            return true;
+          });
+          if (isLoading)
+            return <div className="grid place-items-center py-16"><Loader2 className="size-6 animate-spin text-brand/40" /></div>;
+          if (visible.length === 0)
+            return <div className="text-center text-sm text-brand/60 py-16">No bookings in this view.</div>;
+          return visible.map((b) => (
             <div key={b.id} className="bg-surface p-4 rounded-2xl border border-brand/5 shadow-sm">
               <div className="flex justify-between items-start gap-2">
                 <div className="min-w-0">
