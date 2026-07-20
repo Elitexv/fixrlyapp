@@ -160,7 +160,7 @@ function Home() {
     .map((p) => ({ lat: p.latitude!, lng: p.longitude!, id: p.id, onClick: () => navigate({ to: "/provider/$id", params: { id: p.id } }) }));
 
   return (
-    <div className="min-h-screen bg-canvas pb-24 text-brand">
+    <div className="min-h-screen bg-canvas pb-24 text-brand lg:pl-72">
       <div className="mx-auto flex max-w-5xl flex-col px-4 pb-8 pt-4 sm:px-6 lg:px-8">
         <header className="rounded-[28px] border border-brand/10 bg-gradient-to-br from-white via-white to-orange-50/80 p-4 shadow-[0_18px_45px_rgba(17,28,58,0.08)]">
           <div className="flex items-center justify-between gap-3">

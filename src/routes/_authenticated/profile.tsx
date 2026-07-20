@@ -58,7 +58,7 @@ function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas pb-28">
+    <div className="min-h-screen bg-canvas pb-28 lg:pl-72">
       <header className="relative overflow-hidden bg-gradient-to-br from-accent/20 via-brand/10 to-surface px-5 pt-8 pb-12">
         <div className="pointer-events-none absolute -right-16 top-6 h-44 w-44 rounded-full bg-accent/20 blur-3xl" />
         <div className="pointer-events-none absolute left-6 top-10 h-28 w-28 rounded-full bg-brand/10 blur-3xl" />

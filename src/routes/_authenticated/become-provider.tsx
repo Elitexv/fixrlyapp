@@ -204,7 +204,7 @@ function BecomeProviderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas pb-32">
+    <div className="min-h-screen bg-canvas pb-32 lg:pl-72">
       <header className="bg-surface border-b border-brand/5 px-4 pt-6 pb-4">
         <div className="text-[10px] font-bold uppercase tracking-wider text-accent">Step {step} of 4</div>
         <h1 className="text-xl font-black mt-1">Provider application</h1>

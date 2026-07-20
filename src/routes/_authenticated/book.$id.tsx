@@ -87,7 +87,7 @@ function BookPage() {
   const total = hourlyRate ? hourlyRate * duration : null;
 
   return (
-    <div className="min-h-screen bg-canvas pb-32">
+    <div className="min-h-screen bg-canvas pb-32 lg:pl-72">
       <header className="sticky top-0 z-20 bg-surface border-b border-brand/5 px-4 pt-6 pb-4 flex items-center gap-3">
         <button
           onClick={() => navigate({ to: "/provider/$id", params: { id } })}

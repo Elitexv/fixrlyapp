@@ -54,7 +54,7 @@ function BookingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas pb-24">
+    <div className="min-h-screen bg-canvas pb-24 lg:pl-72">
       <header className="sticky top-0 z-20 bg-surface border-b border-brand/5 px-4 pt-6 pb-3">
         <h1 className="text-xl font-black">My bookings</h1>
         {isProvider && (

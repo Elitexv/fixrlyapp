@@ -264,79 +264,79 @@ function SettingsTab() {
   ] as const;
 
   return (
-    <div className="space-y-4 max-w-2xl">
-      <div className="rounded-2xl bg-white p-5 border border-brand/5 shadow-sm">
-        <div className="text-[10px] uppercase tracking-[0.24em] text-brand/50 font-bold">Payment Provider</div>
-        <h2 className="mt-1 text-lg font-black">Configure how customers pay</h2>
-        <p className="mt-1 text-sm text-brand/60">
-          Live status: <span className={`font-bold ${form.payment_enabled ? "text-green-600" : "text-brand/60"}`}>
+    <div className="mx-auto max-w-3xl space-y-4">
+      <div className="rounded-[1.35rem] border border-brand/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(255,248,240,0.95))] p-5 shadow-[0_16px_40px_rgba(17,28,58,0.06)]">
+        <div className="text-[10px] font-black uppercase tracking-[0.28em] text-brand/50">Payment Provider</div>
+        <h2 className="mt-1 text-lg font-black text-slate-800">Configure how customers pay</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Live status: <span className={`font-bold ${form.payment_enabled ? "text-emerald-600" : "text-brand/70"}`}>
             {form.payment_enabled ? `${form.provider.toUpperCase()} · ${form.mode}` : "Payments off"}
           </span>
         </p>
       </div>
 
-      <form onSubmit={save} className="rounded-2xl bg-white p-5 border border-brand/5 shadow-sm space-y-5">
+      <form onSubmit={save} className="space-y-4 rounded-[1.35rem] border border-brand/10 bg-white/90 p-5 shadow-[0_16px_40px_rgba(17,28,58,0.06)]">
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-bold text-brand/40 mb-2">Provider</div>
-          <div className="grid sm:grid-cols-2 gap-2">
+          <div className="mb-2 text-[10px] font-black uppercase tracking-[0.24em] text-brand/40">Provider</div>
+          <div className="grid gap-2 sm:grid-cols-2">
             {providers.map((p) => (
               <button
                 type="button"
                 key={p.id}
                 onClick={() => setForm({ ...form, provider: p.id })}
-                className={`text-left p-3 rounded-xl border-2 transition ${
-                  form.provider === p.id ? "border-accent bg-accent/5" : "border-brand/10 hover:border-brand/20"
+                className={`rounded-2xl border-2 p-3 text-left transition ${
+                  form.provider === p.id ? "border-accent bg-orange-50 shadow-sm" : "border-brand/10 bg-white hover:border-brand/20"
                 }`}
               >
-                <div className="font-bold text-sm">{p.label}</div>
-                <div className="text-xs text-brand/60 mt-0.5">{p.desc}</div>
+                <div className="text-sm font-bold text-slate-800">{p.label}</div>
+                <div className="mt-0.5 text-xs text-slate-600">{p.desc}</div>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">Mode</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-brand/40">Mode</span>
             <select
               value={form.mode}
               onChange={(e) => setForm({ ...form, mode: e.target.value })}
-              className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm outline-none focus:border-accent"
+              className="mt-1 w-full rounded-2xl border border-brand/10 bg-[#fffaf4] px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-accent"
             >
               <option value="sandbox">Test (sandbox)</option>
               <option value="live">Live</option>
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">Currency</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-brand/40">Currency</span>
             <input
               value={form.currency}
               onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })}
               maxLength={3}
-              className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm uppercase outline-none focus:border-accent"
+              className="mt-1 w-full rounded-2xl border border-brand/10 bg-[#fffaf4] px-3 py-2.5 text-sm uppercase text-slate-700 outline-none transition focus:border-accent"
             />
           </label>
         </div>
 
         {form.provider !== "none" && form.provider !== "manual" && (
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">
+            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-brand/40">
               Publishable key ({form.provider})
             </span>
             <input
               value={form.publishable_key}
               onChange={(e) => setForm({ ...form, publishable_key: e.target.value })}
               placeholder={form.provider === "stripe" ? "pk_test_..." : "pdl_pk_..."}
-              className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm font-mono outline-none focus:border-accent"
+              className="mt-1 w-full rounded-2xl border border-brand/10 bg-[#fffaf4] px-3 py-2.5 text-sm font-mono text-slate-700 outline-none transition focus:border-accent"
             />
-            <span className="text-[11px] text-brand/50 mt-1 block">
+            <span className="mt-1 block text-[11px] text-slate-500">
               Secret keys are stored separately as project secrets — never enter them here.
             </span>
           </label>
         )}
 
         <label className="block">
-          <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">Platform fee %</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.24em] text-brand/40">Platform fee %</span>
           <input
             type="number"
             min="0"
@@ -344,27 +344,27 @@ function SettingsTab() {
             step="0.5"
             value={form.platform_fee_percent}
             onChange={(e) => setForm({ ...form, platform_fee_percent: e.target.value })}
-            className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm outline-none focus:border-accent"
+            className="mt-1 w-full rounded-2xl border border-brand/10 bg-[#fffaf4] px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-accent"
           />
         </label>
 
-        <label className="flex items-start gap-3 p-3 rounded-xl border border-brand/10 bg-canvas cursor-pointer">
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-brand/10 bg-[#fffaf4] p-3">
           <input
             type="checkbox"
             checked={form.payment_enabled}
             onChange={(e) => setForm({ ...form, payment_enabled: e.target.checked })}
-            className="mt-0.5 size-4"
+            className="mt-0.5 size-4 rounded border-brand/20 text-accent focus:ring-accent"
           />
           <div>
-            <div className="font-bold text-sm">Accept payments in the app</div>
-            <div className="text-xs text-brand/60">When off, customers request bookings for free.</div>
+            <div className="text-sm font-bold text-slate-800">Accept payments in the app</div>
+            <div className="text-xs text-slate-600">When off, customers request bookings for free.</div>
           </div>
         </label>
 
         <button
           type="submit"
           disabled={saving}
-          className="w-full rounded-xl bg-accent px-4 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 hover:bg-orange-500 disabled:opacity-60 flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-4 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500 disabled:opacity-60"
         >
           {saving && <Loader2 className="size-4 animate-spin" />}
           Save configuration
