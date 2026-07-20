@@ -310,12 +310,12 @@ function ProviderPage() {
           </button>
           <button
             onClick={() => {
-              if (!user) return navigate({ to: "/auth", search: { redirect: `/provider/${id}` } });
-              setShowBook(true);
+              if (!user) return navigate({ to: "/auth", search: { redirect: `/book/${id}` } });
+              navigate({ to: "/_authenticated/book/$id" as any, params: { id } });
             }}
             className="flex-1 h-12 bg-accent text-white rounded-xl text-sm font-bold shadow-lg shadow-accent/20"
           >
-            Book this pro
+            Book now
           </button>
         </div>
       </div>
