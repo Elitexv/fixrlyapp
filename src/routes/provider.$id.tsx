@@ -49,11 +49,21 @@ function ProviderPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reviews")
-        .select("id,rating,comment,created_at,customer_id,profiles!reviews_customer_id_fkey(full_name)")
+        .select("id,rating,comment,created_at,customer_id")
         .eq("provider_id", id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as any[];
+      const rows = (data ?? []) as any[];
+      const ids = Array.from(new Set(rows.map((r) => r.customer_id).filter(Boolean)));
+      let profMap = new Map<string, any>();
+      if (ids.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id,full_name")
+          .in("id", ids);
+        profMap = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      }
+      return rows.map((r) => ({ ...r, profiles: profMap.get(r.customer_id) ?? null }));
     },
   });
 
