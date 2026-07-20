@@ -30,11 +30,17 @@ function ProviderPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("provider_profiles")
-        .select("*, profiles!provider_profiles_id_fkey(full_name,avatar_url,phone), provider_categories(service_categories(id,name,icon))")
+        .select("*, provider_categories(service_categories(id,name,icon))")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name,avatar_url,phone")
+        .eq("id", id)
+        .maybeSingle();
+      return { ...data, profiles: prof } as any;
     },
   });
 
