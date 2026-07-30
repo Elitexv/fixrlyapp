@@ -5,13 +5,18 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { notifyProviderOfBooking } from "@/lib/booking-notifications.functions";
-import { ArrowLeft, Loader2, Calendar, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { buildBookingPaymentData, getBookingPaymentSettings } from "@/lib/booking-payment";
+import { PageSpinner, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/book/$id")({
   head: () => ({ meta: [{ title: "Book service — Nearby" }, { name: "robots", content: "noindex" }] }),
   component: BookPage,
 });
+
+const fieldClass = "w-full bg-surface border border-brand/5 rounded-2xl py-3 px-3 text-sm outline-none transition focus:ring-2 focus:ring-accent/30 focus:border-accent/30";
+const labelClass = "text-[10px] font-bold uppercase tracking-widest text-brand/40 block mb-1.5 flex items-center gap-1";
 
 function BookPage() {
   const { id } = Route.useParams();
@@ -44,12 +49,29 @@ function BookPage() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const minScheduledAt = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!user) return navigate({ to: "/auth", search: { redirect: `/book/${id}` } });
+    if (new Date(scheduledAt).getTime() < Date.now()) {
+      return toast.error("Pick a date and time in the future");
+    }
     setLoading(true);
     try {
       const cat = categoryId || categories[0]?.id || null;
+      const total = hourlyRate ? hourlyRate * duration : null;
+      // A hiccup reading payment settings shouldn't block the booking itself —
+      // fall back to "no payment" so the request still goes through.
+      const settings = await getBookingPaymentSettings().catch(() => ({
+        provider: "none",
+        mode: "sandbox",
+        currency: "NGN",
+        payment_enabled: false,
+        publishable_key: null,
+        platform_fee_percent: 0,
+      }));
+      const paymentPayload = buildBookingPaymentData(total, settings);
       const { data: inserted, error } = await supabase
         .from("bookings")
         .insert({
@@ -60,12 +82,13 @@ function BookPage() {
           duration_hours: duration,
           address,
           notes: notes || null,
-          total_price: hourlyRate ? hourlyRate * duration : null,
+          total_price: total,
+          ...paymentPayload,
         })
         .select("id")
         .single();
       if (error) throw error;
-      toast.success("Booking requested!");
+      toast.success(settings.payment_enabled ? "Booking requested and payment is pending" : "Booking requested!");
       notify({ data: { bookingId: inserted.id } }).catch((err) =>
         console.warn("[booking] notify failed", err),
       );
@@ -78,7 +101,7 @@ function BookPage() {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen grid place-items-center"><Loader2 className="size-6 animate-spin text-brand/40" /></div>;
+    return <PageSpinner />;
   }
   if (!provider) {
     return <div className="min-h-screen grid place-items-center text-sm text-brand/60">Provider not found.</div>;
@@ -88,10 +111,10 @@ function BookPage() {
 
   return (
     <div className="min-h-screen bg-canvas pb-32">
-      <header className="sticky top-0 z-20 bg-surface border-b border-brand/5 px-4 pt-6 pb-4 flex items-center gap-3">
+      <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-soft px-4 pt-6 pb-4 flex items-center gap-3">
         <button
           onClick={() => navigate({ to: "/provider/$id", params: { id } })}
-          className="size-10 rounded-full bg-brand/5 grid place-items-center"
+          className="size-10 rounded-full bg-brand/5 grid place-items-center transition hover:bg-brand/10"
         >
           <ArrowLeft className="size-4" />
         </button>
@@ -102,8 +125,8 @@ function BookPage() {
       </header>
 
       <form onSubmit={submit} className="px-4 py-4 space-y-4 max-w-lg mx-auto">
-        <div className="bg-surface p-4 rounded-2xl border border-brand/5 shadow-sm flex gap-3 items-center">
-          <div className="size-14 rounded-xl bg-canvas overflow-hidden grid place-items-center text-brand/40 font-bold">
+        <div className="bg-white/95 p-4 rounded-3xl border border-soft shadow-soft flex gap-3 items-center">
+          <div className="size-14 rounded-2xl bg-canvas overflow-hidden grid place-items-center text-brand/40 font-bold">
             {provider.photo_urls?.[0] ? (
               <img src={provider.photo_urls[0]} alt={provider.business_name} className="w-full h-full object-cover" />
             ) : (
@@ -124,11 +147,11 @@ function BookPage() {
 
         {categories.length > 0 && (
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-brand/40 block mb-1.5">Service</label>
+            <label className={labelClass}>Service</label>
             <select
               value={categoryId || categories[0]?.id}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full bg-surface border border-brand/5 rounded-xl py-3 px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
+              className={fieldClass}
             >
               {categories.map((c: any) => (
                 <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
@@ -138,78 +161,80 @@ function BookPage() {
         )}
 
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-brand/40 block mb-1.5 flex items-center gap-1"><Calendar className="size-3" /> When</label>
+          <label className={labelClass}><Calendar className="size-3" /> When</label>
           <input
             type="datetime-local"
             required
+            min={minScheduledAt}
             value={scheduledAt}
             onChange={(e) => setScheduledAt(e.target.value)}
-            className="w-full bg-surface border border-brand/5 rounded-xl py-3 px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
+            className={fieldClass}
           />
         </div>
 
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-brand/40 block mb-1.5 flex items-center gap-1"><Clock className="size-3" /> Duration (hours)</label>
+          <label className={labelClass}><Clock className="size-3" /> Duration (hours)</label>
           <input
             type="number"
             min={0.5}
             step={0.5}
             value={duration}
             onChange={(e) => setDuration(Number(e.target.value))}
-            className="w-full bg-surface border border-brand/5 rounded-xl py-3 px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
+            className={fieldClass}
           />
         </div>
 
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-brand/40 block mb-1.5 flex items-center gap-1"><MapPin className="size-3" /> Service address</label>
+          <label className={labelClass}><MapPin className="size-3" /> Service address</label>
           <input
             required
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="Where should the pro come?"
-            className="w-full bg-surface border border-brand/5 rounded-xl py-3 px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
+            className={fieldClass}
           />
         </div>
 
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-brand/40 block mb-1.5">Notes (optional)</label>
+          <label className={labelClass}>Notes (optional)</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
             placeholder="Anything the pro should know?"
-            className="w-full bg-surface border border-brand/5 rounded-xl py-3 px-3 text-sm outline-none resize-none focus:ring-2 focus:ring-accent/30"
+            className={`${fieldClass} resize-none`}
           />
         </div>
 
         {total != null && (
-          <div className="bg-surface p-4 rounded-2xl border border-brand/5 flex items-center justify-between">
-            <div>
-              <div className="text-[10px] font-bold uppercase text-brand/40">Estimated total</div>
-              <div className="text-xs text-brand/60">{duration}h × ₦{hourlyRate!.toFixed(0)}</div>
+          <div className="bg-white/95 p-4 rounded-3xl border border-soft shadow-soft space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-bold uppercase text-brand/40">Estimated total</div>
+                <div className="text-xs text-brand/60">{duration}h × ₦{hourlyRate!.toFixed(0)}</div>
+              </div>
+              <div className="font-mono font-black text-xl text-accent">₦{total.toFixed(0)}</div>
             </div>
-            <div className="font-mono font-black text-xl text-accent">₦{total.toFixed(0)}</div>
+            <div className="text-xs text-brand/60">
+              Payments are handled by admin settings. If payments are enabled, your booking will be marked as pending payment until the admin confirms it.
+            </div>
           </div>
         )}
       </form>
 
       <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-border p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
         <div className="max-w-lg mx-auto flex gap-2">
-          <button
-            type="button"
-            onClick={() => navigate({ to: "/provider/$id", params: { id } })}
-            className="px-5 h-12 rounded-xl border border-brand/10 text-sm font-bold"
-          >
+          <SecondaryButton type="button" onClick={() => navigate({ to: "/provider/$id", params: { id } })} className="px-5 h-12 rounded-xl">
             Back
-          </button>
-          <button
+          </SecondaryButton>
+          <PrimaryButton
             onClick={submit}
-            disabled={loading || !scheduledAt || !address}
-            className="flex-1 h-12 bg-accent text-white rounded-xl text-sm font-bold shadow-lg shadow-accent/20 disabled:opacity-60 flex items-center justify-center gap-2"
+            loading={loading}
+            disabled={!scheduledAt || !address}
+            className="flex-1 h-12 rounded-xl"
           >
-            {loading && <Loader2 className="size-4 animate-spin" />}
             Confirm booking{total != null ? ` — ₦${total.toFixed(0)}` : ""}
-          </button>
+          </PrimaryButton>
         </div>
       </div>
     </div>

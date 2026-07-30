@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** Geocode a free-form location string (city / ZIP / address) using Google Maps via the connector gateway. */
 export const geocodeLocation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { query: string }) => {
     if (!data || typeof data.query !== "string" || !data.query.trim()) {
       throw new Error("query is required");
@@ -10,17 +12,11 @@ export const geocodeLocation = createServerFn({ method: "POST" })
     return { query: data.query.trim() };
   })
   .handler(async ({ data }) => {
-    const lovableKey = process.env.LOVABLE_API_KEY;
     const gmKey = process.env.GOOGLE_MAPS_API_KEY;
-    if (!lovableKey || !gmKey) throw new Error("Google Maps connector not configured");
+    if (!gmKey) throw new Error("Google Maps API key not configured");
 
-    const url = `https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json?address=${encodeURIComponent(data.query)}`;
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": gmKey,
-      },
-    });
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(data.query)}&key=${gmKey}`;
+    const res = await fetch(url);
     if (!res.ok) {
       const body = await res.text();
       console.error("Geocode failed", res.status, body);
@@ -28,13 +24,18 @@ export const geocodeLocation = createServerFn({ method: "POST" })
     }
     const json = (await res.json()) as {
       status: string;
+      error_message?: string;
       results: Array<{
         formatted_address: string;
         geometry: { location: { lat: number; lng: number } };
       }>;
     };
-    if (json.status !== "OK" || !json.results.length) {
+    if (json.status === "ZERO_RESULTS") {
       return { found: false as const };
+    }
+    if (json.status !== "OK" || !json.results.length) {
+      console.error("Geocode API error", json.status, json.error_message);
+      throw new Error(`Geocode failed: ${json.status}`);
     }
     const r = json.results[0];
     return {

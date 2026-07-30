@@ -67,8 +67,9 @@ export function GoogleMap({
     loadMaps()
       .then(() => {
         if (cancelled || !ref.current) return;
+        const fallbackCenter = center ?? { lat: 9.082, lng: 8.6753 };
         mapRef.current = new window.google.maps.Map(ref.current, {
-          center,
+          center: fallbackCenter,
           zoom,
           disableDefaultUI: true,
           zoomControl: true,

@@ -1,22 +1,7 @@
-CREATE TABLE public.admin_settings (
-  id text PRIMARY KEY,
-  provider_fee_percent integer,
-  stripe_account_id text,
-  payment_enabled boolean,
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-GRANT SELECT, INSERT, UPDATE ON public.admin_settings TO authenticated;
-GRANT ALL ON public.admin_settings TO service_role;
-
-ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can view admin settings"
-  ON public.admin_settings FOR SELECT
-  TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Admins can manage admin settings"
-  ON public.admin_settings FOR INSERT, UPDATE, DELETE
-  TO authenticated
-  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+-- Superseded by 20260717171104_5883c0bf-7223-44bd-bb03-22177cccf4dd.sql, which creates
+-- public.admin_settings with the schema (provider, mode, publishable_key, currency,
+-- platform_fee_percent, payment_enabled, ...) that the app actually reads/writes.
+-- This file previously created a conflicting admin_settings table with different columns
+-- (provider_fee_percent, stripe_account_id) and used invalid syntax
+-- ("FOR INSERT, UPDATE, DELETE" is not valid in CREATE POLICY), so it could never apply
+-- cleanly. Left as a no-op to preserve migration history without breaking fresh deploys.

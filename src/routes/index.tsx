@@ -8,7 +8,9 @@ import { geocodeLocation } from "@/lib/geocode.functions";
 import { BottomNav } from "@/components/BottomNav";
 import { GoogleMap } from "@/components/GoogleMap";
 import { ProviderCard, type ProviderCardData } from "@/components/ProviderCard";
-import { Search, MapPin, Loader2 } from "lucide-react";
+import { NotificationsBell } from "@/components/NotificationsBell";
+import { StickyHeader, InlineSpinner, EmptyState, Eyebrow } from "@/components/ui-kit";
+import { Search, MapPin, Loader2, Compass } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
@@ -34,6 +36,16 @@ function Home() {
   const [locationText, setLocationText] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number; label: string } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("avatar_url,full_name").eq("id", user!.id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -162,18 +174,25 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-canvas font-sans text-brand pb-24">
-      <header className="sticky top-0 z-30 bg-surface border-b border-brand/5 px-4 pt-6 pb-4">
+      <StickyHeader>
         <div className="flex items-center justify-between mb-4">
           <div className="flex flex-col min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-brand/40">Location</span>
+            <Eyebrow>Location</Eyebrow>
             <span className="text-sm font-semibold truncate">{coords?.label ?? "Set your location below"}</span>
           </div>
-          <button
-            onClick={() => navigate({ to: user ? "/profile" : "/auth" })}
-            className="size-10 bg-brand/5 rounded-full grid place-items-center border border-brand/10 text-sm font-bold text-brand"
-          >
-            {user?.email?.[0]?.toUpperCase() ?? "?"}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <NotificationsBell />
+            <button
+              onClick={() => navigate({ to: user ? "/profile" : "/auth" })}
+              className="size-10 overflow-hidden bg-accent/10 rounded-full grid place-items-center border border-accent/20 text-sm font-bold text-accent shrink-0 transition hover:bg-accent/20"
+            >
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                user?.email?.[0]?.toUpperCase() ?? "?"
+              )}
+            </button>
+          </div>
         </div>
 
         <form onSubmit={submitLocation} className="flex gap-2 mb-3">
@@ -183,14 +202,14 @@ function Home() {
               value={locationText}
               onChange={(e) => setLocationText(e.target.value)}
               placeholder="City, ZIP, or address"
-              className="w-full bg-canvas rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
+              className="w-full bg-canvas rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-accent/30"
             />
           </div>
           <button
             type="button"
             onClick={useMyLocation}
             disabled={geoLoading}
-            className="px-3 rounded-xl bg-brand/5 text-xs font-bold uppercase tracking-wider disabled:opacity-50"
+            className="px-3 rounded-xl bg-brand/5 text-xs font-bold uppercase tracking-wider text-brand/70 transition hover:bg-brand/10 disabled:opacity-50"
           >
             {geoLoading ? <Loader2 className="size-4 animate-spin" /> : "GPS"}
           </button>
@@ -202,15 +221,15 @@ function Home() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search for cleaning, plumbing, tutoring..."
-            className="w-full bg-canvas rounded-xl py-3.5 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-accent/30"
+            className="w-full bg-canvas rounded-xl py-3.5 pl-11 pr-4 text-sm outline-none transition focus:ring-2 focus:ring-accent/30"
           />
         </div>
-      </header>
+      </StickyHeader>
 
-      <div className="flex gap-3 overflow-x-auto px-4 py-4 no-scrollbar">
+      <div className="flex gap-2.5 overflow-x-auto px-4 py-4 no-scrollbar">
         <button
           onClick={() => setSelectedCat(null)}
-          className={`flex-none px-5 py-2.5 rounded-full text-xs font-medium transition-colors ${!selectedCat ? "bg-brand text-white" : "bg-surface border border-brand/5 shadow-sm"}`}
+          className={`flex-none px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-colors ${!selectedCat ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-surface border border-brand/5 shadow-sm text-brand/70 hover:border-accent/20"}`}
         >
           All Services
         </button>
@@ -218,7 +237,7 @@ function Home() {
           <button
             key={c.id}
             onClick={() => setSelectedCat(c.id === selectedCat ? null : c.id)}
-            className={`flex-none px-5 py-2.5 rounded-full text-xs font-medium transition-colors ${selectedCat === c.id ? "bg-brand text-white" : "bg-surface border border-brand/5 shadow-sm"}`}
+            className={`flex-none px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-colors ${selectedCat === c.id ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-surface border border-brand/5 shadow-sm text-brand/70 hover:border-accent/20"}`}
           >
             <span className="mr-1">{c.icon}</span>
             {c.name}
@@ -227,7 +246,7 @@ function Home() {
       </div>
 
       <div className="px-4 mb-6">
-        <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-brand/10 shadow-sm bg-canvas">
+        <div className="relative w-full h-44 rounded-3xl overflow-hidden border border-soft shadow-soft bg-canvas">
           <GoogleMap center={mapCenter} markers={markers} zoom={coords ? 12 : 10} />
           <div className="absolute bottom-3 left-3 pointer-events-none">
             <div className="bg-surface px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-xl flex items-center gap-2">
@@ -240,25 +259,27 @@ function Home() {
 
       <div className="px-4 pb-8 space-y-4">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="font-bold text-lg">
+          <h2 className="text-lg font-semibold">
             {coords ? "Nearest to you" : "Top providers"}
           </h2>
-          <span className="text-xs font-bold text-brand/40 font-mono uppercase">{filtered.length} results</span>
+          <span className="font-mono text-xs font-bold uppercase text-brand/40">{filtered.length} results</span>
         </div>
 
         {isLoading ? (
-          <div className="grid place-items-center py-16 text-brand/40">
-            <Loader2 className="size-6 animate-spin" />
-          </div>
+          <InlineSpinner />
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-sm text-brand/60">
-            No providers match yet.{" "}
-            {!roles?.includes("provider") && (
-              <button onClick={() => navigate({ to: "/dashboard" })} className="text-accent font-bold underline">
-                Become a provider
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={Compass}
+            title="No providers match yet"
+            description="Try a different search, category, or location."
+            action={
+              !roles?.includes("provider") && (
+                <button onClick={() => navigate({ to: "/dashboard" })} className="text-accent font-bold text-sm underline underline-offset-2">
+                  Become a provider
+                </button>
+              )
+            }
+          />
         ) : (
           filtered.map((p) => <ProviderCard key={p.id} p={p} />)
         )}

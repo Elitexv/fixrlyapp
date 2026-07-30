@@ -5,20 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { useSession, useRoles } from "@/lib/session";
 import { toast } from "sonner";
-import { Star, Loader2 } from "lucide-react";
+import { Star, CalendarCheck } from "lucide-react";
+import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
+import { StickyHeader, Tile, StatusBadge, InlineSpinner, EmptyState, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   head: () => ({ meta: [{ title: "My bookings — Nearby" }, { name: "robots", content: "noindex" }] }),
   component: BookingsPage,
 });
-
-const statusStyles: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800",
-  accepted: "bg-blue-100 text-blue-800",
-  rejected: "bg-red-100 text-red-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-gray-100 text-gray-700",
-};
 
 function BookingsPage() {
   const { user } = useSession();
@@ -55,19 +49,19 @@ function BookingsPage() {
 
   return (
     <div className="min-h-screen bg-canvas pb-24">
-      <header className="sticky top-0 z-20 bg-surface border-b border-brand/5 px-4 pt-6 pb-3">
-        <h1 className="text-xl font-black">My bookings</h1>
+      <StickyHeader className="pb-3">
+        <h1 className="text-xl font-black tracking-tight">My bookings</h1>
         {isProvider && (
           <div className="mt-3 flex gap-2 bg-canvas rounded-xl p-1">
             <button
               onClick={() => setTab("customer")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider ${tab === "customer" ? "bg-white shadow-sm" : "text-brand/50"}`}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${tab === "customer" ? "bg-white shadow-sm text-brand" : "text-brand/50 hover:text-brand/70"}`}
             >
               As customer
             </button>
             <button
               onClick={() => setTab("provider")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider ${tab === "provider" ? "bg-white shadow-sm" : "text-brand/50"}`}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${tab === "provider" ? "bg-white shadow-sm text-brand" : "text-brand/50 hover:text-brand/70"}`}
             >
               As provider
             </button>
@@ -83,13 +77,13 @@ function BookingsPage() {
             <button
               key={f.k}
               onClick={() => setFilter(f.k)}
-              className={`flex-none px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition ${filter === f.k ? "bg-brand text-white" : "bg-canvas text-brand/60 border border-brand/5"}`}
+              className={`flex-none px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition ${filter === f.k ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-canvas text-brand/60 border border-brand/5 hover:border-accent/20"}`}
             >
               {f.label}
             </button>
           ))}
         </div>
-      </header>
+      </StickyHeader>
 
       <div className="px-4 py-4 space-y-3">
         {(() => {
@@ -100,12 +94,11 @@ function BookingsPage() {
             if (filter === "completed") return b.status === "completed";
             return true;
           });
-          if (isLoading)
-            return <div className="grid place-items-center py-16"><Loader2 className="size-6 animate-spin text-brand/40" /></div>;
+          if (isLoading) return <InlineSpinner />;
           if (visible.length === 0)
-            return <div className="text-center text-sm text-brand/60 py-16">No bookings in this view.</div>;
+            return <EmptyState icon={CalendarCheck} title="No bookings in this view" description="Bookings you make or receive will show up here." />;
           return visible.map((b) => (
-            <div key={b.id} className="bg-surface p-4 rounded-2xl border border-brand/5 shadow-sm">
+            <Tile key={b.id}>
               <div className="flex justify-between items-start gap-2">
                 <div className="min-w-0">
                   <div className="text-[10px] font-bold uppercase text-brand/40">
@@ -121,34 +114,35 @@ function BookingsPage() {
                   {b.notes && <div className="text-xs mt-2 p-2 bg-canvas rounded-lg">{b.notes}</div>}
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
-                  <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${statusStyles[b.status]}`}>{b.status}</span>
+                  <StatusBadge status={b.status} />
                   {b.total_price && <span className="font-mono font-bold text-sm text-accent">₦{Number(b.total_price).toFixed(0)}</span>}
+                  <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${getPaymentStatusBadge(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span>
                 </div>
               </div>
 
               <div className="mt-3 pt-3 border-t border-brand/5 flex gap-2 flex-wrap">
                 {tab === "provider" && b.status === "pending" && (
                   <>
-                    <button onClick={() => updateStatus(b.id, "accepted")} className="flex-1 py-2 bg-accent text-white rounded-lg text-xs font-bold">Accept</button>
-                    <button onClick={() => updateStatus(b.id, "rejected")} className="flex-1 py-2 border border-brand/10 rounded-lg text-xs font-bold">Reject</button>
+                    <PrimaryButton onClick={() => updateStatus(b.id, "accepted")} className="flex-1 py-2 rounded-lg text-xs">Accept</PrimaryButton>
+                    <SecondaryButton onClick={() => updateStatus(b.id, "rejected")} className="flex-1 py-2 rounded-lg text-xs">Reject</SecondaryButton>
                   </>
                 )}
                 {tab === "provider" && b.status === "accepted" && (
-                  <button onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 bg-brand text-white rounded-lg text-xs font-bold">Mark completed</button>
+                  <button onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 bg-brand text-white rounded-lg text-xs font-bold transition hover:bg-brand/90">Mark completed</button>
                 )}
                 {tab === "customer" && ["pending", "accepted"].includes(b.status) && (
-                  <button onClick={() => updateStatus(b.id, "cancelled")} className="flex-1 py-2 border border-brand/10 rounded-lg text-xs font-bold">Cancel</button>
+                  <SecondaryButton onClick={() => updateStatus(b.id, "cancelled")} className="flex-1 py-2 rounded-lg text-xs">Cancel</SecondaryButton>
                 )}
                 {b.provider?.id && (
-                  <button onClick={() => navigate({ to: "/provider/$id", params: { id: b.provider.id } })} className="py-2 px-3 rounded-xl border border-brand/10 text-xs font-bold text-brand bg-white">
+                  <SecondaryButton onClick={() => navigate({ to: "/provider/$id", params: { id: b.provider.id } })} className="py-2 px-3 rounded-xl text-xs">
                     View provider profile
-                  </button>
+                  </SecondaryButton>
                 )}
                 {tab === "customer" && b.status === "completed" && (
                   <LeaveReviewButton booking={b} />
                 )}
               </div>
-            </div>
+            </Tile>
           ));
         })()}
       </div>
@@ -198,10 +192,10 @@ function LeaveReviewButton({ booking }: { booking: any }) {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="flex-1 py-2 bg-accent text-white rounded-lg text-xs font-bold">Leave review</button>
+      <PrimaryButton onClick={() => setOpen(true)} className="flex-1 py-2 rounded-lg text-xs">Leave review</PrimaryButton>
       {open && (
         <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center px-4" onClick={() => setOpen(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm bg-surface rounded-3xl p-6">
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm bg-white rounded-[2rem] p-6 shadow-soft">
             <h3 className="font-black text-lg">Rate this provider</h3>
             <div className="flex justify-center gap-1 my-4">
               {[1, 2, 3, 4, 5].map((n) => (
@@ -210,13 +204,10 @@ function LeaveReviewButton({ booking }: { booking: any }) {
                 </button>
               ))}
             </div>
-            <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional comment" rows={3} className="w-full bg-canvas rounded-xl py-2.5 px-3 text-sm outline-none resize-none" />
+            <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional comment" rows={3} className="w-full bg-canvas rounded-xl py-2.5 px-3 text-sm outline-none resize-none focus:ring-2 focus:ring-accent/20" />
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setOpen(false)} className="flex-1 py-3 rounded-xl border border-brand/10 text-sm font-bold">Cancel</button>
-              <button onClick={submit} disabled={loading} className="flex-1 py-3 bg-accent text-white rounded-xl text-sm font-bold disabled:opacity-60 flex items-center justify-center gap-2">
-                {loading && <Loader2 className="size-4 animate-spin" />}
-                Submit
-              </button>
+              <SecondaryButton onClick={() => setOpen(false)} className="flex-1">Cancel</SecondaryButton>
+              <PrimaryButton onClick={submit} loading={loading} className="flex-1">Submit</PrimaryButton>
             </div>
           </div>
         </div>

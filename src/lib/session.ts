@@ -5,6 +5,43 @@ import type { Session, User } from "@supabase/supabase-js";
 
 export type AppRole = "admin" | "provider" | "customer";
 
+export async function waitForSupabaseSession(maxAttempts = 6, delayMs = 250) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (error) throw error;
+    if (session?.access_token && session.user) return session;
+
+    if (attempt < maxAttempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  return null;
+}
+
+export async function getSupabaseUserOrNull() {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) throw sessionError;
+  if (session?.user) return session.user;
+
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    const message = error.message?.toLowerCase() ?? "";
+    if (message.includes("session") || error.status === 400) return null;
+    throw error;
+  }
+
+  return data.user ?? null;
+}
+
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -14,10 +51,20 @@ export function useSession() {
       setSession(s);
       setLoading(false);
     });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
+
+    const syncSession = async () => {
+      try {
+        const activeSession = await waitForSupabaseSession(4, 150);
+        setSession(activeSession ?? null);
+      } catch (error) {
+        console.error("Failed to sync Supabase session", error);
+        setSession(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void syncSession();
     return () => sub.subscription.unsubscribe();
   }, []);
 

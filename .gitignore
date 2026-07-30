@@ -30,3 +30,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase CLI local link metadata
+supabase/.temp/
+
+# Environment variables (contains live API keys/secrets)
+.env
+.env.*
+!.env.example

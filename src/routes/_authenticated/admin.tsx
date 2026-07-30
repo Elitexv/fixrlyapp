@@ -5,14 +5,16 @@ import { useSession, useRoles } from "@/lib/session";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GoogleMap } from "@/components/GoogleMap";
 import { toast } from "sonner";
+import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter,
 } from "@/components/ui/sidebar";
 import {
-  Loader2, Check, X, FileText, IdCard, LayoutDashboard, Users, MapPin,
-  Briefcase, CalendarCheck, ClipboardList, Shield, ShieldOff, Power, CreditCard, Home, LogOut,
+  Check, X, FileText, IdCard, LayoutDashboard, Users, MapPin,
+  Briefcase, CalendarCheck, ClipboardList, Shield, ShieldOff, Power, CreditCard, Home, LogOut, Inbox,
 } from "lucide-react";
+import { Panel, Tile, StatCard, StatusBadge, Eyebrow, PrimaryButton, FormField, EmptyState, PageSpinner, InlineSpinner } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Nearby" }, { name: "robots", content: "noindex" }] }),
@@ -38,15 +40,17 @@ function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
 
   if (rolesLoading) {
-    return <div className="min-h-screen grid place-items-center"><Loader2 className="animate-spin size-6 text-brand/40" /></div>;
+    return <PageSpinner />;
   }
   if (!isAdmin) {
     return (
       <div className="min-h-screen grid place-items-center px-6 text-center">
         <div>
-          <h1 className="text-xl font-black">Admins only</h1>
+          <h1 className="text-xl font-black tracking-tight">Admins only</h1>
           <p className="text-sm text-brand/60 mt-2">Ask a workspace admin to grant you the admin role.</p>
-          <Link to="/" className="inline-block mt-4 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-bold">Home</Link>
+          <Link to="/" className="mt-4 inline-flex items-center justify-center rounded-2xl bg-accent px-5 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500">
+            Home
+          </Link>
         </div>
       </div>
     );
@@ -63,11 +67,11 @@ function AdminPage() {
       <div className="min-h-screen flex w-full bg-canvas">
         <Sidebar collapsible="icon">
           <SidebarContent>
-            <div className="px-4 pt-5 pb-3 flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-brand grid place-items-center text-white"><Shield className="size-4" /></div>
+            <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
+              <div className="size-9 rounded-xl bg-brand grid place-items-center text-white shadow-lg shadow-brand/20"><Shield className="size-4" /></div>
               <div className="group-data-[collapsible=icon]:hidden">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-brand/40">Nearby</div>
-                <div className="text-sm font-black">Admin Console</div>
+                <Eyebrow>Nearby</Eyebrow>
+                <div className="text-sm font-black tracking-tight">Admin Console</div>
               </div>
             </div>
             {groups.map((g) => (
@@ -108,14 +112,14 @@ function AdminPage() {
         </Sidebar>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 border-b border-brand/5 bg-white/90 backdrop-blur sticky top-0 z-20 px-4">
+          <header className="h-16 flex items-center gap-3 border-b border-soft bg-white/90 backdrop-blur sticky top-0 z-20 px-4">
             <SidebarTrigger />
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-brand/40">Admin</div>
-              <h1 className="text-sm font-black truncate">{tabs.find((t) => t.id === tab)?.label}</h1>
+              <Eyebrow>Admin</Eyebrow>
+              <h1 className="text-base font-black tracking-tight truncate">{tabs.find((t) => t.id === tab)?.label}</h1>
             </div>
           </header>
-          <main className="flex-1 px-4 py-5 max-w-6xl w-full mx-auto">
+          <main className="flex-1 px-4 py-6 max-w-6xl w-full mx-auto">
             {tab === "overview" && <OverviewTab />}
             {tab === "requests" && <RequestsTab />}
             {tab === "settings" && <SettingsTab />}
@@ -156,21 +160,21 @@ function OverviewTab() {
   });
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <BigStat label="Total users" value={stats?.users ?? 0} />
-        <BigStat label="Providers" value={stats?.providers ?? 0} />
-        <BigStat label="Bookings" value={stats?.bookings ?? 0} />
-        <BigStat label="Reviews" value={stats?.reviews ?? 0} />
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Total users" value={stats?.users ?? 0} />
+        <StatCard label="Providers" value={stats?.providers ?? 0} />
+        <StatCard label="Bookings" value={stats?.bookings ?? 0} />
+        <StatCard label="Reviews" value={stats?.reviews ?? 0} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-4 rounded-2xl bg-amber-500 text-white">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-white/80">Pending requests</div>
-          <div className="font-mono font-black text-3xl">{stats?.pending ?? 0}</div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-3xl bg-amber-500 p-5 text-white">
+          <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">Pending requests</div>
+          <div className="mt-2 font-mono font-black text-3xl">{stats?.pending ?? 0}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-accent text-white">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-white/80">Revenue (completed)</div>
-          <div className="font-mono font-black text-3xl">₦{(stats?.revenue ?? 0).toFixed(0)}</div>
+        <div className="rounded-3xl bg-accent p-5 text-white">
+          <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">Revenue (completed)</div>
+          <div className="mt-2 font-mono font-black text-3xl">₦{(stats?.revenue ?? 0).toFixed(0)}</div>
         </div>
       </div>
     </div>
@@ -253,38 +257,40 @@ function SettingsTab() {
   };
 
   if (isLoading) {
-    return <div className="p-8 grid place-items-center"><Loader2 className="animate-spin size-5 text-brand/40" /></div>;
+    return <InlineSpinner />;
   }
 
   const providers = [
     { id: "none", label: "Disabled", desc: "Bookings run as free requests." },
     { id: "stripe", label: "Stripe", desc: "Cards, wallets, subscriptions. Global reach." },
     { id: "paddle", label: "Paddle", desc: "Merchant of record. Handles tax + compliance." },
+    { id: "paystack", label: "Paystack", desc: "Popular Nigerian cards and bank transfers." },
+    { id: "flutterwave", label: "Flutterwave", desc: "Cards, bank transfers, and mobile money." },
     { id: "manual", label: "Manual / Cash", desc: "Providers collect payment in person." },
   ] as const;
 
   return (
     <div className="space-y-4 max-w-2xl">
-      <div className="rounded-2xl bg-white p-5 border border-brand/5 shadow-sm">
-        <div className="text-[10px] uppercase tracking-[0.24em] text-brand/50 font-bold">Payment Provider</div>
-        <h2 className="mt-1 text-lg font-black">Configure how customers pay</h2>
+      <Panel className="p-5">
+        <Eyebrow>Payment Provider</Eyebrow>
+        <h2 className="mt-1 text-lg font-black tracking-tight">Configure how customers pay</h2>
         <p className="mt-1 text-sm text-brand/60">
           Live status: <span className={`font-bold ${form.payment_enabled ? "text-green-600" : "text-brand/60"}`}>
             {form.payment_enabled ? `${form.provider.toUpperCase()} · ${form.mode}` : "Payments off"}
           </span>
         </p>
-      </div>
+      </Panel>
 
-      <form onSubmit={save} className="rounded-2xl bg-white p-5 border border-brand/5 shadow-sm space-y-5">
+      <Panel as="form" onSubmit={save} className="p-5 space-y-5">
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-bold text-brand/40 mb-2">Provider</div>
+          <Eyebrow className="mb-2">Provider</Eyebrow>
           <div className="grid sm:grid-cols-2 gap-2">
             {providers.map((p) => (
               <button
                 type="button"
                 key={p.id}
                 onClick={() => setForm({ ...form, provider: p.id })}
-                className={`text-left p-3 rounded-xl border-2 transition ${
+                className={`text-left p-3 rounded-2xl border-2 transition ${
                   form.provider === p.id ? "border-accent bg-accent/5" : "border-brand/10 hover:border-brand/20"
                 }`}
               >
@@ -297,58 +303,50 @@ function SettingsTab() {
 
         <div className="grid sm:grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">Mode</span>
+            <Eyebrow className="mb-1.5">Mode</Eyebrow>
             <select
               value={form.mode}
               onChange={(e) => setForm({ ...form, mode: e.target.value })}
-              className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm outline-none focus:border-accent"
+              className="w-full rounded-xl bg-canvas border border-transparent py-2.5 px-3 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
             >
               <option value="sandbox">Test (sandbox)</option>
               <option value="live">Live</option>
             </select>
           </label>
-          <label className="block">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">Currency</span>
-            <input
-              value={form.currency}
-              onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })}
-              maxLength={3}
-              className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm uppercase outline-none focus:border-accent"
-            />
-          </label>
+          <FormField label="Currency" value={form.currency} onChange={(v) => setForm({ ...form, currency: v.toUpperCase() })} className="[&_input]:uppercase" />
         </div>
 
         {form.provider !== "none" && form.provider !== "manual" && (
-          <label className="block">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">
-              Publishable key ({form.provider})
-            </span>
-            <input
+          <div>
+            <FormField
+              label={`Publishable key (${form.provider})`}
               value={form.publishable_key}
-              onChange={(e) => setForm({ ...form, publishable_key: e.target.value })}
-              placeholder={form.provider === "stripe" ? "pk_test_..." : "pdl_pk_..."}
-              className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm font-mono outline-none focus:border-accent"
+              onChange={(v) => setForm({ ...form, publishable_key: v })}
+              placeholder={
+                form.provider === "stripe"
+                  ? "pk_test_..."
+                  : form.provider === "paystack"
+                    ? "pk_test_..."
+                    : form.provider === "flutterwave"
+                      ? "FLWPUBK_TEST_..."
+                      : "pdl_pk_..."
+              }
+              className="[&_input]:font-mono"
             />
-            <span className="text-[11px] text-brand/50 mt-1 block">
+            <span className="text-[11px] text-brand/50 mt-1.5 block">
               Secret keys are stored separately as project secrets — never enter them here.
             </span>
-          </label>
+          </div>
         )}
 
-        <label className="block">
-          <span className="text-[10px] uppercase tracking-widest font-bold text-brand/40">Platform fee %</span>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            step="0.5"
-            value={form.platform_fee_percent}
-            onChange={(e) => setForm({ ...form, platform_fee_percent: e.target.value })}
-            className="mt-1 w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm outline-none focus:border-accent"
-          />
-        </label>
+        <FormField
+          label="Platform fee %"
+          type="number"
+          value={form.platform_fee_percent}
+          onChange={(v) => setForm({ ...form, platform_fee_percent: v })}
+        />
 
-        <label className="flex items-start gap-3 p-3 rounded-xl border border-brand/10 bg-canvas cursor-pointer">
+        <label className="flex items-start gap-3 p-3.5 rounded-2xl border border-brand/10 bg-canvas cursor-pointer">
           <input
             type="checkbox"
             checked={form.payment_enabled}
@@ -361,15 +359,10 @@ function SettingsTab() {
           </div>
         </label>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full rounded-xl bg-accent px-4 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 hover:bg-orange-500 disabled:opacity-60 flex items-center justify-center gap-2"
-        >
-          {saving && <Loader2 className="size-4 animate-spin" />}
+        <PrimaryButton type="submit" disabled={saving} loading={saving} className="w-full">
           Save configuration
-        </button>
-      </form>
+        </PrimaryButton>
+      </Panel>
     </div>
   );
 }
@@ -405,47 +398,47 @@ function RequestsTab() {
     qc.invalidateQueries();
   };
 
-  if (requests.length === 0) return <Empty label="No provider requests yet." />;
+  if (requests.length === 0) return <EmptyState icon={Inbox} title="No provider requests yet" />;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {requests.map((r) => (
-        <div key={r.id} className="bg-surface p-3 rounded-xl border border-brand/5 space-y-2">
+        <Tile key={r.id} className="space-y-2 hover:shadow-sm">
           <div className="flex justify-between items-start gap-2">
             <div className="min-w-0">
               <div className="font-bold text-sm truncate">{r.business_name}</div>
               <div className="text-xs text-brand/60 truncate">{[r.city, r.zip].filter(Boolean).join(" · ") || "—"}</div>
               {r.phone && <div className="text-xs text-brand/60">📞 {r.phone}</div>}
             </div>
-            <StatusPill status={r.status} />
+            <StatusBadge status={r.status} />
           </div>
           {r.bio && <p className="text-xs text-brand/70 line-clamp-2">{r.bio}</p>}
           <div className="flex gap-2 flex-wrap">
             {r.service_id_url && (
-              <button onClick={() => viewDoc(r.service_id_url)} className="text-[10px] font-bold uppercase flex items-center gap-1 px-2 py-1 rounded bg-canvas border border-brand/10">
+              <button onClick={() => viewDoc(r.service_id_url)} className="text-[10px] font-bold uppercase flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-canvas border border-brand/10">
                 <IdCard className="size-3" /> Service ID
               </button>
             )}
             {r.national_id_url && (
-              <button onClick={() => viewDoc(r.national_id_url)} className="text-[10px] font-bold uppercase flex items-center gap-1 px-2 py-1 rounded bg-canvas border border-brand/10">
+              <button onClick={() => viewDoc(r.national_id_url)} className="text-[10px] font-bold uppercase flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-canvas border border-brand/10">
                 <FileText className="size-3" /> National ID
               </button>
             )}
           </div>
           {r.status === "pending" && (
             <div className="flex gap-2 pt-1">
-              <button onClick={() => approve(r.id)} className="flex-1 py-2 rounded-lg bg-green-600 text-white text-xs font-bold flex items-center justify-center gap-1">
+              <button onClick={() => approve(r.id)} className="flex-1 py-2.5 rounded-xl bg-green-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition hover:bg-green-500">
                 <Check className="size-3.5" /> Approve
               </button>
-              <button onClick={() => reject(r.id)} className="flex-1 py-2 rounded-lg bg-red-600 text-white text-xs font-bold flex items-center justify-center gap-1">
+              <button onClick={() => reject(r.id)} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition hover:bg-red-500">
                 <X className="size-3.5" /> Reject
               </button>
             </div>
           )}
           {r.status === "rejected" && r.review_notes && (
-            <div className="text-[11px] text-red-700 bg-red-50 rounded p-2">Note: {r.review_notes}</div>
+            <div className="text-[11px] text-red-700 bg-red-50 rounded-lg p-2.5">Note: {r.review_notes}</div>
           )}
-        </div>
+        </Tile>
       ))}
     </div>
   );
@@ -475,7 +468,7 @@ function UsersTab() {
     !q || [u.email, u.full_name, u.phone].filter(Boolean).some((x: string) => x.toLowerCase().includes(q.toLowerCase())),
   );
 
-  if (isLoading) return <div className="grid place-items-center py-16"><Loader2 className="size-6 animate-spin text-brand/40" /></div>;
+  if (isLoading) return <InlineSpinner />;
 
   return (
     <div className="space-y-3">
@@ -483,13 +476,13 @@ function UsersTab() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search by name, email, phone…"
-        className="w-full bg-surface border border-brand/10 rounded-xl py-2.5 px-3 text-sm outline-none"
+        className="w-full bg-surface border border-brand/10 rounded-xl py-2.5 px-3 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
       />
-      {filtered.length === 0 && <Empty label="No users match." />}
+      {filtered.length === 0 && <EmptyState icon={Users} title="No users match" />}
       {filtered.map((u: any) => {
         const has = (r: string) => (u.roles ?? []).includes(r);
         return (
-          <div key={u.id} className="bg-surface p-3 rounded-xl border border-brand/5">
+          <Tile key={u.id} className="hover:shadow-sm">
             <div className="flex justify-between items-start gap-2">
               <div className="min-w-0">
                 <div className="font-bold text-sm truncate">{u.full_name ?? "(no name)"}</div>
@@ -507,8 +500,8 @@ function UsersTab() {
                 <button
                   key={r}
                   onClick={() => setRole(u.id, r, !has(r))}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-                    has(r) ? "bg-brand text-white" : "bg-canvas border border-brand/10 text-brand/60"
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${
+                    has(r) ? "bg-brand text-white" : "bg-canvas border border-brand/10 text-brand/60 hover:border-brand/20"
                   }`}
                 >
                   {has(r) ? <ShieldOff className="size-3" /> : <Shield className="size-3" />}
@@ -516,7 +509,7 @@ function UsersTab() {
                 </button>
               ))}
             </div>
-          </div>
+          </Tile>
         );
       })}
     </div>
@@ -543,11 +536,11 @@ function ProvidersTab() {
     qc.invalidateQueries({ queryKey: ["admin-providers"] });
   };
 
-  if (providers.length === 0) return <Empty label="No providers yet." />;
+  if (providers.length === 0) return <EmptyState icon={Briefcase} title="No providers yet" />;
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {providers.map((p: any) => (
-        <div key={p.id} className="bg-surface p-3 rounded-xl border border-brand/5 flex justify-between items-center gap-2">
+        <Tile key={p.id} className="flex justify-between items-center gap-2 hover:shadow-sm">
           <div className="min-w-0">
             <div className="font-bold text-sm truncate">{p.business_name}</div>
             <div className="text-xs text-brand/60 truncate">
@@ -556,11 +549,11 @@ function ProvidersTab() {
           </div>
           <button
             onClick={() => toggle(p.id, p.is_active)}
-            className={`flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded ${p.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+            className={`flex items-center gap-1.5 shrink-0 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg transition ${p.is_active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
           >
             <Power className="size-3" /> {p.is_active ? "Active" : "Suspended"}
           </button>
-        </div>
+        </Tile>
       ))}
     </div>
   );
@@ -621,10 +614,10 @@ function MapTab() {
 
   return (
     <div className="space-y-4">
-      <form onSubmit={saveKey} className="rounded-2xl bg-white p-5 border border-brand/5 shadow-sm space-y-3">
+      <Panel as="form" onSubmit={saveKey} className="p-5 space-y-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.24em] text-brand/50 font-bold">Google Maps</div>
-          <h2 className="mt-1 text-lg font-black">Manual API key</h2>
+          <Eyebrow>Google Maps</Eyebrow>
+          <h2 className="mt-1 text-lg font-black tracking-tight">Manual API key</h2>
           <p className="text-xs text-brand/60 mt-1">
             Paste a browser-restricted Google Maps JavaScript API key. Leave blank to fall back to the built-in Lovable connector key.
           </p>
@@ -633,30 +626,25 @@ function MapTab() {
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="AIza..."
-          className="w-full rounded-xl border border-brand/10 bg-canvas px-3 py-2.5 text-sm font-mono outline-none focus:border-accent"
+          className="w-full rounded-xl bg-canvas border border-transparent py-2.5 px-3 text-sm font-mono outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
         />
         <div className="flex items-center gap-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/20 disabled:opacity-60 flex items-center gap-2"
-          >
-            {saving && <Loader2 className="size-4 animate-spin" />}
+          <PrimaryButton type="submit" disabled={saving} loading={saving} className="py-2.5">
             Save key
-          </button>
+          </PrimaryButton>
           {apiKey && (
             <button
               type="button"
               onClick={() => { setApiKey(""); }}
-              className="rounded-xl border border-brand/10 px-3 py-2.5 text-xs font-bold uppercase"
+              className="rounded-2xl border border-brand/10 px-4 py-2.5 text-xs font-bold uppercase transition hover:bg-slate-50"
             >
               Clear
             </button>
           )}
         </div>
-      </form>
+      </Panel>
 
-      <div className="h-[380px] rounded-2xl overflow-hidden border border-brand/10">
+      <div className="h-[380px] rounded-3xl overflow-hidden border border-soft shadow-soft">
         <GoogleMap
           center={center}
           zoom={6}
@@ -673,18 +661,26 @@ function MapTab() {
 
 /* ---------- Bookings ---------- */
 function BookingsTab() {
+  const qc = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
   const { data: bookings = [] } = useQuery({
     queryKey: ["admin-bookings-all"],
     queryFn: async () => {
       const { data } = await supabase
         .from("bookings")
-        .select("id,status,scheduled_at,total_price,duration_hours,address,provider:provider_profiles!bookings_provider_id_fkey(business_name),customer:profiles!bookings_customer_id_fkey(full_name)")
+        .select("id,status,scheduled_at,total_price,duration_hours,address,payment_status,payment_provider,payment_reference,provider:provider_profiles!bookings_provider_id_fkey(business_name),customer:profiles!bookings_customer_id_fkey(full_name)")
         .order("created_at", { ascending: false });
       return (data ?? []) as any[];
     },
   });
   const filtered = filter === "all" ? bookings : bookings.filter((b) => b.status === filter);
+
+  const markPayment = async (id: string) => {
+    const { error } = await supabase.from("bookings").update({ payment_status: "paid", paid_at: new Date().toISOString() }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Booking marked as paid");
+    qc.invalidateQueries({ queryKey: ["admin-bookings-all"] });
+  };
 
   return (
     <div className="space-y-3">
@@ -699,9 +695,9 @@ function BookingsTab() {
           </button>
         ))}
       </div>
-      {filtered.length === 0 && <Empty label="No bookings match." />}
+      {filtered.length === 0 && <EmptyState icon={CalendarCheck} title="No bookings match" />}
       {filtered.map((b: any) => (
-        <div key={b.id} className="bg-surface p-3 rounded-xl border border-brand/5">
+        <Tile key={b.id} className="hover:shadow-sm">
           <div className="flex justify-between items-start gap-2">
             <div className="min-w-0">
               <div className="font-bold text-sm truncate">{b.provider?.business_name ?? "—"}</div>
@@ -709,37 +705,22 @@ function BookingsTab() {
               <div className="text-xs text-brand/60 mt-0.5">{new Date(b.scheduled_at).toLocaleString()} · {b.duration_hours}h</div>
               {b.address && <div className="text-xs text-brand/60 truncate">📍 {b.address}</div>}
             </div>
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              <StatusPill status={b.status} />
+            <div className="flex flex-col items-end gap-1.5 shrink-0">
+              <StatusBadge status={b.status} />
               {b.total_price && <span className="font-mono font-bold text-xs text-accent">₦{Number(b.total_price).toFixed(0)}</span>}
+              <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${getPaymentStatusBadge(b.payment_status)}`}>
+                {getPaymentStatusLabel(b.payment_status)}
+              </span>
+              {b.payment_reference && <span className="text-[10px] text-brand/50">Ref: {b.payment_reference}</span>}
+              {b.payment_status === "pending" && (
+                <button onClick={() => markPayment(b.id)} className="rounded-lg bg-green-600 px-2.5 py-1.5 text-[10px] font-bold uppercase text-white transition hover:bg-green-500">
+                  Mark paid
+                </button>
+              )}
             </div>
           </div>
-        </div>
+        </Tile>
       ))}
     </div>
   );
-}
-
-/* ---------- Shared bits ---------- */
-function BigStat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="p-4 rounded-2xl bg-surface border border-brand/5">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-brand/40">{label}</div>
-      <div className="font-mono font-black text-3xl mt-1">{value}</div>
-    </div>
-  );
-}
-function Empty({ label }: { label: string }) {
-  return <div className="text-xs text-brand/50 bg-surface p-4 rounded-xl border border-brand/5 text-center">{label}</div>;
-}
-function StatusPill({ status }: { status: string }) {
-  const s: Record<string, string> = {
-    pending: "bg-amber-100 text-amber-700",
-    approved: "bg-green-100 text-green-700",
-    accepted: "bg-blue-100 text-blue-700",
-    rejected: "bg-red-100 text-red-700",
-    completed: "bg-green-100 text-green-700",
-    cancelled: "bg-gray-100 text-gray-700",
-  };
-  return <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${s[status] ?? "bg-brand/5"}`}>{status}</span>;
 }

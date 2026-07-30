@@ -12,42 +12,73 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       admin_settings: {
         Row: {
-          created_at: string
-          currency: string
+          created_at: string | null
+          currency: string | null
           id: string
-          mode: string
-          payment_enabled: boolean
-          platform_fee_percent: number
-          provider: string
+          mode: string | null
+          payment_enabled: boolean | null
+          platform_fee_percent: number | null
+          provider: string | null
+          provider_fee_percent: number | null
           publishable_key: string | null
+          stripe_account_id: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
-          created_at?: string
-          currency?: string
+          created_at?: string | null
+          currency?: string | null
           id: string
-          mode?: string
-          payment_enabled?: boolean
-          platform_fee_percent?: number
-          provider?: string
+          mode?: string | null
+          payment_enabled?: boolean | null
+          platform_fee_percent?: number | null
+          provider?: string | null
+          provider_fee_percent?: number | null
           publishable_key?: string | null
+          stripe_account_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
-          created_at?: string
-          currency?: string
+          created_at?: string | null
+          currency?: string | null
           id?: string
-          mode?: string
-          payment_enabled?: boolean
-          platform_fee_percent?: number
-          provider?: string
+          mode?: string | null
+          payment_enabled?: boolean | null
+          platform_fee_percent?: number | null
+          provider?: string | null
+          provider_fee_percent?: number | null
           publishable_key?: string | null
+          stripe_account_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -70,6 +101,11 @@ export type Database = {
           duration_hours: number
           id: string
           notes: string | null
+          paid_at: string | null
+          payment_amount: number | null
+          payment_provider: string
+          payment_reference: string | null
+          payment_status: string
           provider_id: string
           scheduled_at: string
           status: Database["public"]["Enums"]["booking_status"]
@@ -84,6 +120,11 @@ export type Database = {
           duration_hours?: number
           id?: string
           notes?: string | null
+          paid_at?: string | null
+          payment_amount?: number | null
+          payment_provider?: string
+          payment_reference?: string | null
+          payment_status?: string
           provider_id: string
           scheduled_at: string
           status?: Database["public"]["Enums"]["booking_status"]
@@ -98,6 +139,11 @@ export type Database = {
           duration_hours?: number
           id?: string
           notes?: string | null
+          paid_at?: string | null
+          payment_amount?: number | null
+          payment_provider?: string
+          payment_reference?: string | null
+          payment_status?: string
           provider_id?: string
           scheduled_at?: string
           status?: Database["public"]["Enums"]["booking_status"]
@@ -124,6 +170,137 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          sender_id: string
+          sender_role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id: string
+          sender_role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id?: string
+          sender_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_overview"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          provider_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          provider_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          provider_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_overview"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          data: Json | null
+          id: string
+          is_read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_overview"
             referencedColumns: ["id"]
           },
         ]
@@ -722,6 +899,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "provider", "customer"],

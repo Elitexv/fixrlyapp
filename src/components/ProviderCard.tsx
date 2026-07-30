@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
+import { Tile } from "@/components/ui-kit";
 
 export type ProviderCardData = {
   id: string;
@@ -18,13 +19,9 @@ export type ProviderCardData = {
 export function ProviderCard({ p }: { p: ProviderCardData }) {
   const initial = p.business_name?.[0]?.toUpperCase() ?? "?";
   return (
-    <Link
-      to="/provider/$id"
-      params={{ id: p.id }}
-      className="block bg-surface p-4 rounded-2xl border border-brand/5 shadow-sm hover:shadow-md transition-shadow"
-    >
+    <Tile as={Link} to="/provider/$id" params={{ id: p.id }} className="block hover:border-accent/20">
       <div className="flex gap-4">
-        <div className="size-20 rounded-xl bg-canvas flex-none overflow-hidden grid place-items-center text-brand/40 text-2xl font-bold">
+        <div className="size-20 rounded-2xl bg-canvas flex-none overflow-hidden grid place-items-center text-brand/40 text-2xl font-bold">
           {p.photo_urls[0] ? (
             <img src={p.photo_urls[0]} alt={p.business_name} className="w-full h-full object-cover" />
           ) : (
@@ -40,7 +37,7 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
                 {p.city ? ` • ${p.city}` : ""}
               </p>
             </div>
-            <div className="flex items-center gap-1 bg-brand/5 px-2 py-0.5 rounded text-[10px] font-bold shrink-0">
+            <div className="flex items-center gap-1 bg-brand/5 px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0">
               <Star className="size-3 fill-yellow-500 text-yellow-500" />
               {p.rating ? p.rating.toFixed(1) : "New"}
               {p.review_count > 0 && <span className="text-brand/40">({p.review_count})</span>}
@@ -75,6 +72,6 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
           View & Book
         </span>
       </div>
-    </Link>
+    </Tile>
   );
 }
