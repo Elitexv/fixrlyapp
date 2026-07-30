@@ -157,7 +157,6 @@ function Home() {
 
   useEffect(() => {
     if (!coords && typeof window !== "undefined" && navigator.geolocation) {
-      // Non-blocking attempt
       navigator.geolocation.getCurrentPosition(
         (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude, label: "Current location" }),
         () => {},
@@ -254,8 +253,7 @@ function Home() {
               {filtered.length} PROS {coords ? "NEAR YOU" : "AVAILABLE"}
             </div>
           </div>
-        </div>
-      </div>
+        </header>
 
       <div className="px-4 pb-8 space-y-4">
         <div className="flex items-center justify-between mb-2">

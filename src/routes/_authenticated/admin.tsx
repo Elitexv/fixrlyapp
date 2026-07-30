@@ -294,14 +294,14 @@ function SettingsTab() {
                   form.provider === p.id ? "border-accent bg-accent/5" : "border-brand/10 hover:border-brand/20"
                 }`}
               >
-                <div className="font-bold text-sm">{p.label}</div>
-                <div className="text-xs text-brand/60 mt-0.5">{p.desc}</div>
+                <div className="text-sm font-bold text-slate-800">{p.label}</div>
+                <div className="mt-0.5 text-xs text-slate-600">{p.desc}</div>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
             <Eyebrow className="mb-1.5">Mode</Eyebrow>
             <select
@@ -351,11 +351,11 @@ function SettingsTab() {
             type="checkbox"
             checked={form.payment_enabled}
             onChange={(e) => setForm({ ...form, payment_enabled: e.target.checked })}
-            className="mt-0.5 size-4"
+            className="mt-0.5 size-4 rounded border-brand/20 text-accent focus:ring-accent"
           />
           <div>
-            <div className="font-bold text-sm">Accept payments in the app</div>
-            <div className="text-xs text-brand/60">When off, customers request bookings for free.</div>
+            <div className="text-sm font-bold text-slate-800">Accept payments in the app</div>
+            <div className="text-xs text-slate-600">When off, customers request bookings for free.</div>
           </div>
         </label>
 

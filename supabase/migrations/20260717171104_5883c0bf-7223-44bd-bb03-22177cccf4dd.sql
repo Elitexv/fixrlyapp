@@ -12,6 +12,22 @@ CREATE TABLE IF NOT EXISTS public.admin_settings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE public.admin_settings ADD COLUMN IF NOT EXISTS provider TEXT;
+ALTER TABLE public.admin_settings ADD COLUMN IF NOT EXISTS mode TEXT;
+ALTER TABLE public.admin_settings ADD COLUMN IF NOT EXISTS publishable_key TEXT;
+ALTER TABLE public.admin_settings ADD COLUMN IF NOT EXISTS currency TEXT;
+ALTER TABLE public.admin_settings ADD COLUMN IF NOT EXISTS platform_fee_percent NUMERIC;
+ALTER TABLE public.admin_settings ADD COLUMN IF NOT EXISTS payment_enabled BOOLEAN;
+ALTER TABLE public.admin_settings ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES auth.users(id);
+ALTER TABLE public.admin_settings ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ;
+
+ALTER TABLE public.admin_settings ALTER COLUMN provider SET DEFAULT 'none';
+ALTER TABLE public.admin_settings ALTER COLUMN mode SET DEFAULT 'sandbox';
+ALTER TABLE public.admin_settings ALTER COLUMN currency SET DEFAULT 'USD';
+ALTER TABLE public.admin_settings ALTER COLUMN platform_fee_percent SET DEFAULT 10;
+ALTER TABLE public.admin_settings ALTER COLUMN payment_enabled SET DEFAULT false;
+ALTER TABLE public.admin_settings ALTER COLUMN created_at SET DEFAULT now();
+
 GRANT SELECT ON public.admin_settings TO authenticated;
 GRANT ALL ON public.admin_settings TO service_role;
 
