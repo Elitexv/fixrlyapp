@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GoogleMap } from "@/components/GoogleMap";
 import { toast } from "sonner";
 import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
+import { formatMoney, useCurrency } from "@/lib/currency";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter,
@@ -136,6 +137,7 @@ function AdminPage() {
 
 /* ---------- Overview ---------- */
 function OverviewTab() {
+  const currency = useCurrency();
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
@@ -174,7 +176,7 @@ function OverviewTab() {
         </div>
         <div className="rounded-3xl bg-accent p-5 text-white">
           <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">Revenue (completed)</div>
-          <div className="mt-2 font-mono font-black text-3xl">₦{(stats?.revenue ?? 0).toFixed(0)}</div>
+          <div className="mt-2 font-mono font-black text-3xl">{formatMoney(stats?.revenue ?? 0, currency)}</div>
         </div>
       </div>
     </div>
@@ -294,8 +296,8 @@ function SettingsTab() {
                   form.provider === p.id ? "border-accent bg-accent/5" : "border-brand/10 hover:border-brand/20"
                 }`}
               >
-                <div className="text-sm font-bold text-slate-800">{p.label}</div>
-                <div className="mt-0.5 text-xs text-slate-600">{p.desc}</div>
+                <div className="text-sm font-bold text-brand">{p.label}</div>
+                <div className="mt-0.5 text-xs text-brand/60">{p.desc}</div>
               </button>
             ))}
           </div>
@@ -354,8 +356,8 @@ function SettingsTab() {
             className="mt-0.5 size-4 rounded border-brand/20 text-accent focus:ring-accent"
           />
           <div>
-            <div className="text-sm font-bold text-slate-800">Accept payments in the app</div>
-            <div className="text-xs text-slate-600">When off, customers request bookings for free.</div>
+            <div className="text-sm font-bold text-brand">Accept payments in the app</div>
+            <div className="text-xs text-brand/60">When off, customers request bookings for free.</div>
           </div>
         </label>
 
@@ -519,6 +521,7 @@ function UsersTab() {
 /* ---------- Providers ---------- */
 function ProvidersTab() {
   const qc = useQueryClient();
+  const currency = useCurrency();
   const { data: providers = [] } = useQuery({
     queryKey: ["admin-providers"],
     queryFn: async () => {
@@ -544,7 +547,7 @@ function ProvidersTab() {
           <div className="min-w-0">
             <div className="font-bold text-sm truncate">{p.business_name}</div>
             <div className="text-xs text-brand/60 truncate">
-              {p.city ?? "—"}{p.hourly_rate ? ` · ₦${Number(p.hourly_rate).toFixed(0)}/hr` : ""}
+              {p.city ?? "—"}{p.hourly_rate ? ` · ${formatMoney(p.hourly_rate, currency)}/hr` : ""}
             </div>
           </div>
           <button
@@ -636,7 +639,7 @@ function MapTab() {
             <button
               type="button"
               onClick={() => { setApiKey(""); }}
-              className="rounded-2xl border border-brand/10 px-4 py-2.5 text-xs font-bold uppercase transition hover:bg-slate-50"
+              className="rounded-2xl border border-brand/10 px-4 py-2.5 text-xs font-bold uppercase transition hover:bg-brand/5"
             >
               Clear
             </button>
@@ -662,6 +665,7 @@ function MapTab() {
 /* ---------- Bookings ---------- */
 function BookingsTab() {
   const qc = useQueryClient();
+  const currency = useCurrency();
   const [filter, setFilter] = useState<string>("all");
   const { data: bookings = [] } = useQuery({
     queryKey: ["admin-bookings-all"],
@@ -707,7 +711,7 @@ function BookingsTab() {
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">
               <StatusBadge status={b.status} />
-              {b.total_price && <span className="font-mono font-bold text-xs text-accent">₦{Number(b.total_price).toFixed(0)}</span>}
+              {b.total_price && <span className="font-mono font-bold text-xs text-accent">{formatMoney(b.total_price, currency)}</span>}
               <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${getPaymentStatusBadge(b.payment_status)}`}>
                 {getPaymentStatusLabel(b.payment_status)}
               </span>

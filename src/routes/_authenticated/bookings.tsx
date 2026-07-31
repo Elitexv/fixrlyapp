@@ -1,12 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { useSession, useRoles } from "@/lib/session";
 import { toast } from "sonner";
-import { Star, CalendarCheck } from "lucide-react";
+import { Star, CalendarCheck, Loader2 } from "lucide-react";
 import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
+import { formatMoney, useCurrency } from "@/lib/currency";
+import { initializePaystackPayment, verifyPaystackPayment } from "@/lib/payments.functions";
 import { StickyHeader, Tile, StatusBadge, InlineSpinner, EmptyState, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
@@ -18,10 +21,15 @@ function BookingsPage() {
   const { user } = useSession();
   const { data: roles = [] } = useRoles(user);
   const isProvider = roles.includes("provider");
+  const currency = useCurrency();
   const [tab, setTab] = useState<"customer" | "provider">(isProvider ? "provider" : "customer");
   const [filter, setFilter] = useState<"all" | "hired" | "pending" | "completed">("all");
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const initializePayment = useServerFn(initializePaystackPayment);
+  const verifyPayment = useServerFn(verifyPaystackPayment);
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const verifiedRef = useRef<string | null>(null);
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ["bookings", user?.id, tab],
@@ -40,11 +48,45 @@ function BookingsPage() {
     },
   });
 
+  // Paystack redirects the customer back here with ?paystack_ref=... after checkout;
+  // verify it server-side rather than trusting the redirect itself as proof of payment.
+  useEffect(() => {
+    if (!user) return;
+    const reference = new URLSearchParams(window.location.search).get("paystack_ref");
+    if (!reference || verifiedRef.current === reference) return;
+    verifiedRef.current = reference;
+    (async () => {
+      try {
+        const result = await verifyPayment({ data: { reference } });
+        if (result.status === "paid") toast.success("Payment confirmed!");
+        else toast.error("Payment could not be confirmed. Contact support if you were charged.");
+      } catch (err: any) {
+        toast.error(err.message ?? "Could not verify payment");
+      } finally {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("paystack_ref");
+        window.history.replaceState({}, "", url.toString());
+        qc.invalidateQueries({ queryKey: ["bookings", user.id, "customer"] });
+      }
+    })();
+  }, [user, verifyPayment, qc]);
+
   const updateStatus = async (id: string, status: "pending" | "accepted" | "rejected" | "completed" | "cancelled") => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success(`Booking ${status}`);
     qc.invalidateQueries({ queryKey: ["bookings", user?.id, tab] });
+  };
+
+  const payNow = async (id: string) => {
+    setPayingId(id);
+    try {
+      const result = await initializePayment({ data: { bookingId: id } });
+      window.location.href = result.authorizationUrl;
+    } catch (err: any) {
+      toast.error(err.message ?? "Could not start payment");
+      setPayingId(null);
+    }
   };
 
   return (
@@ -115,12 +157,22 @@ function BookingsPage() {
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <StatusBadge status={b.status} />
-                  {b.total_price && <span className="font-mono font-bold text-sm text-accent">₦{Number(b.total_price).toFixed(0)}</span>}
+                  {b.total_price && <span className="font-mono font-bold text-sm text-accent">{formatMoney(b.total_price, currency)}</span>}
                   <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${getPaymentStatusBadge(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span>
                 </div>
               </div>
 
               <div className="mt-3 pt-3 border-t border-brand/5 flex gap-2 flex-wrap">
+                {tab === "customer" && b.payment_status === "pending" && b.payment_provider === "paystack" && (
+                  <button
+                    onClick={() => payNow(b.id)}
+                    disabled={payingId === b.id}
+                    className="flex-1 py-2 bg-accent text-white rounded-lg text-xs font-bold transition hover:bg-orange-500 disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+                  >
+                    {payingId === b.id ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                    Pay now
+                  </button>
+                )}
                 {tab === "provider" && b.status === "pending" && (
                   <>
                     <PrimaryButton onClick={() => updateStatus(b.id, "accepted")} className="flex-1 py-2 rounded-lg text-xs">Accept</PrimaryButton>

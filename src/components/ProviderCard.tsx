@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Star } from "lucide-react";
 import { Tile } from "@/components/ui-kit";
+import { formatMoney, useCurrency } from "@/lib/currency";
 
 export type ProviderCardData = {
   id: string;
@@ -18,6 +19,7 @@ export type ProviderCardData = {
 
 export function ProviderCard({ p }: { p: ProviderCardData }) {
   const initial = p.business_name?.[0]?.toUpperCase() ?? "?";
+  const currency = useCurrency();
   return (
     <Tile as={Link} to="/provider/$id" params={{ id: p.id }} className="block hover:border-accent/20">
       <div className="flex gap-4">
@@ -60,7 +62,7 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
             {p.hourly_rate !== null && (
               <div className="flex flex-col">
                 <span className="text-brand/40">Rate</span>
-                <span className="text-accent">₦{Number(p.hourly_rate).toFixed(0)}/hr</span>
+                <span className="text-accent">{formatMoney(p.hourly_rate, currency)}/hr</span>
               </div>
             )}
           </div>

@@ -1,6 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sendLovableEmail, EmailAPIError } from "@lovable.dev/email-js";
+import { formatMoney } from "@/lib/currency";
+
+function getOrigin(): string {
+  const request = getRequest();
+  const headerOrigin = request?.headers.get("origin");
+  if (headerOrigin) return headerOrigin;
+  const host = request?.headers.get("host");
+  if (host) return `https://${host}`;
+  return "https://fixrly.app";
+}
 
 type Input = { bookingId: string };
 
@@ -37,10 +48,18 @@ export const notifyProviderOfBooking = createServerFn({ method: "POST" })
       .eq("id", booking.customer_id)
       .maybeSingle();
 
+    const { data: paymentSettings } = await supabaseAdmin
+      .from("admin_settings" as any)
+      .select("currency")
+      .eq("id", "payments")
+      .maybeSingle();
+    const currency = (paymentSettings as any)?.currency ?? "NGN";
+
     const when = new Date(booking.scheduled_at).toLocaleString();
     const category = (booking as any).category?.name ?? "Service";
-    const total = booking.total_price ? `₦${Number(booking.total_price).toFixed(2)}` : "—";
+    const total = booking.total_price ? formatMoney(booking.total_price, currency) : "—";
     const customerName = customer?.full_name ?? "A customer";
+    const dashboardUrl = `${getOrigin()}/bookings`;
 
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#ffffff;color:#111">
@@ -54,10 +73,10 @@ export const notifyProviderOfBooking = createServerFn({ method: "POST" })
           <tr><td style="padding:6px 0;color:#666">Total</td><td style="padding:6px 0"><b>${total}</b></td></tr>
           ${booking.notes ? `<tr><td style="padding:6px 0;color:#666" valign="top">Notes</td><td style="padding:6px 0">${booking.notes}</td></tr>` : ""}
         </table>
-        <p style="margin:24px 0 0"><a href="https://fixrlyapp.lovable.app/bookings" style="background:#111;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:bold">Open dashboard</a></p>
+        <p style="margin:24px 0 0"><a href="${dashboardUrl}" style="background:#111;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:bold">Open dashboard</a></p>
       </div>`;
 
-    const text = `New booking request from ${customerName}\n\nService: ${category}\nWhen: ${when}\nDuration: ${booking.duration_hours}h\nAddress: ${booking.address ?? "—"}\nTotal: ${total}\n${booking.notes ? `Notes: ${booking.notes}\n` : ""}\nOpen dashboard: https://fixrlyapp.lovable.app/bookings`;
+    const text = `New booking request from ${customerName}\n\nService: ${category}\nWhen: ${when}\nDuration: ${booking.duration_hours}h\nAddress: ${booking.address ?? "—"}\nTotal: ${total}\n${booking.notes ? `Notes: ${booking.notes}\n` : ""}\nOpen dashboard: ${dashboardUrl}`;
 
     try {
       const result = await sendLovableEmail(

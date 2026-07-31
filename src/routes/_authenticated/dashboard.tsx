@@ -9,6 +9,7 @@ import { geocodeLocation } from "@/lib/geocode.functions";
 import { toast } from "sonner";
 import { Loader2, MapPin } from "lucide-react";
 import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
+import { currencySymbol, formatMoney, useCurrency } from "@/lib/currency";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import {
   PageHero,
@@ -33,6 +34,7 @@ function DashboardPage() {
   const isProvider = roles.includes("provider");
   const qc = useQueryClient();
   const geocode = useServerFn(geocodeLocation);
+  const currency = useCurrency();
 
   const { data: profile } = useQuery({
     queryKey: ["provider-profile", user?.id],
@@ -229,7 +231,7 @@ function DashboardPage() {
               <StatCard label="Pending" value={stats.pending} />
               <StatCard label="Accepted" value={stats.accepted} />
               <StatCard label="Completed" value={stats.completed} />
-              <StatCard label="Earnings" value={`₦${stats.earned.toFixed(0)}`} accent />
+              <StatCard label="Earnings" value={formatMoney(stats.earned, currency)} accent />
             </div>
 
             <div className="mt-6 rounded-2xl bg-canvas p-5 text-sm text-brand/70">
@@ -268,7 +270,7 @@ function DashboardPage() {
                         </div>
                         <div className="flex flex-col items-end gap-2 text-right">
                           <StatusBadge status={b.status} />
-                          {b.total_price && <span className="font-mono text-sm font-bold text-accent">₦{Number(b.total_price).toFixed(0)}</span>}
+                          {b.total_price && <span className="font-mono text-sm font-bold text-accent">{formatMoney(b.total_price, currency)}</span>}
                           <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${getPaymentStatusBadge(b.payment_status)}`}>
                             {getPaymentStatusLabel(b.payment_status)}
                           </span>
@@ -312,7 +314,7 @@ function DashboardPage() {
               <FormField label="Business name" required value={form.business_name} onChange={(v) => setForm({ ...form, business_name: v })} />
               <FormField label="Bio" textarea value={form.bio} onChange={(v) => setForm({ ...form, bio: v })} />
               <div className="grid gap-3 sm:grid-cols-2">
-                <FormField label="Hourly rate (₦)" value={form.hourly_rate} type="number" onChange={(v) => setForm({ ...form, hourly_rate: v })} />
+                <FormField label={`Hourly rate (${currencySymbol(currency)})`} value={form.hourly_rate} type="number" onChange={(v) => setForm({ ...form, hourly_rate: v })} />
                 <FormField label="Service radius (km)" value={String(form.service_radius_km)} type="number" onChange={(v) => setForm({ ...form, service_radius_km: Number(v) || 0 })} />
               </div>
               <FormField label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />

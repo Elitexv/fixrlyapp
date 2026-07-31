@@ -50,7 +50,7 @@ export function AvatarUpload({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="absolute -bottom-1.5 -right-1.5 size-8 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-lg border-2 border-white transition hover:bg-primary/90 disabled:opacity-60"
+        className="absolute -bottom-1.5 -right-1.5 size-8 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-lg border-2 border-surface transition hover:bg-primary/90 disabled:opacity-60"
       >
         {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
       </button>

@@ -8,6 +8,7 @@ import { notifyProviderOfBooking } from "@/lib/booking-notifications.functions";
 import { ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { buildBookingPaymentData, getBookingPaymentSettings } from "@/lib/booking-payment";
+import { formatMoney, useCurrency } from "@/lib/currency";
 import { PageSpinner, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/book/$id")({
@@ -23,6 +24,7 @@ function BookPage() {
   const navigate = useNavigate();
   const { user } = useSession();
   const notify = useServerFn(notifyProviderOfBooking);
+  const currency = useCurrency();
 
   const { data: provider, isLoading } = useQuery({
     queryKey: ["book-provider", id],
@@ -140,7 +142,7 @@ function BookPage() {
           {hourlyRate && (
             <div className="ml-auto text-right">
               <div className="text-[10px] font-bold uppercase text-brand/40">Rate</div>
-              <div className="font-mono font-bold text-accent">₦{hourlyRate.toFixed(0)}/hr</div>
+              <div className="font-mono font-bold text-accent">{formatMoney(hourlyRate, currency)}/hr</div>
             </div>
           )}
         </div>
@@ -211,9 +213,9 @@ function BookPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-[10px] font-bold uppercase text-brand/40">Estimated total</div>
-                <div className="text-xs text-brand/60">{duration}h × ₦{hourlyRate!.toFixed(0)}</div>
+                <div className="text-xs text-brand/60">{duration}h × {formatMoney(hourlyRate, currency)}</div>
               </div>
-              <div className="font-mono font-black text-xl text-accent">₦{total.toFixed(0)}</div>
+              <div className="font-mono font-black text-xl text-accent">{formatMoney(total, currency)}</div>
             </div>
             <div className="text-xs text-brand/60">
               Payments are handled by admin settings. If payments are enabled, your booking will be marked as pending payment until the admin confirms it.
@@ -233,7 +235,7 @@ function BookPage() {
             disabled={!scheduledAt || !address}
             className="flex-1 h-12 rounded-xl"
           >
-            Confirm booking{total != null ? ` — ₦${total.toFixed(0)}` : ""}
+            Confirm booking{total != null ? ` — ${formatMoney(total, currency)}` : ""}
           </PrimaryButton>
         </div>
       </div>

@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ArrowLeft, Star, MapPin, Phone, Mail, Heart, Users, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { getOrCreateConversation } from "@/lib/chat";
+import { formatMoney, useCurrency } from "@/lib/currency";
 import { Panel, Tile, Eyebrow, PrimaryButton, SecondaryButton, PageSpinner } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/provider/$id")({
@@ -24,6 +25,7 @@ function ProviderPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { user } = useSession();
+  const currency = useCurrency();
 
   const { data, isLoading } = useQuery({
     queryKey: ["provider", id],
@@ -218,7 +220,7 @@ function ProviderPage() {
             <div className="mt-4 pt-4 border-t border-brand/5 flex items-center justify-between">
               <div>
                 <Eyebrow>Rate</Eyebrow>
-                <div className="mt-1 font-mono font-bold text-lg text-accent">₦{Number(data.hourly_rate).toFixed(0)}<span className="text-xs text-brand/60">/hr</span></div>
+                <div className="mt-1 font-mono font-bold text-lg text-accent">{formatMoney(data.hourly_rate, currency)}<span className="text-xs text-brand/60">/hr</span></div>
               </div>
               {data.availability_note && (
                 <div className="text-right">

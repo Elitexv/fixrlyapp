@@ -34,11 +34,13 @@ export function buildBookingPaymentData(totalPrice: number | null, settings: Boo
   const paymentEnabled = settings.payment_enabled && settings.provider !== "none";
   const paymentAmount = totalPrice != null ? Number(totalPrice) : null;
 
+  // No payment_reference here — a real reference is only created once the
+  // customer actually starts a charge (see initializePaystackPayment), never
+  // faked up front just to make the row look "paid-ish".
   return {
     payment_provider: paymentEnabled ? settings.provider : "none",
     payment_status: paymentEnabled ? "pending" : "not_required",
     payment_amount: paymentAmount,
-    payment_reference: paymentEnabled ? `${settings.provider}-${crypto.randomUUID().slice(0, 8)}` : null,
   };
 }
 

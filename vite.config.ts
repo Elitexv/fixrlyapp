@@ -12,4 +12,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Enables file-based routes in ./server/routes (e.g. the Paystack webhook),
+  // which Nitro doesn't scan by default (serverDir defaults to false).
+  // `serverDir` isn't in this wrapper's narrowed nitro option type (it only
+  // exposes preset/output/cloudflare) but is forwarded to the real nitro()
+  // plugin at runtime regardless, so this cast is safe.
+  nitro: {
+    serverDir: "server",
+  } as any,
 });
