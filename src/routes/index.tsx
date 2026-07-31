@@ -253,7 +253,8 @@ function Home() {
               {filtered.length} PROS {coords ? "NEAR YOU" : "AVAILABLE"}
             </div>
           </div>
-        </header>
+        </div>
+      </div>
 
       <div className="px-4 pb-8 space-y-4">
         <div className="flex items-center justify-between mb-2">
