@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Star } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import { Tile } from "@/components/ui-kit";
 
 export type ProviderCardData = {
@@ -72,7 +72,7 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand/40">Availability</span>
           <p className="truncate text-sm font-semibold text-brand/80">{p.availability_note ?? "Available soon"}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-1 rounded-full bg-brand px-3.5 py-2 text-[11px] font-semibold text-white">
+        <div className="flex shrink-0 items-center gap-1 rounded-full bg-primary px-3.5 py-2 text-[11px] font-semibold text-primary-foreground">
           View
           <ArrowRight className="size-3.5" />
         </div>

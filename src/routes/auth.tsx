@@ -134,7 +134,7 @@ function AuthPage() {
           </p>
         </div>
 
-        <div className="bg-white/95 p-6 rounded-[2rem] border border-soft shadow-soft space-y-4">
+        <div className="light-surface bg-white/95 p-6 rounded-[2rem] border border-soft shadow-soft space-y-4">
           {mode !== "forgot" && (
             <>
               <button
@@ -220,14 +220,14 @@ function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setRole("customer")}
-                  className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${role === "customer" ? "bg-brand text-white border-brand" : "bg-canvas border-brand/10 hover:border-brand/20"}`}
+                  className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${role === "customer" ? "bg-primary text-primary-foreground border-primary" : "bg-canvas border-brand/10 hover:border-brand/20"}`}
                 >
                   I need services
                 </button>
                 <button
                   type="button"
                   onClick={() => setRole("provider")}
-                  className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${role === "provider" ? "bg-brand text-white border-brand" : "bg-canvas border-brand/10 hover:border-brand/20"}`}
+                  className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${role === "provider" ? "bg-primary text-primary-foreground border-primary" : "bg-canvas border-brand/10 hover:border-brand/20"}`}
                 >
                   I offer services
                 </button>

@@ -286,7 +286,7 @@ function DashboardPage() {
                               </SecondaryButton>
                             </>
                           ) : (
-                            <button onClick={() => updateStatus(b.id, "completed")} className="w-full rounded-2xl bg-brand px-3 py-2 text-xs font-bold text-white transition hover:bg-brand/90">
+                            <button onClick={() => updateStatus(b.id, "completed")} className="w-full rounded-2xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90">
                               Mark completed
                             </button>
                           )}
@@ -344,7 +344,7 @@ function DashboardPage() {
                       type="button"
                       key={c.id}
                       onClick={() => setSelectedCats(on ? selectedCats.filter((x) => x !== c.id) : [...selectedCats, c.id])}
-                      className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold transition ${on ? "bg-brand text-white" : "bg-white border border-brand/10 text-brand hover:border-accent/30"}`}
+                      className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold transition ${on ? "bg-primary text-primary-foreground" : "light-surface bg-white border border-brand/10 text-brand hover:border-accent/30"}`}
                     >
                       {c.icon} {c.name}
                     </button>

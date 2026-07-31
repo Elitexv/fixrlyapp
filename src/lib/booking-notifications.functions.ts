@@ -9,8 +9,9 @@ export const notifyProviderOfBooking = createServerFn({ method: "POST" })
   .inputValidator((d: Input) => d)
   .handler(async ({ data, context }) => {
     const from = process.env.EMAIL_FROM;
-    if (!from) {
-      console.warn("[booking-notify] EMAIL_FROM not set; skipping email send");
+    const lovableApiKey = process.env.LOVABLE_API_KEY;
+    if (!from || !lovableApiKey) {
+      console.warn("[booking-notify] EMAIL_FROM or LOVABLE_API_KEY not set; skipping email send");
       return { sent: false, reason: "email_not_configured" as const };
     }
 
@@ -68,7 +69,7 @@ export const notifyProviderOfBooking = createServerFn({ method: "POST" })
           text,
         },
         {
-          apiKey: process.env.LOVABLE_API_KEY!,
+          apiKey: lovableApiKey,
           idempotencyKey: `booking-notify-${booking.id}`,
         },
       );

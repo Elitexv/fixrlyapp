@@ -13,6 +13,9 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
+import { ThemeProvider, useTheme } from "@/lib/theme";
+
+const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("nearby-theme");var d=s==="dark"||((!s||s==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");}catch(e){}})();`;
 
 function NotFoundComponent() {
   return (
@@ -50,7 +53,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             onClick={() => { router.invalidate(); reset(); }}
             className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/20"
           >Try again</button>
-          <a href="/" className="rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-medium">Go home</a>
+          <a href="/" className="light-surface rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-medium">Go home</a>
         </div>
       </div>
     </div>
@@ -90,7 +93,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <head><HeadContent /></head>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <HeadContent />
+      </head>
       <body>
         {children}
         <Scripts />
@@ -114,8 +120,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster position="top-center" richColors />
+      <ThemeProvider>
+        <Outlet />
+        <ThemedToaster />
+      </ThemeProvider>
     </QueryClientProvider>
   );
+}
+
+function ThemedToaster() {
+  const { resolvedTheme } = useTheme();
+  return <Toaster position="top-center" richColors theme={resolvedTheme} />;
 }

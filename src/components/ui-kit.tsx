@@ -61,7 +61,7 @@ export function Panel({
   ...rest
 }: { className?: string; children: React.ReactNode; as?: any } & Record<string, any>) {
   return (
-    <Comp className={cn("rounded-[2rem] bg-white/95 border border-soft p-6 shadow-soft", className)} {...rest}>
+    <Comp className={cn("light-surface rounded-[2rem] bg-white/95 border border-soft p-6 shadow-soft", className)} {...rest}>
       {children}
     </Comp>
   );
@@ -109,7 +109,7 @@ export const SecondaryButton = React.forwardRef<HTMLButtonElement, React.ButtonH
   ({ className, children, ...props }, ref) => (
     <button
       ref={ref}
-      className={cn(buttonBase, "rounded-2xl border border-brand/10 bg-white px-4 py-3 text-sm text-brand hover:bg-slate-50", className)}
+      className={cn(buttonBase, "light-surface rounded-2xl border border-brand/10 bg-white px-4 py-3 text-sm text-brand hover:bg-slate-50", className)}
       {...props}
     >
       {children}

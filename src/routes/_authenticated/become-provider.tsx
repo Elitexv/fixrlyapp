@@ -242,7 +242,7 @@ function BecomeProviderPage() {
                     type="button"
                     key={c.id}
                     onClick={() => setSelectedCats(on ? selectedCats.filter((x) => x !== c.id) : [...selectedCats, c.id])}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold ${on ? "bg-brand text-white" : "bg-canvas border border-brand/10"}`}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold ${on ? "bg-primary text-primary-foreground" : "bg-canvas border border-brand/10"}`}
                   >
                     {c.icon} {c.name}
                   </button>

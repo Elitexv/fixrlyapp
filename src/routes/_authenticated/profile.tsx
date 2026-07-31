@@ -6,19 +6,41 @@ import { BottomNav } from "@/components/BottomNav";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { LogOut, User, Briefcase, Shield, Home } from "lucide-react";
+import { LogOut, User, Briefcase, Shield, Home, Palette, Sun, Moon, Laptop } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Panel, Eyebrow, FormField, PrimaryButton, PageSpinner } from "@/components/ui-kit";
+import { useTheme, type Theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "My profile — Nearby" }, { name: "robots", content: "noindex" }] }),
   component: ProfilePage,
 });
 
-type Section = "profile" | "provider" | "admin";
+type Section = "profile" | "provider" | "theme" | "admin";
+
+// This page's account sidebar renders as a plain surface instead of the app's
+// dark navy sidebar panel — scoped to <body> (not just this tree) because the
+// Sidebar's mobile drawer is a Radix portal appended outside this component.
+function useNeutralSidebarSurface() {
+  useEffect(() => {
+    const body = document.body;
+    const overrides: [string, string][] = [
+      ["--sidebar", "var(--surface)"],
+      ["--sidebar-foreground", "var(--foreground)"],
+      ["--sidebar-primary", "var(--accent)"],
+      ["--sidebar-primary-foreground", "var(--accent-foreground)"],
+      ["--sidebar-accent", "var(--muted)"],
+      ["--sidebar-accent-foreground", "var(--foreground)"],
+      ["--sidebar-border", "var(--border)"],
+      ["--sidebar-ring", "var(--accent)"],
+    ];
+    overrides.forEach(([k, v]) => body.style.setProperty(k, v));
+    return () => overrides.forEach(([k]) => body.style.removeProperty(k));
+  }, []);
+}
 
 function ProfilePage() {
   const { user, loading: sessionLoading } = useSession();
@@ -28,6 +50,7 @@ function ProfilePage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [section, setSection] = useState<Section>("profile");
+  useNeutralSidebarSurface();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -74,6 +97,7 @@ function ProfilePage() {
   const sections = [
     { id: "profile" as const, label: "Profile", icon: User },
     { id: "provider" as const, label: "Provider", icon: Briefcase },
+    { id: "theme" as const, label: "Theme", icon: Palette },
     ...(isAdmin ? [{ id: "admin" as const, label: "Admin", icon: Shield }] : []),
   ];
 
@@ -127,7 +151,7 @@ function ProfilePage() {
         </Sidebar>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 flex items-center gap-3 border-b border-soft bg-white/90 backdrop-blur sticky top-0 z-20 px-4">
+          <header className="h-16 flex items-center gap-3 border-b border-soft bg-surface/90 backdrop-blur sticky top-0 z-20 px-4">
             <SidebarTrigger />
             <div className="flex-1 min-w-0">
               <Eyebrow>Account</Eyebrow>
@@ -186,13 +210,15 @@ function ProfilePage() {
                   <>
                     <h2 className="mt-2 text-lg font-semibold">Provider mode active</h2>
                     <p className="mt-2 text-sm text-brand/60">You can edit your listing details from the dashboard and accept bookings instantly.</p>
-                    <Link to="/dashboard" className="mt-4 inline-flex rounded-2xl bg-brand px-5 py-3 text-sm font-bold text-white shadow-lg shadow-brand/20 transition hover:bg-brand/90">
+                    <Link to="/dashboard" className="mt-4 inline-flex rounded-2xl bg-accent px-5 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500">
                       Open dashboard
                     </Link>
                   </>
                 )}
               </Panel>
             )}
+
+            {section === "theme" && <ThemeSection />}
 
             {section === "admin" && isAdmin && (
               <Panel>
@@ -201,7 +227,7 @@ function ProfilePage() {
                 <p className="mt-2 text-sm text-brand/60">Requests, users, payments, and platform settings.</p>
                 <Link
                   to="/admin"
-                  className="mt-4 inline-flex items-center gap-3 rounded-2xl bg-brand px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand/20 transition hover:bg-brand/90"
+                  className="mt-4 inline-flex items-center gap-3 rounded-2xl bg-accent px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500"
                 >
                   <Shield className="size-4" /> Open admin console
                 </Link>
@@ -212,5 +238,42 @@ function ProfilePage() {
       </div>
       <BottomNav />
     </SidebarProvider>
+  );
+}
+
+const THEME_OPTIONS: { id: Theme; label: string; icon: typeof Sun }[] = [
+  { id: "light", label: "Light", icon: Sun },
+  { id: "dark", label: "Dark", icon: Moon },
+  { id: "system", label: "System", icon: Laptop },
+];
+
+function ThemeSection() {
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <Panel>
+      <Eyebrow>Appearance</Eyebrow>
+      <h2 className="mt-2 text-lg font-black tracking-tight">Theme</h2>
+      <p className="mt-2 text-sm text-brand/60">Choose how Nearby looks on this device. Applies everywhere, instantly.</p>
+
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        {THEME_OPTIONS.map(({ id, label, icon: Icon }) => {
+          const active = theme === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTheme(id)}
+              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-sm font-bold transition ${
+                active ? "border-accent bg-accent/5 text-accent" : "border-brand/10 text-brand/60 hover:border-brand/20"
+              }`}
+            >
+              <Icon className="size-5" />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </Panel>
   );
 }

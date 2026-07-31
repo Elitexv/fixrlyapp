@@ -186,7 +186,7 @@ function ProviderPage() {
         )}
         <button
           onClick={() => navigate({ to: "/" })}
-          className="absolute top-4 left-4 size-10 rounded-full bg-white/90 backdrop-blur grid place-items-center shadow-lg"
+          className="light-surface absolute top-4 left-4 size-10 rounded-full bg-white/90 backdrop-blur grid place-items-center shadow-lg"
         >
           <ArrowLeft className="size-4" />
         </button>
@@ -271,7 +271,7 @@ function ProviderPage() {
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition ${
                 reactions?.mine === "like"
                   ? "bg-green-600 text-white border-green-600"
-                  : "bg-white border-brand/10 text-brand hover:border-green-500"
+                  : "light-surface bg-white border-brand/10 text-brand hover:border-green-500"
               }`}
             >
               <ThumbsUp className={`size-4 ${reactions?.mine === "like" ? "fill-white" : ""}`} />
@@ -282,7 +282,7 @@ function ProviderPage() {
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition ${
                 reactions?.mine === "dislike"
                   ? "bg-red-600 text-white border-red-600"
-                  : "bg-white border-brand/10 text-brand hover:border-red-500"
+                  : "light-surface bg-white border-brand/10 text-brand hover:border-red-500"
               }`}
             >
               <ThumbsDown className={`size-4 ${reactions?.mine === "dislike" ? "fill-white" : ""}`} />
@@ -315,11 +315,11 @@ function ProviderPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-border p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+      <div className="light-surface fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-border p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
         <div className="max-w-lg mx-auto flex gap-2 items-center">
           <SecondaryButton
             onClick={toggleFollow}
-            className={`h-12 px-4 py-0 text-xs gap-1.5 ${followData?.following ? "bg-brand text-white border-brand hover:bg-brand/90" : ""}`}
+            className={`h-12 px-4 py-0 text-xs gap-1.5 ${followData?.following ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" : ""}`}
           >
             <Heart className={`size-4 ${followData?.following ? "fill-white" : ""}`} />
             {followData?.following ? "Following" : "Follow"}

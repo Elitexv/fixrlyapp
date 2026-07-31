@@ -78,7 +78,7 @@ function ResetPasswordPage() {
           <p className="text-sm text-brand/60 mt-1">Choose a new password for your account.</p>
         </div>
 
-        <div className="bg-white/95 p-6 rounded-[2rem] border border-soft shadow-soft">
+        <div className="light-surface bg-white/95 p-6 rounded-[2rem] border border-soft shadow-soft">
           <form onSubmit={submit} className="space-y-3">
             <TextField
               type="password"

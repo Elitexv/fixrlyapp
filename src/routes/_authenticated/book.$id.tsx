@@ -125,7 +125,7 @@ function BookPage() {
       </header>
 
       <form onSubmit={submit} className="px-4 py-4 space-y-4 max-w-lg mx-auto">
-        <div className="bg-white/95 p-4 rounded-3xl border border-soft shadow-soft flex gap-3 items-center">
+        <div className="light-surface bg-white/95 p-4 rounded-3xl border border-soft shadow-soft flex gap-3 items-center">
           <div className="size-14 rounded-2xl bg-canvas overflow-hidden grid place-items-center text-brand/40 font-bold">
             {provider.photo_urls?.[0] ? (
               <img src={provider.photo_urls[0]} alt={provider.business_name} className="w-full h-full object-cover" />
@@ -207,7 +207,7 @@ function BookPage() {
         </div>
 
         {total != null && (
-          <div className="bg-white/95 p-4 rounded-3xl border border-soft shadow-soft space-y-2">
+          <div className="light-surface bg-white/95 p-4 rounded-3xl border border-soft shadow-soft space-y-2">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-[10px] font-bold uppercase text-brand/40">Estimated total</div>
@@ -222,7 +222,7 @@ function BookPage() {
         )}
       </form>
 
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-border p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+      <div className="light-surface fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-border p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
         <div className="max-w-lg mx-auto flex gap-2">
           <SecondaryButton type="button" onClick={() => navigate({ to: "/provider/$id", params: { id } })} className="px-5 h-12 rounded-xl">
             Back

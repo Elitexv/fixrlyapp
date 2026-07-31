@@ -55,13 +55,13 @@ function BookingsPage() {
           <div className="mt-3 flex gap-2 bg-canvas rounded-xl p-1">
             <button
               onClick={() => setTab("customer")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${tab === "customer" ? "bg-white shadow-sm text-brand" : "text-brand/50 hover:text-brand/70"}`}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${tab === "customer" ? "light-surface bg-white shadow-sm text-brand" : "text-brand/50 hover:text-brand/70"}`}
             >
               As customer
             </button>
             <button
               onClick={() => setTab("provider")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${tab === "provider" ? "bg-white shadow-sm text-brand" : "text-brand/50 hover:text-brand/70"}`}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${tab === "provider" ? "light-surface bg-white shadow-sm text-brand" : "text-brand/50 hover:text-brand/70"}`}
             >
               As provider
             </button>
@@ -128,7 +128,7 @@ function BookingsPage() {
                   </>
                 )}
                 {tab === "provider" && b.status === "accepted" && (
-                  <button onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 bg-brand text-white rounded-lg text-xs font-bold transition hover:bg-brand/90">Mark completed</button>
+                  <button onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold transition hover:bg-primary/90">Mark completed</button>
                 )}
                 {tab === "customer" && ["pending", "accepted"].includes(b.status) && (
                   <SecondaryButton onClick={() => updateStatus(b.id, "cancelled")} className="flex-1 py-2 rounded-lg text-xs">Cancel</SecondaryButton>
@@ -195,7 +195,7 @@ function LeaveReviewButton({ booking }: { booking: any }) {
       <PrimaryButton onClick={() => setOpen(true)} className="flex-1 py-2 rounded-lg text-xs">Leave review</PrimaryButton>
       {open && (
         <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center px-4" onClick={() => setOpen(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm bg-white rounded-[2rem] p-6 shadow-soft">
+          <div onClick={(e) => e.stopPropagation()} className="light-surface w-full max-w-sm bg-white rounded-[2rem] p-6 shadow-soft">
             <h3 className="font-black text-lg">Rate this provider</h3>
             <div className="flex justify-center gap-1 my-4">
               {[1, 2, 3, 4, 5].map((n) => (

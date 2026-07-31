@@ -20,7 +20,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   const variants = {
     default: "bg-gradient-to-br from-accent/15 via-brand/8 to-surface text-brand",
-    brand: "bg-brand text-white",
+    brand: "bg-primary text-primary-foreground",
     accent: "bg-gradient-to-br from-accent/25 via-brand/10 to-surface text-brand",
   };
 
@@ -34,7 +34,7 @@ export function PageHeader({
             <p
               className={cn(
                 "text-xs font-bold uppercase tracking-[0.28em]",
-                variant === "brand" ? "text-white/60" : "text-accent/80",
+                variant === "brand" ? "text-primary-foreground/60" : "text-accent/80",
               )}
             >
               {eyebrow}
@@ -45,7 +45,7 @@ export function PageHeader({
             <p
               className={cn(
                 "mt-2 max-w-2xl text-sm",
-                variant === "brand" ? "text-white/70" : "text-brand/60",
+                variant === "brand" ? "text-primary-foreground/70" : "text-brand/60",
               )}
             >
               {description}

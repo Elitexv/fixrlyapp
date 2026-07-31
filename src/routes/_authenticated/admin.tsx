@@ -68,7 +68,7 @@ function AdminPage() {
         <Sidebar collapsible="icon">
           <SidebarContent>
             <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
-              <div className="size-9 rounded-xl bg-brand grid place-items-center text-white shadow-lg shadow-brand/20"><Shield className="size-4" /></div>
+              <div className="size-9 rounded-xl bg-primary grid place-items-center text-primary-foreground shadow-lg shadow-primary/20"><Shield className="size-4" /></div>
               <div className="group-data-[collapsible=icon]:hidden">
                 <Eyebrow>Nearby</Eyebrow>
                 <div className="text-sm font-black tracking-tight">Admin Console</div>
@@ -112,7 +112,7 @@ function AdminPage() {
         </Sidebar>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 flex items-center gap-3 border-b border-soft bg-white/90 backdrop-blur sticky top-0 z-20 px-4">
+          <header className="h-16 flex items-center gap-3 border-b border-soft bg-surface/90 backdrop-blur sticky top-0 z-20 px-4">
             <SidebarTrigger />
             <div className="flex-1 min-w-0">
               <Eyebrow>Admin</Eyebrow>
@@ -501,7 +501,7 @@ function UsersTab() {
                   key={r}
                   onClick={() => setRole(u.id, r, !has(r))}
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${
-                    has(r) ? "bg-brand text-white" : "bg-canvas border border-brand/10 text-brand/60 hover:border-brand/20"
+                    has(r) ? "bg-primary text-primary-foreground" : "bg-canvas border border-brand/10 text-brand/60 hover:border-brand/20"
                   }`}
                 >
                   {has(r) ? <ShieldOff className="size-3" /> : <Shield className="size-3" />}
@@ -689,7 +689,7 @@ function BookingsTab() {
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase ${filter === s ? "bg-brand text-white" : "bg-surface border border-brand/10 text-brand/60"}`}
+            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase ${filter === s ? "bg-primary text-primary-foreground" : "bg-surface border border-brand/10 text-brand/60"}`}
           >
             {s}
           </button>

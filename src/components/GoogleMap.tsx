@@ -23,14 +23,14 @@ async function resolveMapKey(): Promise<string | undefined> {
   } catch {
     /* fall through to env */
   }
-  return import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
+  return import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
 }
 
 function loadMaps() {
   if (typeof window === "undefined") return Promise.reject(new Error("no window"));
   if (window.google?.maps) return Promise.resolve();
   if (window.__gmapLoading) return window.__gmapLoading;
-  const channel = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
+  const channel = import.meta.env.VITE_GOOGLE_MAPS_TRACKING_ID as string | undefined;
   window.__gmapLoading = (async () => {
     const key = await resolveMapKey();
     if (!key) throw new Error("Missing Google Maps browser key");
