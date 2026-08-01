@@ -93,7 +93,7 @@ export const verifyPaystackPayment = createServerFn({ method: "POST" })
     if (error || !booking) throw new Error("Payment record not found");
     if (booking.customer_id !== context.userId) throw new Error("Forbidden");
 
-    if (booking.payment_status === "paid") return { status: "paid" as const };
+    if (booking.payment_status === "paid") return { status: "paid" as const, bookingId: booking.id };
 
     const res = await fetch(`${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(data.reference)}`, {
       headers: { Authorization: `Bearer ${secretKey}` },
@@ -106,14 +106,17 @@ export const verifyPaystackPayment = createServerFn({ method: "POST" })
     const verified =
       tx.status === "success" && tx.amount === expectedKobo && tx.currency === booking.payment_currency;
 
-    const { error: updateError } = await supabaseAdmin
-      .from("bookings")
-      .update({
-        payment_status: verified ? "paid" : "failed",
-        paid_at: verified ? new Date().toISOString() : null,
-      })
-      .eq("id", booking.id);
-    if (updateError) throw new Error(updateError.message);
+    // Anything short of a confirmed success (declined, abandoned, still
+    // processing) leaves the booking as "pending" rather than "failed" —
+    // the customer can just retry checkout from the bookings list instead
+    // of hitting a dead-end status.
+    if (verified) {
+      const { error: updateError } = await supabaseAdmin
+        .from("bookings")
+        .update({ payment_status: "paid", paid_at: new Date().toISOString() })
+        .eq("id", booking.id);
+      if (updateError) throw new Error(updateError.message);
+    }
 
-    return { status: (verified ? "paid" : "failed") as "paid" | "failed" };
+    return { status: (verified ? "paid" : "pending") as "paid" | "pending", bookingId: booking.id };
   });

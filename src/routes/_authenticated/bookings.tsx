@@ -58,8 +58,13 @@ function BookingsPage() {
     (async () => {
       try {
         const result = await verifyPayment({ data: { reference } });
-        if (result.status === "paid") toast.success("Payment confirmed!");
-        else toast.error("Payment could not be confirmed. Contact support if you were charged.");
+        if (result.status === "paid") {
+          toast.success("Payment confirmed!");
+          // Hand back the full payment + booking details rather than just a toast.
+          navigate({ to: "/bookings/$id/receipt", params: { id: result.bookingId } });
+          return;
+        }
+        toast.error("Payment not completed — booking is still pending. Tap \"Pay now\" to try again.");
       } catch (err: any) {
         toast.error(err.message ?? "Could not verify payment");
       } finally {
@@ -69,7 +74,7 @@ function BookingsPage() {
         qc.invalidateQueries({ queryKey: ["bookings", user.id, "customer"] });
       }
     })();
-  }, [user, verifyPayment, qc]);
+  }, [user, verifyPayment, qc, navigate]);
 
   const updateStatus = async (id: string, status: "pending" | "accepted" | "rejected" | "completed" | "cancelled") => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
