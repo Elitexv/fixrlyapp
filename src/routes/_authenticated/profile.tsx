@@ -15,7 +15,7 @@ import { Panel, Eyebrow, FormField, PrimaryButton, PageSpinner } from "@/compone
 import { useTheme, type Theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "My profile — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "My profile — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: ProfilePage,
 });
 
@@ -111,7 +111,7 @@ function ProfilePage() {
                 <User className="size-4" />
               </div>
               <div>
-                <Eyebrow>Nearby</Eyebrow>
+                <Eyebrow>Fixrly</Eyebrow>
                 <div className="text-sm font-black tracking-tight">Account</div>
               </div>
             </div>
@@ -254,7 +254,7 @@ function ThemeSection() {
     <Panel>
       <Eyebrow>Appearance</Eyebrow>
       <h2 className="mt-2 text-lg font-black tracking-tight">Theme</h2>
-      <p className="mt-2 text-sm text-brand/60">Choose how Nearby looks on this device. Applies everywhere, instantly.</p>
+      <p className="mt-2 text-sm text-brand/60">Choose how Fixrly looks on this device. Applies everywhere, instantly.</p>
 
       <div className="mt-5 grid grid-cols-3 gap-3">
         {THEME_OPTIONS.map(({ id, label, icon: Icon }) => {

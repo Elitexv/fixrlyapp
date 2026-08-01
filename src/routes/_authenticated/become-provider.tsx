@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Loader2, MapPin, ArrowRight, CheckCircle2, Upload, FileCheck2, Clock, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/become-provider")({
-  head: () => ({ meta: [{ title: "Become a provider — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Become a provider — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: BecomeProviderPage,
 });
 

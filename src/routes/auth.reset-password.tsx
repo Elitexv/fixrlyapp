@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { PageSpinner, PrimaryButton, TextField } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/auth/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Reset password — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: ResetPasswordPage,
 });
 
@@ -73,7 +73,7 @@ function ResetPasswordPage() {
     <div className="min-h-screen bg-canvas grid place-items-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="inline-flex size-12 rounded-2xl bg-accent grid place-items-center text-white font-black text-xl shadow-lg shadow-accent/30">N</div>
+          <img src="/icon.png" alt="Fixrly" className="inline-block size-12" />
           <h1 className="mt-3 text-2xl font-black tracking-tight">Set a new password</h1>
           <p className="text-sm text-brand/60 mt-1">Choose a new password for your account.</p>
         </div>

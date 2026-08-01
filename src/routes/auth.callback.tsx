@@ -9,7 +9,7 @@ export const Route = createFileRoute("/auth/callback")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     redirect: typeof s.redirect === "string" ? s.redirect : undefined,
   }),
-  head: () => ({ meta: [{ title: "Signing in — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Signing in — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: AuthCallbackPage,
 });
 

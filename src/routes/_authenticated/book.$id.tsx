@@ -13,7 +13,7 @@ import { formatMoney, useCurrency } from "@/lib/currency";
 import { PageSpinner, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/book/$id")({
-  head: () => ({ meta: [{ title: "Book service — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Book service — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: BookPage,
 });
 

@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 
-const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("nearby-theme");var d=s==="dark"||((!s||s==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("fixrly-theme");var d=s==="dark"||((!s||s==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");}catch(e){}})();`;
 
 function NotFoundComponent() {
   return (
@@ -65,20 +65,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Find local service pros near you — Nearby" },
-      { name: "description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city." },
-      { property: "og:title", content: "Find local service pros near you — Nearby" },
-      { property: "og:description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city." },
+      { title: "Find local service pros near you — Fixrly" },
+      { name: "description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly." },
+      { name: "theme-color", content: "#ff5a1f" },
+      { property: "og:site_name", content: "Fixrly" },
+      { property: "og:title", content: "Find local service pros near you — Fixrly" },
+      { property: "og:description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Find local service pros near you — Nearby" },
-      { name: "twitter:description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/06219f77-69bc-4c3f-8383-750ac4e02775/id-preview-14400a29--34f123c3-8ba5-4f26-be8a-de6872e35411.lovable.app-1783788142362.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/06219f77-69bc-4c3f-8383-750ac4e02775/id-preview-14400a29--34f123c3-8ba5-4f26-be8a-de6872e35411.lovable.app-1783788142362.png" },
+      { name: "twitter:title", content: "Find local service pros near you — Fixrly" },
+      { name: "twitter:description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly." },
+      { property: "og:image", content: "https://fixrly.app/og-image.png" },
+      { name: "twitter:image", content: "https://fixrly.app/og-image.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/icon.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/manifest.json" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@500;700&display=swap" },

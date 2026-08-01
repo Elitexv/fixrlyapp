@@ -18,7 +18,7 @@ import {
 import { Panel, Tile, StatCard, StatusBadge, Eyebrow, PrimaryButton, FormField, EmptyState, PageSpinner, InlineSpinner } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: AdminPage,
 });
 
@@ -71,7 +71,7 @@ function AdminPage() {
             <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
               <div className="size-9 rounded-xl bg-primary grid place-items-center text-primary-foreground shadow-lg shadow-primary/20"><Shield className="size-4" /></div>
               <div className="group-data-[collapsible=icon]:hidden">
-                <Eyebrow>Nearby</Eyebrow>
+                <Eyebrow>Fixrly</Eyebrow>
                 <div className="text-sm font-black tracking-tight">Admin Console</div>
               </div>
             </div>

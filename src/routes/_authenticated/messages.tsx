@@ -9,7 +9,7 @@ import { ArrowLeft, Loader2, Send, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/messages")({
-  head: () => ({ meta: [{ title: "Messages — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Messages — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: MessagesPage,
 });
 

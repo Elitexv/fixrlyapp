@@ -12,12 +12,33 @@ import { formatMoney, useCurrency } from "@/lib/currency";
 import { Panel, Tile, Eyebrow, PrimaryButton, SecondaryButton, PageSpinner } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/provider/$id")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `Provider profile — Nearby` },
-      { name: "description", content: `Book this service provider on Nearby.` },
-    ],
-  }),
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from("provider_profiles")
+      .select("business_name,city")
+      .eq("id", params.id)
+      .maybeSingle();
+    return { businessName: data?.business_name ?? null, city: data?.city ?? null };
+  },
+  head: ({ params, loaderData }) => {
+    const name = loaderData?.businessName;
+    const city = loaderData?.city;
+    const title = name ? `${name}${city ? ` in ${city}` : ""} — Fixrly` : "Provider profile — Fixrly";
+    const description = name
+      ? `Book ${name}${city ? ` in ${city}` : ""} on Fixrly. See services, pricing, and reviews.`
+      : "Book this service provider on Fixrly.";
+    const url = `https://fixrly.app/provider/${params.id}`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: ProviderPage,
 });
 

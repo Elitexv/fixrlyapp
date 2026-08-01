@@ -16,9 +16,11 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Find local service pros near you — Nearby" },
-      { name: "description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city." },
+      { title: "Find local service pros near you — Fixrly" },
+      { name: "description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly." },
+      { property: "og:url", content: "https://fixrly.app/" },
     ],
+    links: [{ rel: "canonical", href: "https://fixrly.app/" }],
   }),
   component: Home,
 });

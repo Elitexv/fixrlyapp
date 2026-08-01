@@ -64,7 +64,7 @@ export const notifyProviderOfBooking = createServerFn({ method: "POST" })
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#ffffff;color:#111">
         <h2 style="margin:0 0 8px">New booking request</h2>
-        <p style="color:#555;margin:0 0 16px">${customerName} just booked you on Nearby.</p>
+        <p style="color:#555;margin:0 0 16px">${customerName} just booked you on Fixrly.</p>
         <table style="width:100%;border-collapse:collapse;font-size:14px">
           <tr><td style="padding:6px 0;color:#666">Service</td><td style="padding:6px 0"><b>${category}</b></td></tr>
           <tr><td style="padding:6px 0;color:#666">When</td><td style="padding:6px 0"><b>${when}</b></td></tr>

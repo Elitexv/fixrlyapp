@@ -12,7 +12,7 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     redirect: typeof s.redirect === "string" ? s.redirect : undefined,
   }),
-  head: () => ({ meta: [{ title: "Sign in — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: AuthPage,
 });
 
@@ -121,7 +121,7 @@ function AuthPage() {
     <div className="min-h-screen bg-canvas grid place-items-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="inline-flex size-12 rounded-2xl bg-accent grid place-items-center text-white font-black text-xl shadow-lg shadow-accent/30">N</div>
+          <img src="/icon.png" alt="Fixrly" className="inline-block size-12" />
           <h1 className="mt-3 text-2xl font-black tracking-tight">
             {mode === "signin" ? "Welcome back" : mode === "signup" ? "Create your account" : "Reset your password"}
           </h1>
@@ -240,7 +240,7 @@ function AuthPage() {
           </form>
 
           <div className="text-center text-xs text-brand/60">
-            {mode === "signin" ? "New to Nearby?" : "Already have an account?"}{" "}
+            {mode === "signin" ? "New to Fixrly?" : "Already have an account?"}{" "}
             <button
               onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
               className="text-accent font-bold"

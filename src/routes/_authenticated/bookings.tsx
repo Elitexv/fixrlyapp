@@ -13,7 +13,7 @@ import { initializePaystackPayment, verifyPaystackPayment } from "@/lib/payments
 import { StickyHeader, Tile, StatusBadge, InlineSpinner, EmptyState, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
-  head: () => ({ meta: [{ title: "My bookings — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "My bookings — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: BookingsPage,
 });
 

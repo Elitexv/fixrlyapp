@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /auth/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /bookings
+Disallow: /book/
+Disallow: /messages
+Disallow: /become-provider
+
+Sitemap: https://fixrly.app/sitemap.xml

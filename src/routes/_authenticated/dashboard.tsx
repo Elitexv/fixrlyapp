@@ -24,7 +24,7 @@ import {
 } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Provider dashboard — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Provider dashboard — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: DashboardPage,
 });
 

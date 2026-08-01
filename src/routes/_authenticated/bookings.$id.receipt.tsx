@@ -8,7 +8,7 @@ import { ArrowLeft, Printer } from "lucide-react";
 import { PageSpinner, EmptyState, PrimaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/bookings/$id/receipt")({
-  head: () => ({ meta: [{ title: "Receipt — Nearby" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Receipt — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: ReceiptPage,
 });
 
