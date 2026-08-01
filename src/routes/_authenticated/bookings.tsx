@@ -143,8 +143,9 @@ function BookingsPage() {
             <Tile key={b.id}>
               <div className="flex justify-between items-start gap-2">
                 <div className="min-w-0">
-                  <div className="text-[10px] font-bold uppercase text-brand/40">
-                    {b.category?.icon} {b.category?.name}
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-brand/40">
+                    <span>{b.category?.icon} {b.category?.name}</span>
+                    {b.booking_number && <span className="font-mono normal-case text-brand/30">· {b.booking_number}</span>}
                   </div>
                   <div className="font-bold truncate">
                     {tab === "customer" ? b.provider?.business_name : (b.customer?.full_name ?? "Customer")}
@@ -188,6 +189,11 @@ function BookingsPage() {
                 {b.provider?.id && (
                   <SecondaryButton onClick={() => navigate({ to: "/provider/$id", params: { id: b.provider.id } })} className="py-2 px-3 rounded-xl text-xs">
                     View provider profile
+                  </SecondaryButton>
+                )}
+                {["pending", "completed"].includes(b.status) && (
+                  <SecondaryButton onClick={() => navigate({ to: "/bookings/$id/receipt", params: { id: b.id } })} className="py-2 px-3 rounded-xl text-xs">
+                    Receipt
                   </SecondaryButton>
                 )}
                 {tab === "customer" && b.status === "completed" && (

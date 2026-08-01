@@ -95,6 +95,7 @@ export type Database = {
       bookings: {
         Row: {
           address: string
+          booking_number: string
           category_id: string | null
           created_at: string
           customer_id: string
@@ -115,6 +116,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          booking_number?: string
           category_id?: string | null
           created_at?: string
           customer_id: string
@@ -135,6 +137,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          booking_number?: string
           category_id?: string | null
           created_at?: string
           customer_id?: string

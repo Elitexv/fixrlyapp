@@ -22,6 +22,7 @@ import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedBecomeProviderRouteImport } from './routes/_authenticated/become-provider'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBookIdRouteImport } from './routes/_authenticated/book.$id'
+import { Route as AuthenticatedBookingsIdReceiptRouteImport } from './routes/_authenticated/bookings.$id.receipt'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -88,13 +89,19 @@ const AuthenticatedBookIdRoute = AuthenticatedBookIdRouteImport.update({
   path: '/book/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBookingsIdReceiptRoute =
+  AuthenticatedBookingsIdReceiptRouteImport.update({
+    id: '/$id/receipt',
+    path: '/$id/receipt',
+    getParentRoute: () => AuthenticatedBookingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/become-provider': typeof AuthenticatedBecomeProviderRoute
-  '/bookings': typeof AuthenticatedBookingsRoute
+  '/bookings': typeof AuthenticatedBookingsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -102,13 +109,14 @@ export interface FileRoutesByFullPath {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/provider/$id': typeof ProviderIdRoute
   '/book/$id': typeof AuthenticatedBookIdRoute
+  '/bookings/$id/receipt': typeof AuthenticatedBookingsIdReceiptRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/become-provider': typeof AuthenticatedBecomeProviderRoute
-  '/bookings': typeof AuthenticatedBookingsRoute
+  '/bookings': typeof AuthenticatedBookingsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -116,6 +124,7 @@ export interface FileRoutesByTo {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/provider/$id': typeof ProviderIdRoute
   '/book/$id': typeof AuthenticatedBookIdRoute
+  '/bookings/$id/receipt': typeof AuthenticatedBookingsIdReceiptRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -124,7 +133,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/become-provider': typeof AuthenticatedBecomeProviderRoute
-  '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
+  '/_authenticated/bookings': typeof AuthenticatedBookingsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -132,6 +141,7 @@ export interface FileRoutesById {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/provider/$id': typeof ProviderIdRoute
   '/_authenticated/book/$id': typeof AuthenticatedBookIdRoute
+  '/_authenticated/bookings/$id/receipt': typeof AuthenticatedBookingsIdReceiptRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/provider/$id'
     | '/book/$id'
+    | '/bookings/$id/receipt'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/provider/$id'
     | '/book/$id'
+    | '/bookings/$id/receipt'
   id:
     | '__root__'
     | '/'
@@ -177,6 +189,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/provider/$id'
     | '/_authenticated/book/$id'
+    | '/_authenticated/bookings/$id/receipt'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -279,13 +292,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBookIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/bookings/$id/receipt': {
+      id: '/_authenticated/bookings/$id/receipt'
+      path: '/$id/receipt'
+      fullPath: '/bookings/$id/receipt'
+      preLoaderRoute: typeof AuthenticatedBookingsIdReceiptRouteImport
+      parentRoute: typeof AuthenticatedBookingsRoute
+    }
   }
 }
+
+interface AuthenticatedBookingsRouteChildren {
+  AuthenticatedBookingsIdReceiptRoute: typeof AuthenticatedBookingsIdReceiptRoute
+}
+
+const AuthenticatedBookingsRouteChildren: AuthenticatedBookingsRouteChildren = {
+  AuthenticatedBookingsIdReceiptRoute: AuthenticatedBookingsIdReceiptRoute,
+}
+
+const AuthenticatedBookingsRouteWithChildren =
+  AuthenticatedBookingsRoute._addFileChildren(
+    AuthenticatedBookingsRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBecomeProviderRoute: typeof AuthenticatedBecomeProviderRoute
-  AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
+  AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -295,7 +328,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBecomeProviderRoute: AuthenticatedBecomeProviderRoute,
-  AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
+  AuthenticatedBookingsRoute: AuthenticatedBookingsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,

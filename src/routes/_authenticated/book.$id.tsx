@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { notifyProviderOfBooking } from "@/lib/booking-notifications.functions";
+import { initializePaystackPayment } from "@/lib/payments.functions";
 import { ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { buildBookingPaymentData, getBookingPaymentSettings } from "@/lib/booking-payment";
@@ -24,6 +25,7 @@ function BookPage() {
   const navigate = useNavigate();
   const { user } = useSession();
   const notify = useServerFn(notifyProviderOfBooking);
+  const initializePayment = useServerFn(initializePaystackPayment);
   const currency = useCurrency();
 
   const { data: provider, isLoading } = useQuery({
@@ -90,10 +92,24 @@ function BookPage() {
         .select("id")
         .single();
       if (error) throw error;
-      toast.success(settings.payment_enabled ? "Booking requested and payment is pending" : "Booking requested!");
       notify({ data: { bookingId: inserted.id } }).catch((err) =>
         console.warn("[booking] notify failed", err),
       );
+
+      if (settings.payment_enabled && settings.provider === "paystack") {
+        try {
+          const { authorizationUrl } = await initializePayment({ data: { bookingId: inserted.id } });
+          toast.success("Booking requested — redirecting to checkout…");
+          window.location.href = authorizationUrl;
+          return;
+        } catch (payErr: any) {
+          toast.error(payErr.message ?? "Couldn't start checkout — you can pay from My Bookings");
+          navigate({ to: "/bookings" });
+          return;
+        }
+      }
+
+      toast.success("Booking requested!");
       navigate({ to: "/bookings" });
     } catch (err: any) {
       toast.error(err.message ?? "Booking failed");
