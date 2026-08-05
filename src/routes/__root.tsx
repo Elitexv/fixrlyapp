@@ -12,8 +12,9 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { ThemeProvider, useTheme } from "@/lib/theme";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("fixrly-theme");var d=s==="dark"||((!s||s==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");}catch(e){}})();`;
 
@@ -27,7 +28,10 @@ function NotFoundComponent() {
           The page you're looking for doesn't exist.
         </p>
         <div className="mt-6">
-          <Link to="/" className="inline-flex items-center rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/20 hover:opacity-90">
+          <Link
+            to="/"
+            className="inline-flex items-center rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/20 hover:opacity-90"
+          >
             Go home
           </Link>
         </div>
@@ -50,10 +54,20 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">Something went wrong.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/20"
-          >Try again</button>
-          <a href="/" className="light-surface rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-medium">Go home</a>
+          >
+            Try again
+          </button>
+          <a
+            href="/"
+            className="light-surface rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-medium"
+          >
+            Go home
+          </a>
         </div>
       </div>
     </div>
@@ -66,15 +80,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Find local service pros near you — Fixrly" },
-      { name: "description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly." },
+      {
+        name: "description",
+        content:
+          "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly.",
+      },
       { name: "theme-color", content: "#ff5a1f" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Fixrly" },
       { property: "og:site_name", content: "Fixrly" },
       { property: "og:title", content: "Find local service pros near you — Fixrly" },
-      { property: "og:description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly." },
+      {
+        property: "og:description",
+        content:
+          "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Find local service pros near you — Fixrly" },
-      { name: "twitter:description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly." },
+      {
+        name: "twitter:description",
+        content:
+          "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly.",
+      },
       { property: "og:image", content: "https://fixrly.app/og-image.png" },
       { name: "twitter:image", content: "https://fixrly.app/og-image.png" },
     ],
@@ -83,10 +113,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "icon", href: "/icon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-      { rel: "manifest", href: "/manifest.json" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@500;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@500;700&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -123,11 +156,27 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [queryClient, router]);
 
+  // Registration is prod-only: devOptions is off, so no sw.js exists in dev.
+  useEffect(() => {
+    if (!import.meta.env.PROD) return;
+    import("virtual:pwa-register").then(({ registerSW }) => {
+      const updateSW = registerSW({
+        onNeedRefresh() {
+          toast("A new version of Fixrly is available", {
+            action: { label: "Reload", onClick: () => updateSW(true) },
+            duration: Infinity,
+          });
+        },
+      });
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Outlet />
         <ThemedToaster />
+        <InstallPrompt />
       </ThemeProvider>
     </QueryClientProvider>
   );
