@@ -10,6 +10,7 @@ export type ProviderCardData = {
   hourly_rate: number | null;
   city: string | null;
   photo_urls: string[];
+  avatar_url?: string | null;
   availability_note: string | null;
   category_names: string[];
   rating: number | null;
@@ -20,12 +21,13 @@ export type ProviderCardData = {
 export function ProviderCard({ p }: { p: ProviderCardData }) {
   const initial = p.business_name?.[0]?.toUpperCase() ?? "?";
   const currency = useCurrency();
+  const image = p.avatar_url || p.photo_urls[0];
   return (
     <Tile as={Link} to="/provider/$id" params={{ id: p.id }} className="block hover:border-accent/20">
       <div className="flex gap-4">
         <div className="size-20 rounded-2xl bg-canvas flex-none overflow-hidden grid place-items-center text-brand/40 text-2xl font-bold">
-          {p.photo_urls[0] ? (
-            <img src={p.photo_urls[0]} alt={p.business_name} className="h-full w-full object-cover" />
+          {image ? (
+            <img src={image} alt={p.business_name} className="h-full w-full object-cover" />
           ) : (
             initial
           )}

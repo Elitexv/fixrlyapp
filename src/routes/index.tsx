@@ -67,6 +67,12 @@ function Home() {
         .eq("is_active", true);
       const { data, error } = await q;
       if (error) throw error;
+      const ids = (data ?? []).map((row: any) => row.id);
+      let avatarMap = new Map<string, string | null>();
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id,avatar_url").in("id", ids);
+        avatarMap = new Map((profs ?? []).map((p: any) => [p.id, p.avatar_url]));
+      }
       let rows = (data ?? []).map((row: any) => {
         const ratings: number[] = (row.reviews ?? []).map((r: any) => r.rating);
         const rating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
@@ -80,6 +86,7 @@ function Home() {
           hourly_rate: row.hourly_rate,
           city: row.city,
           photo_urls: row.photo_urls ?? [],
+          avatar_url: avatarMap.get(row.id) ?? null,
           availability_note: row.availability_note,
           category_names,
           rating,
@@ -227,63 +234,65 @@ function Home() {
         </div>
       </StickyHeader>
 
-      <div className="flex gap-2.5 overflow-x-auto px-4 py-4 no-scrollbar">
-        <button
-          onClick={() => setSelectedCat(null)}
-          className={`flex-none px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-colors ${!selectedCat ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-surface border border-brand/5 shadow-sm text-brand/70 hover:border-accent/20"}`}
-        >
-          All Services
-        </button>
-        {categories.map((c) => (
+      <div className="max-w-lg mx-auto">
+        <div className="flex gap-2.5 overflow-x-auto px-4 py-4 no-scrollbar">
           <button
-            key={c.id}
-            onClick={() => setSelectedCat(c.id === selectedCat ? null : c.id)}
-            className={`flex-none px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-colors ${selectedCat === c.id ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-surface border border-brand/5 shadow-sm text-brand/70 hover:border-accent/20"}`}
+            onClick={() => setSelectedCat(null)}
+            className={`flex-none px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-colors ${!selectedCat ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-surface border border-brand/5 shadow-sm text-brand/70 hover:border-accent/20"}`}
           >
-            <span className="mr-1">{c.icon}</span>
-            {c.name}
+            All Services
           </button>
-        ))}
-      </div>
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCat(c.id === selectedCat ? null : c.id)}
+              className={`flex-none px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-colors ${selectedCat === c.id ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-surface border border-brand/5 shadow-sm text-brand/70 hover:border-accent/20"}`}
+            >
+              <span className="mr-1">{c.icon}</span>
+              {c.name}
+            </button>
+          ))}
+        </div>
 
-      <div className="px-4 mb-6">
-        <div className="relative w-full h-44 rounded-3xl overflow-hidden border border-soft shadow-soft bg-canvas">
-          <GoogleMap center={mapCenter} markers={markers} zoom={coords ? 12 : 10} />
-          <div className="absolute bottom-3 left-3 pointer-events-none">
-            <div className="bg-surface px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-xl flex items-center gap-2">
-              <span className="size-1.5 bg-green-500 rounded-full animate-pulse" />
-              {filtered.length} PROS {coords ? "NEAR YOU" : "AVAILABLE"}
+        <div className="px-4 mb-6">
+          <div className="relative w-full h-44 rounded-3xl overflow-hidden border border-soft shadow-soft bg-canvas">
+            <GoogleMap center={mapCenter} markers={markers} zoom={coords ? 12 : 10} />
+            <div className="absolute bottom-3 left-3 pointer-events-none">
+              <div className="bg-surface px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-xl flex items-center gap-2">
+                <span className="size-1.5 bg-green-500 rounded-full animate-pulse" />
+                {filtered.length} PROS {coords ? "NEAR YOU" : "AVAILABLE"}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="px-4 pb-8 space-y-4">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold">
-            {coords ? "Nearest to you" : "Top providers"}
-          </h2>
-          <span className="font-mono text-xs font-bold uppercase text-brand/40">{filtered.length} results</span>
+        <div className="px-4 pb-8 space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">
+              {coords ? "Nearest to you" : "Top providers"}
+            </h2>
+            <span className="font-mono text-xs font-bold uppercase text-brand/40">{filtered.length} results</span>
+          </div>
+
+          {isLoading ? (
+            <InlineSpinner />
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              icon={Compass}
+              title="No providers match yet"
+              description="Try a different search, category, or location."
+              action={
+                !roles?.includes("provider") && (
+                  <button onClick={() => navigate({ to: "/dashboard" })} className="text-accent font-bold text-sm underline underline-offset-2">
+                    Become a provider
+                  </button>
+                )
+              }
+            />
+          ) : (
+            filtered.map((p) => <ProviderCard key={p.id} p={p} />)
+          )}
         </div>
-
-        {isLoading ? (
-          <InlineSpinner />
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            icon={Compass}
-            title="No providers match yet"
-            description="Try a different search, category, or location."
-            action={
-              !roles?.includes("provider") && (
-                <button onClick={() => navigate({ to: "/dashboard" })} className="text-accent font-bold text-sm underline underline-offset-2">
-                  Become a provider
-                </button>
-              )
-            }
-          />
-        ) : (
-          filtered.map((p) => <ProviderCard key={p.id} p={p} />)
-        )}
       </div>
 
       <BottomNav />

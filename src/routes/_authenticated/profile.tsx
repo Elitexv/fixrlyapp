@@ -236,7 +236,13 @@ function ProfilePage() {
           </main>
         </div>
       </div>
-      <BottomNav />
+      {/* Sidebar switches from an offcanvas sheet to a persistent column at
+          the same 768px breakpoint useIsMobile uses (md:), so BottomNav must
+          hide there too — otherwise both navs render at once on desktop,
+          with BottomNav floating uncentered over the sidebar's content area. */}
+      <div className="md:hidden">
+        <BottomNav />
+      </div>
     </SidebarProvider>
   );
 }

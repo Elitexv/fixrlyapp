@@ -672,7 +672,7 @@ function BookingsTab() {
     queryFn: async () => {
       const { data } = await supabase
         .from("bookings")
-        .select("id,status,scheduled_at,total_price,duration_hours,address,payment_status,payment_provider,payment_reference,provider:provider_profiles!bookings_provider_id_fkey(business_name),customer:profiles!bookings_customer_id_fkey(full_name)")
+        .select("id,status,scheduled_at,total_price,duration_hours,address,payment_status,payment_provider,payment_reference,provider:provider_profiles!bookings_provider_id_fkey(business_name),customer:profiles!bookings_customer_id_profiles_fkey(full_name)")
         .order("created_at", { ascending: false });
       return (data ?? []) as any[];
     },

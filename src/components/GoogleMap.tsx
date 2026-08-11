@@ -1,5 +1,22 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTheme } from "@/lib/theme";
+
+// Google Maps ignores the page's CSS theme entirely, so without an explicit
+// dark style array it always paints its default light basemap — a jarring
+// light-gray box in the middle of an otherwise dark page.
+const DARK_MAP_STYLES = [
+  { elementType: "geometry", stylers: [{ color: "#1a1a1a" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a1a" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#a3a3a3" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#3a3a3a" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2b2b2b" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0f1f2e" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+];
+const LIGHT_MAP_STYLES = [{ featureType: "poi", stylers: [{ visibility: "off" }] }];
 
 type Marker = { lat: number; lng: number; label?: string; id?: string; onClick?: () => void };
 
@@ -61,6 +78,7 @@ export function GoogleMap({
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -74,13 +92,18 @@ export function GoogleMap({
           disableDefaultUI: true,
           zoomControl: true,
           gestureHandling: "greedy",
-          styles: [{ featureType: "poi", stylers: [{ visibility: "off" }] }],
+          styles: resolvedTheme === "dark" ? DARK_MAP_STYLES : LIGHT_MAP_STYLES,
         });
       })
       .catch((e) => console.error(e));
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    mapRef.current.setOptions({ styles: resolvedTheme === "dark" ? DARK_MAP_STYLES : LIGHT_MAP_STYLES });
+  }, [resolvedTheme]);
 
   useEffect(() => {
     if (!mapRef.current || !window.google) return;

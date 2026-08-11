@@ -95,7 +95,7 @@ export type Database = {
       bookings: {
         Row: {
           address: string
-          booking_number: string
+          booking_number: string | null
           category_id: string | null
           created_at: string
           customer_id: string
@@ -116,7 +116,7 @@ export type Database = {
         }
         Insert: {
           address: string
-          booking_number?: string
+          booking_number?: string | null
           category_id?: string | null
           created_at?: string
           customer_id: string
@@ -137,7 +137,7 @@ export type Database = {
         }
         Update: {
           address?: string
-          booking_number?: string
+          booking_number?: string | null
           category_id?: string | null
           created_at?: string
           customer_id?: string
@@ -169,6 +169,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "admin_users_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_customer_id_profiles_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {

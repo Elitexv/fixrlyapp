@@ -48,7 +48,7 @@ export function PageHero({
 export function StickyHeader({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
     <header className={cn("sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-soft px-4 pt-6 pb-4", className)}>
-      {children}
+      <div className="max-w-lg mx-auto">{children}</div>
     </header>
   );
 }

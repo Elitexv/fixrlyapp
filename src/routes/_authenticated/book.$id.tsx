@@ -129,16 +129,18 @@ function BookPage() {
 
   return (
     <div className="min-h-screen bg-canvas pb-32">
-      <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-soft px-4 pt-6 pb-4 flex items-center gap-3">
-        <button
-          onClick={() => navigate({ to: "/provider/$id", params: { id } })}
-          className="size-10 rounded-full bg-brand/5 grid place-items-center transition hover:bg-brand/10"
-        >
-          <ArrowLeft className="size-4" />
-        </button>
-        <div className="min-w-0">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-brand/40">Book service</div>
-          <h1 className="text-lg font-black truncate">{provider.business_name}</h1>
+      <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-soft px-4 pt-6 pb-4">
+        <div className="max-w-lg mx-auto flex items-center gap-3">
+          <button
+            onClick={() => navigate({ to: "/provider/$id", params: { id } })}
+            className="size-10 rounded-full bg-brand/5 grid place-items-center transition hover:bg-brand/10"
+          >
+            <ArrowLeft className="size-4" />
+          </button>
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-brand/40">Book service</div>
+            <h1 className="text-lg font-black truncate">{provider.business_name}</h1>
+          </div>
         </div>
       </header>
 

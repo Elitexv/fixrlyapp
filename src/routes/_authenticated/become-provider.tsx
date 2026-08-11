@@ -204,19 +204,21 @@ function BecomeProviderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas pb-32 lg:pl-72">
+    <div className="min-h-screen bg-canvas pb-32">
       <header className="bg-surface border-b border-brand/5 px-4 pt-6 pb-4">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-accent">Step {step} of 4</div>
-        <h1 className="text-xl font-black mt-1">Provider application</h1>
-        <p className="text-xs text-brand/60 mt-1">Admin approval required before your listing goes live.</p>
-        <div className="flex gap-1 mt-3">
-          {[1, 2, 3, 4].map((n) => (
-            <div key={n} className={`h-1 flex-1 rounded ${n <= step ? "bg-accent" : "bg-brand/10"}`} />
-          ))}
+        <div className="max-w-lg mx-auto">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-accent">Step {step} of 4</div>
+          <h1 className="text-xl font-black mt-1">Provider application</h1>
+          <p className="text-xs text-brand/60 mt-1">Admin approval required before your listing goes live.</p>
+          <div className="flex gap-1 mt-3">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className={`h-1 flex-1 rounded ${n <= step ? "bg-accent" : "bg-brand/10"}`} />
+            ))}
+          </div>
         </div>
       </header>
 
-      <div className="px-4 py-4 space-y-3">
+      <div className="px-4 py-4 space-y-3 max-w-lg mx-auto">
         {step === 1 && (
           <section className="bg-surface p-4 rounded-2xl border border-brand/5 shadow-sm space-y-3">
             <h2 className="font-bold">About your business</h2>

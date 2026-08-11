@@ -19,11 +19,11 @@ export const Route = createFileRoute("/_authenticated/bookings")({
 
 function BookingsPage() {
   const { user } = useSession();
-  const { data: roles = [] } = useRoles(user);
+  const { data: roles = [], isLoading: rolesLoading } = useRoles(user);
   const isProvider = roles.includes("provider");
   const currency = useCurrency();
-  const [tab, setTab] = useState<"customer" | "provider">(isProvider ? "provider" : "customer");
-  const [filter, setFilter] = useState<"all" | "hired" | "pending" | "completed">("all");
+  const [tab, setTab] = useState<"customer" | "provider">("customer");
+  const [filter, setFilter] = useState<"all" | "hired" | "pending" | "accepted" | "completed" | "rejected" | "cancelled" | "failed">("all");
   const qc = useQueryClient();
   const navigate = useNavigate();
   const initializePayment = useServerFn(initializePaystackPayment);
@@ -31,15 +31,20 @@ function BookingsPage() {
   const [payingId, setPayingId] = useState<string | null>(null);
   const verifiedRef = useRef<string | null>(null);
 
-  const { data: bookings = [], isLoading } = useQuery({
+  useEffect(() => {
+    if (!user || rolesLoading) return;
+    setTab(isProvider ? "provider" : "customer");
+  }, [user, isProvider, rolesLoading]);
+
+  const { data: bookings = [], isLoading: queryLoading } = useQuery({
     queryKey: ["bookings", user?.id, tab],
-    enabled: !!user,
+    enabled: !!user && !rolesLoading,
     queryFn: async () => {
       const col = tab === "customer" ? "customer_id" : "provider_id";
       const { data, error } = await supabase
         .from("bookings")
         .select(
-          "*, provider:provider_profiles!bookings_provider_id_fkey(id,business_name), customer:profiles!bookings_customer_id_fkey(full_name), category:service_categories(name,icon)",
+          "*, provider:provider_profiles!bookings_provider_id_fkey(id,business_name), customer:profiles!bookings_customer_id_profiles_fkey(full_name), category:service_categories(name,icon)",
         )
         .eq(col, user!.id)
         .order("scheduled_at", { ascending: false });
@@ -47,6 +52,8 @@ function BookingsPage() {
       return data as any[];
     },
   });
+
+  const isLoading = rolesLoading || queryLoading;
 
   // Paystack redirects the customer back here with ?paystack_ref=... after checkout;
   // verify it server-side rather than trusting the redirect itself as proof of payment.
@@ -119,7 +126,11 @@ function BookingsPage() {
             { k: "all", label: "All" },
             { k: "hired", label: "Hired & paid" },
             { k: "pending", label: "Pending" },
+            { k: "accepted", label: "Accepted" },
             { k: "completed", label: "Completed" },
+            { k: "rejected", label: "Rejected" },
+            { k: "cancelled", label: "Cancelled" },
+            { k: "failed", label: "Failed" },
           ] as const).map((f) => (
             <button
               key={f.k}
@@ -132,13 +143,17 @@ function BookingsPage() {
         </div>
       </StickyHeader>
 
-      <div className="px-4 py-4 space-y-3">
+      <div className="px-4 py-4 space-y-3 max-w-lg mx-auto">
         {(() => {
           const visible = bookings.filter((b) => {
             if (filter === "all") return true;
-            if (filter === "hired") return ["accepted", "completed"].includes(b.status);
-            if (filter === "pending") return b.status === "pending";
+            if (filter === "hired") return ["accepted", "completed"].includes(b.status) || b.payment_status === "paid";
+            if (filter === "pending") return b.status === "pending" || b.payment_status === "pending" || (b.payment_status === "not_required" && b.status === "pending");
+            if (filter === "accepted") return b.status === "accepted";
             if (filter === "completed") return b.status === "completed";
+            if (filter === "rejected") return b.status === "rejected";
+            if (filter === "cancelled") return b.status === "cancelled";
+            if (filter === "failed") return b.payment_status === "failed" || b.status === "rejected" || b.status === "cancelled";
             return true;
           });
           if (isLoading) return <InlineSpinner />;

@@ -198,7 +198,8 @@ function ProviderPage() {
   const categories = (data.provider_categories ?? []).map((pc: any) => pc.service_categories).filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-canvas pb-32 lg:pl-72">
+    <div className="min-h-screen bg-canvas pb-32">
+      <div className="max-w-lg mx-auto">
       <div className="relative h-56 bg-brand/10">
         {data.photo_urls?.[0] ? (
           <img src={data.photo_urls[0]} alt={data.business_name} className="w-full h-full object-cover" />
@@ -336,6 +337,7 @@ function ProviderPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
 
       <div className="light-surface fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-border p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">

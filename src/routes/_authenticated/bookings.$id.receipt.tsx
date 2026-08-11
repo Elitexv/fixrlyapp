@@ -24,7 +24,7 @@ function ReceiptPage() {
       const { data, error } = await supabase
         .from("bookings")
         .select(
-          "*, provider:provider_profiles!bookings_provider_id_fkey(business_name,city), customer:profiles!bookings_customer_id_fkey(full_name), category:service_categories(name,icon)",
+          "*, provider:provider_profiles!bookings_provider_id_fkey(business_name,city), customer:profiles!bookings_customer_id_profiles_fkey(full_name), category:service_categories(name,icon)",
         )
         .eq("id", id)
         .maybeSingle();

@@ -156,12 +156,25 @@
 
   /* For surfaces that intentionally stay white/light even in dark mode
      (cards, buttons, bubbles) — resets ink tokens so their text renders
-     dark-on-light instead of inheriting the page's white-on-black text. */
+     dark-on-light instead of inheriting the page's white-on-black text.
+     --canvas/--surface are reset too: inputs (bg-canvas) and nested
+     panels (bg-surface) inside these cards would otherwise keep the
+     page's near-black backgrounds while the text above just went dark,
+     making typed text unreadable (dark-on-black).
+     `color` is set explicitly (not just the --foreground variable) because
+     CSS custom properties only affect descendants that reference the
+     variable themselves — a plain <h2> or <input> with no text-* class
+     never does, so it would keep inheriting <body>'s already-computed
+     white and stay invisible on this light card regardless of the
+     variable override above. */
   .dark .light-surface {
     --brand: #0f172a;
     --brand-foreground: #ffffff;
     --foreground: #0f172a;
     --muted-foreground: #64748b;
+    --canvas: #f8fafc;
+    --surface: #ffffff;
+    color: var(--foreground);
   }
 }
 

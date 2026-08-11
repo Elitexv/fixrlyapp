@@ -69,7 +69,7 @@ function DashboardPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("bookings")
-        .select("*, customer:profiles!bookings_customer_id_fkey(full_name), category:service_categories(name,icon)")
+        .select("*, customer:profiles!bookings_customer_id_profiles_fkey(full_name), category:service_categories(name,icon)")
         .eq("provider_id", user!.id)
         .order("scheduled_at", { ascending: false });
       return data ?? [];
