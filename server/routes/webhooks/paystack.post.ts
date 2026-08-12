@@ -29,22 +29,33 @@ function createSupabaseAdmin() {
   });
 }
 
+function signatureMatches(secretKey: string, rawBody: string, signature: string): boolean {
+  const expected = createHmac("sha512", secretKey).update(rawBody).digest("hex");
+  const expectedBuf = Buffer.from(expected, "utf8");
+  const signatureBuf = Buffer.from(signature, "utf8");
+  return expectedBuf.length === signatureBuf.length && timingSafeEqual(expectedBuf, signatureBuf);
+}
+
 // Defense-in-depth confirmation, independent of the customer's browser making
 // it back to the callback page — Paystack calls this directly from their
 // servers once a charge settles, so a closed tab or dropped redirect can't
 // leave a booking stuck as "pending" after money actually moved.
 export default defineHandler(async (event) => {
-  const secretKey = process.env.PAYSTACK_SECRET_KEY;
-  if (!secretKey) return new Response("Not configured", { status: 503 });
-
   const rawBody = await event.req.text();
   const signature = event.req.headers.get("x-paystack-signature");
   if (!signature) return new Response("Missing signature", { status: 400 });
 
-  const expected = createHmac("sha512", secretKey).update(rawBody).digest("hex");
-  const expectedBuf = Buffer.from(expected, "utf8");
-  const signatureBuf = Buffer.from(signature, "utf8");
-  if (expectedBuf.length !== signatureBuf.length || !timingSafeEqual(expectedBuf, signatureBuf)) {
+  // Test-mode and live-mode charges land on the same webhook URL, each
+  // signed with its own secret — we don't know which mode this event is
+  // for until the signature tells us, so try both keys.
+  const liveKey = process.env.PAYSTACK_SECRET_KEY;
+  const testKey = process.env.PAYSTACK_TEST_SECRET_KEY;
+  const matchedMode = liveKey && signatureMatches(liveKey, rawBody, signature)
+    ? "live"
+    : testKey && signatureMatches(testKey, rawBody, signature)
+      ? "sandbox"
+      : null;
+  if (!matchedMode) {
     return new Response("Invalid signature", { status: 401 });
   }
 
@@ -60,11 +71,14 @@ export default defineHandler(async (event) => {
   const data = payload.data;
   const { data: booking } = await supabaseAdmin
     .from("bookings")
-    .select("id,payment_status,payment_amount,payment_currency")
+    .select("id,payment_status,payment_amount,payment_currency,payment_mode")
     .eq("payment_reference", data.reference)
     .maybeSingle();
 
   if (!booking || booking.payment_status === "paid") return new Response("ok", { status: 200 });
+  // The key that verified this event's signature must match the mode this
+  // specific booking was actually initialized under.
+  if (booking.payment_mode && booking.payment_mode !== matchedMode) return new Response("ok", { status: 200 });
 
   const expectedKobo = Math.round(Number(booking.payment_amount ?? 0) * 100);
   const verified = data.status === "success" && data.amount === expectedKobo && data.currency === booking.payment_currency;

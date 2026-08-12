@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader2, MapPin } from "lucide-react";
 import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
 import { currencySymbol, formatMoney, useCurrency } from "@/lib/currency";
+import { formatRelativeTime } from "@/lib/time";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import {
   PageHero,
@@ -71,7 +72,7 @@ function DashboardPage() {
         .from("bookings")
         .select("*, customer:profiles!bookings_customer_id_profiles_fkey(full_name), category:service_categories(name,icon)")
         .eq("provider_id", user!.id)
-        .order("scheduled_at", { ascending: false });
+        .order("created_at", { ascending: false });
       return data ?? [];
     },
   });
@@ -264,9 +265,8 @@ function DashboardPage() {
                         <div className="min-w-0">
                           <Eyebrow>{b.category?.icon} {b.category?.name}</Eyebrow>
                           <div className="mt-2 text-sm font-semibold truncate">{b.customer?.full_name ?? "Customer"}</div>
-                          <div className="mt-1 text-xs text-brand/60">
-                            {new Date(b.scheduled_at).toLocaleString()} • {b.duration_hours}h
-                          </div>
+                          <div className="mt-1 text-xs text-brand/60">{new Date(b.scheduled_at).toLocaleString()}</div>
+                          <div className="mt-0.5 text-[10px] text-brand/40">Booked {formatRelativeTime(b.created_at)}</div>
                         </div>
                         <div className="flex flex-col items-end gap-2 text-right">
                           <StatusBadge status={b.status} />

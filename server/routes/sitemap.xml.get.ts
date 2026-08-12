@@ -16,29 +16,39 @@ export default defineHandler(async () => {
   ];
 
   let providerUrls: { loc: string; lastmod: string; changefreq: string; priority: string }[] = [];
+  let categoryUrls: { loc: string; changefreq: string; priority: string }[] = [];
 
   if (url && key) {
     try {
       const supabase = createClient(url, key, { auth: { persistSession: false } });
-      const { data } = await supabase
-        .from("provider_profiles")
-        .select("id,updated_at")
-        .eq("is_active", true)
-        .order("updated_at", { ascending: false })
-        .limit(5000);
-      providerUrls = (data ?? []).map((p) => ({
+      const [{ data: providers }, { data: categories }] = await Promise.all([
+        supabase
+          .from("provider_profiles")
+          .select("id,updated_at")
+          .eq("is_active", true)
+          .order("updated_at", { ascending: false })
+          .limit(5000),
+        supabase.from("service_categories").select("slug"),
+      ]);
+      providerUrls = (providers ?? []).map((p) => ({
         loc: `${SITE_URL}/provider/${p.id}`,
         lastmod: new Date(p.updated_at).toISOString(),
         changefreq: "weekly",
         priority: "0.8",
       }));
+      categoryUrls = (categories ?? []).map((c) => ({
+        loc: `${SITE_URL}/services/${c.slug}`,
+        changefreq: "daily",
+        priority: "0.9",
+      }));
     } catch (err) {
-      console.error("[sitemap] Failed to load providers", err);
+      console.error("[sitemap] Failed to load providers/categories", err);
     }
   }
 
   const entries = [
     ...staticUrls.map((u) => `  <url><loc>${xmlEscape(u.loc)}</loc><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`),
+    ...categoryUrls.map((u) => `  <url><loc>${xmlEscape(u.loc)}</loc><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`),
     ...providerUrls.map((u) => `  <url><loc>${xmlEscape(u.loc)}</loc><lastmod>${u.lastmod}</lastmod><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`),
   ];
 

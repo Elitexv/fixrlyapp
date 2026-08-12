@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ServicesCategorySlugRouteImport } from './routes/services.$categorySlug'
 import { Route as ProviderIdRouteImport } from './routes/provider.$id'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -36,6 +37,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesCategorySlugRoute = ServicesCategorySlugRouteImport.update({
+  id: '/services/$categorySlug',
+  path: '/services/$categorySlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProviderIdRoute = ProviderIdRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/provider/$id': typeof ProviderIdRoute
+  '/services/$categorySlug': typeof ServicesCategorySlugRoute
   '/book/$id': typeof AuthenticatedBookIdRoute
   '/bookings/$id/receipt': typeof AuthenticatedBookingsIdReceiptRoute
 }
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/provider/$id': typeof ProviderIdRoute
+  '/services/$categorySlug': typeof ServicesCategorySlugRoute
   '/book/$id': typeof AuthenticatedBookIdRoute
   '/bookings/$id/receipt': typeof AuthenticatedBookingsIdReceiptRoute
 }
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/provider/$id': typeof ProviderIdRoute
+  '/services/$categorySlug': typeof ServicesCategorySlugRoute
   '/_authenticated/book/$id': typeof AuthenticatedBookIdRoute
   '/_authenticated/bookings/$id/receipt': typeof AuthenticatedBookingsIdReceiptRoute
 }
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/reset-password'
     | '/provider/$id'
+    | '/services/$categorySlug'
     | '/book/$id'
     | '/bookings/$id/receipt'
   fileRoutesByTo: FileRoutesByTo
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/reset-password'
     | '/provider/$id'
+    | '/services/$categorySlug'
     | '/book/$id'
     | '/bookings/$id/receipt'
   id:
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/reset-password'
     | '/provider/$id'
+    | '/services/$categorySlug'
     | '/_authenticated/book/$id'
     | '/_authenticated/bookings/$id/receipt'
   fileRoutesById: FileRoutesById
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   ProviderIdRoute: typeof ProviderIdRoute
+  ServicesCategorySlugRoute: typeof ServicesCategorySlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/$categorySlug': {
+      id: '/services/$categorySlug'
+      path: '/services/$categorySlug'
+      fullPath: '/services/$categorySlug'
+      preLoaderRoute: typeof ServicesCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/provider/$id': {
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   ProviderIdRoute: ProviderIdRoute,
+  ServicesCategorySlugRoute: ServicesCategorySlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

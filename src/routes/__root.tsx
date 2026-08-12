@@ -107,6 +107,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:image", content: "https://fixrly.app/og-image.png" },
       { name: "twitter:image", content: "https://fixrly.app/og-image.png" },
+      {
+        "script:ld+json": {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Fixrly",
+          url: "https://fixrly.app",
+          logo: "https://fixrly.app/icon.png",
+          description: "A marketplace to find and book vetted local service providers — cleaning, plumbing, tutoring, pet care, and more.",
+        },
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

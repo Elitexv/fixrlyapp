@@ -31,7 +31,12 @@ export async function getBookingPaymentSettings(): Promise<BookingPaymentSetting
 }
 
 export function buildBookingPaymentData(totalPrice: number | null, settings: BookingPaymentSettings) {
-  const paymentEnabled = settings.payment_enabled && settings.provider !== "none";
+  // A provider with no hourly rate set produces a null/zero total — nothing
+  // to charge, so payment must stay "not_required" even with payments
+  // enabled globally. Otherwise the booking gets stuck as "pending" forever:
+  // initializePaystackPayment always rejects a zero/undefined amount, so the
+  // customer would have no way to ever clear a "Pay now" that can't run.
+  const paymentEnabled = settings.payment_enabled && settings.provider !== "none" && totalPrice != null && totalPrice > 0;
   const paymentAmount = totalPrice != null ? Number(totalPrice) : null;
 
   // No payment_reference here — a real reference is only created once the

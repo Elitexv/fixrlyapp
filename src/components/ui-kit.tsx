@@ -67,6 +67,27 @@ export function Panel({
   );
 }
 
+/* ---------- ProviderAvatar: profile pic, falling back to a business photo, then initials ---------- */
+export function ProviderAvatar({
+  name,
+  avatarUrl,
+  photoUrl,
+  className,
+}: {
+  name: string | null | undefined;
+  avatarUrl?: string | null;
+  photoUrl?: string | null;
+  className?: string;
+}) {
+  const image = avatarUrl || photoUrl;
+  const initial = name?.[0]?.toUpperCase() ?? "?";
+  return (
+    <div className={cn("shrink-0 overflow-hidden bg-canvas grid place-items-center font-bold text-brand/40", className)}>
+      {image ? <img src={image} alt={name ?? ""} className="h-full w-full object-cover" /> : initial}
+    </div>
+  );
+}
+
 /* ---------- Tile: repeating list-item card (provider card, booking card, message row) ---------- */
 export function Tile({
   className,
@@ -225,15 +246,19 @@ const bookingStatusStyles: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
   accepted: "bg-blue-100 text-blue-800",
   approved: "bg-green-100 text-green-800",
+  on_the_way: "bg-orange-100 text-orange-800",
   rejected: "bg-red-100 text-red-800",
   completed: "bg-green-100 text-green-800",
   cancelled: "bg-slate-100 text-slate-700",
+};
+const bookingStatusLabels: Record<string, string> = {
+  on_the_way: "On the way",
 };
 
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
   return (
     <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", bookingStatusStyles[status] ?? "bg-slate-100 text-slate-700", className)}>
-      {status}
+      {bookingStatusLabels[status] ?? status}
     </span>
   );
 }

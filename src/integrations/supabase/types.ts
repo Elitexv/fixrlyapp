@@ -99,16 +99,22 @@ export type Database = {
           category_id: string | null
           created_at: string
           customer_id: string
+          dest_lat: number | null
+          dest_lng: number | null
           duration_hours: number
           id: string
           notes: string | null
           paid_at: string | null
           payment_amount: number | null
           payment_currency: string | null
+          payment_mode: string | null
           payment_provider: string
           payment_reference: string | null
           payment_status: string
           provider_id: string
+          provider_lat: number | null
+          provider_lng: number | null
+          provider_location_updated_at: string | null
           scheduled_at: string
           status: Database["public"]["Enums"]["booking_status"]
           total_price: number | null
@@ -120,16 +126,22 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           customer_id: string
+          dest_lat?: number | null
+          dest_lng?: number | null
           duration_hours?: number
           id?: string
           notes?: string | null
           paid_at?: string | null
           payment_amount?: number | null
           payment_currency?: string | null
+          payment_mode?: string | null
           payment_provider?: string
           payment_reference?: string | null
           payment_status?: string
           provider_id: string
+          provider_lat?: number | null
+          provider_lng?: number | null
+          provider_location_updated_at?: string | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_price?: number | null
@@ -141,16 +153,22 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           customer_id?: string
+          dest_lat?: number | null
+          dest_lng?: number | null
           duration_hours?: number
           id?: string
           notes?: string | null
           paid_at?: string | null
           payment_amount?: number | null
           payment_currency?: string | null
+          payment_mode?: string | null
           payment_provider?: string
           payment_reference?: string | null
           payment_status?: string
           provider_id?: string
+          provider_lat?: number | null
+          provider_lng?: number | null
+          provider_location_updated_at?: string | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_price?: number | null
@@ -783,6 +801,7 @@ export type Database = {
       booking_status:
         | "pending"
         | "accepted"
+        | "on_the_way"
         | "rejected"
         | "completed"
         | "cancelled"
@@ -921,6 +940,7 @@ export const Constants = {
       booking_status: [
         "pending",
         "accepted",
+        "on_the_way",
         "rejected",
         "completed",
         "cancelled",

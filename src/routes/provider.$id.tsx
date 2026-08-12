@@ -15,19 +15,40 @@ export const Route = createFileRoute("/provider/$id")({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from("provider_profiles")
-      .select("business_name,city")
+      .select("business_name,city,photo_urls,hourly_rate,bio,provider_categories(service_categories(name)),reviews(rating)")
       .eq("id", params.id)
       .maybeSingle();
-    return { businessName: data?.business_name ?? null, city: data?.city ?? null };
+    if (!data) return null;
+    const ratings = (data.reviews ?? []).map((r: any) => r.rating);
+    const rating = ratings.length ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : null;
+    const categoryNames = (data.provider_categories ?? []).map((pc: any) => pc.service_categories?.name).filter(Boolean);
+    return {
+      businessName: data.business_name as string,
+      city: data.city as string | null,
+      bio: data.bio as string | null,
+      photoUrl: data.photo_urls?.[0] ?? null,
+      hourlyRate: data.hourly_rate as number | null,
+      categoryName: categoryNames[0] ?? null,
+      rating,
+      reviewCount: ratings.length,
+    };
   },
   head: ({ params, loaderData }) => {
-    const name = loaderData?.businessName;
-    const city = loaderData?.city;
-    const title = name ? `${name}${city ? ` in ${city}` : ""} — Fixrly` : "Provider profile — Fixrly";
-    const description = name
-      ? `Book ${name}${city ? ` in ${city}` : ""} on Fixrly. See services, pricing, and reviews.`
-      : "Book this service provider on Fixrly.";
     const url = `https://fixrly.app/provider/${params.id}`;
+    if (!loaderData) {
+      return {
+        meta: [{ title: "Provider profile — Fixrly" }, { name: "description", content: "Book this service provider on Fixrly." }],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+    const { businessName, city, bio, photoUrl, categoryName, rating, reviewCount } = loaderData;
+    const locality = city ? ` in ${city}` : "";
+    const service = categoryName ? `${categoryName} ` : "";
+    const title = `${businessName} — ${service}${categoryName ? "Services" : "Provider"}${locality} | Fixrly`;
+    const description = bio
+      ? bio.slice(0, 155)
+      : `Book ${businessName}${locality} on Fixrly. See services, pricing, and reviews.`;
+
     return {
       meta: [
         { title },
@@ -35,6 +56,22 @@ export const Route = createFileRoute("/provider/$id")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
+        { property: "og:type", content: "profile" },
+        ...(photoUrl ? [{ property: "og:image", content: photoUrl }] : []),
+        {
+          "script:ld+json": {
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            name: businessName,
+            url,
+            ...(photoUrl ? { image: photoUrl } : {}),
+            ...(city ? { address: { "@type": "PostalAddress", addressLocality: city } } : {}),
+            ...(categoryName ? { additionalType: categoryName } : {}),
+            ...(rating != null
+              ? { aggregateRating: { "@type": "AggregateRating", ratingValue: rating, reviewCount } }
+              : {}),
+          },
+        },
       ],
       links: [{ rel: "canonical", href: url }],
     };

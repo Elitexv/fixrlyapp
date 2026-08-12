@@ -1,40 +1,58 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { haversineKm, useRoles, useSession } from "@/lib/session";
 import { geocodeLocation } from "@/lib/geocode.functions";
+import { fetchActiveProviders, fetchCategories, type Category } from "@/lib/providers";
 import { BottomNav } from "@/components/BottomNav";
 import { GoogleMap } from "@/components/GoogleMap";
 import { ProviderCard, type ProviderCardData } from "@/components/ProviderCard";
 import { NotificationsBell } from "@/components/NotificationsBell";
-import { StickyHeader, InlineSpinner, EmptyState, Eyebrow } from "@/components/ui-kit";
-import { Search, MapPin, Loader2, Compass } from "lucide-react";
+import { StickyHeader, InlineSpinner, EmptyState, Eyebrow, ProviderAvatar } from "@/components/ui-kit";
+import { Search, MapPin, Loader2, Compass, SearchX } from "lucide-react";
 import { toast } from "sonner";
 
+const SITE_URL = "https://fixrly.app";
+
 export const Route = createFileRoute("/")({
+  // Server-rendered so crawlers (and the first paint) see real provider
+  // listings instead of an empty shell waiting on a client-side fetch.
+  loader: async () => {
+    const [initialProviders, categories] = await Promise.all([fetchActiveProviders(null), fetchCategories()]);
+    return { initialProviders, categories };
+  },
   head: () => ({
     meta: [
       { title: "Find local service pros near you — Fixrly" },
       { name: "description", content: "Search vetted local service providers by category and location. Book cleaning, plumbing, tutoring, pet care, and more in your city with Fixrly." },
-      { property: "og:url", content: "https://fixrly.app/" },
+      { property: "og:url", content: `${SITE_URL}/` },
+      {
+        "script:ld+json": {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Fixrly",
+          url: SITE_URL,
+          description: "Search vetted local service providers by category and location.",
+        },
+      },
     ],
-    links: [{ rel: "canonical", href: "https://fixrly.app/" }],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
   }),
   component: Home,
 });
-
-type Category = { id: string; slug: string; name: string; icon: string | null };
 
 function Home() {
   const navigate = useNavigate();
   const { user } = useSession();
   const { data: roles } = useRoles(user);
   const geocode = useServerFn(geocodeLocation);
+  const { initialProviders, categories: initialCategories } = Route.useLoaderData();
 
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [locationText, setLocationText] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number; label: string } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
@@ -49,56 +67,16 @@ function Home() {
     },
   });
 
-  const { data: categories = [] } = useQuery({
+  const { data: categories = initialCategories } = useQuery({
     queryKey: ["categories"],
-    queryFn: async (): Promise<Category[]> => {
-      const { data, error } = await supabase.from("service_categories").select("id,slug,name,icon").order("sort_order");
-      if (error) throw error;
-      return data as Category[];
-    },
+    initialData: initialCategories,
+    queryFn: fetchCategories,
   });
 
   const { data: providers = [], isLoading } = useQuery({
     queryKey: ["providers", selectedCat],
-    queryFn: async (): Promise<ProviderCardData[]> => {
-      let q = supabase
-        .from("provider_profiles")
-        .select("id,business_name,bio,hourly_rate,city,photo_urls,availability_note,latitude,longitude,provider_categories(category_id,service_categories(name)),reviews(rating)")
-        .eq("is_active", true);
-      const { data, error } = await q;
-      if (error) throw error;
-      const ids = (data ?? []).map((row: any) => row.id);
-      let avatarMap = new Map<string, string | null>();
-      if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id,avatar_url").in("id", ids);
-        avatarMap = new Map((profs ?? []).map((p: any) => [p.id, p.avatar_url]));
-      }
-      let rows = (data ?? []).map((row: any) => {
-        const ratings: number[] = (row.reviews ?? []).map((r: any) => r.rating);
-        const rating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-        const category_names: string[] = (row.provider_categories ?? [])
-          .map((pc: any) => pc.service_categories?.name)
-          .filter(Boolean);
-        return {
-          id: row.id,
-          business_name: row.business_name,
-          bio: row.bio,
-          hourly_rate: row.hourly_rate,
-          city: row.city,
-          photo_urls: row.photo_urls ?? [],
-          avatar_url: avatarMap.get(row.id) ?? null,
-          availability_note: row.availability_note,
-          category_names,
-          rating,
-          review_count: ratings.length,
-          latitude: row.latitude,
-          longitude: row.longitude,
-          _cat_ids: (row.provider_categories ?? []).map((pc: any) => pc.category_id) as string[],
-        };
-      });
-      if (selectedCat) rows = rows.filter((r) => r._cat_ids.includes(selectedCat));
-      return rows as any;
-    },
+    initialData: selectedCat === null ? initialProviders : undefined,
+    queryFn: (): Promise<ProviderCardData[]> => fetchActiveProviders(selectedCat) as unknown as Promise<ProviderCardData[]>,
   });
 
   const filtered = useMemo(() => {
@@ -127,6 +105,14 @@ function Home() {
     });
     return withDistance;
   }, [providers, query, coords]);
+
+  // Live "quick results" dropdown under the search box, Facebook-style —
+  // capped to a handful of matches with avatars; the full, sortable list
+  // still renders below as `filtered` updates.
+  const searchSuggestions = useMemo(() => {
+    if (!query.trim()) return [];
+    return filtered.slice(0, 6);
+  }, [filtered, query]);
 
   const useMyLocation = () => {
     if (!navigator.geolocation) return toast.error("Geolocation not available");
@@ -182,6 +168,10 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-canvas font-sans text-brand pb-24">
+      {/* Visually replaced by the compact header below, but the page still
+          needs one real <h1> stating what it's about for crawlers and
+          screen readers. */}
+      <h1 className="sr-only">Find and book trusted local service providers near you</h1>
       <StickyHeader>
         <div className="flex items-center justify-between mb-4">
           <div className="flex flex-col min-w-0">
@@ -228,9 +218,61 @@ function Home() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => setSearchOpen(true)}
+            onBlur={() => setSearchOpen(false)}
+            onKeyDown={(e) => e.key === "Escape" && e.currentTarget.blur()}
             placeholder="Search for cleaning, plumbing, tutoring..."
             className="w-full bg-canvas rounded-xl py-3.5 pl-11 pr-4 text-sm outline-none transition focus:ring-2 focus:ring-accent/30"
           />
+
+          {searchOpen && query.trim() && (
+            <div className="light-surface absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-[70vh] overflow-y-auto rounded-2xl border border-soft bg-white shadow-soft">
+              {searchSuggestions.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-8 text-center">
+                  <SearchX className="size-5 text-brand/30" />
+                  <p className="text-sm text-brand/60">No pros match "{query.trim()}"</p>
+                </div>
+              ) : (
+                <>
+                  {searchSuggestions.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setSearchOpen(false);
+                        navigate({ to: "/provider/$id", params: { id: p.id } });
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-brand/5"
+                    >
+                      <ProviderAvatar
+                        name={p.business_name}
+                        avatarUrl={p.avatar_url}
+                        photoUrl={p.photo_urls[0]}
+                        className="size-11 rounded-full text-sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold text-brand">{p.business_name}</div>
+                        <div className="truncate text-xs text-brand/50">
+                          {[p.category_names[0], p.city].filter(Boolean).join(" · ") || "Service pro"}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                  {filtered.length > searchSuggestions.length && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setSearchOpen(false)}
+                      className="w-full border-t border-soft py-2.5 text-center text-xs font-bold uppercase tracking-wider text-accent hover:bg-brand/5"
+                    >
+                      See all {filtered.length} results
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </StickyHeader>
 
@@ -293,6 +335,24 @@ function Home() {
             filtered.map((p) => <ProviderCard key={p.id} p={p} />)
           )}
         </div>
+
+        {categories.length > 0 && (
+          <div className="px-4 pb-8">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-brand/40 mb-3">Browse services</h2>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((c) => (
+                <Link
+                  key={c.id}
+                  to="/services/$categorySlug"
+                  params={{ categorySlug: c.slug }}
+                  className="rounded-full bg-surface border border-brand/5 px-4 py-2 text-xs font-semibold text-brand/70 shadow-sm transition hover:border-accent/20 hover:text-brand"
+                >
+                  {c.icon} {c.name} near you
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <BottomNav />

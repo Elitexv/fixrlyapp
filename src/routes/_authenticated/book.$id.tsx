@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { notifyProviderOfBooking } from "@/lib/booking-notifications.functions";
 import { initializePaystackPayment } from "@/lib/payments.functions";
+import { geocodeLocation } from "@/lib/geocode.functions";
 import { ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { buildBookingPaymentData, getBookingPaymentSettings } from "@/lib/booking-payment";
@@ -26,6 +27,7 @@ function BookPage() {
   const { user } = useSession();
   const notify = useServerFn(notifyProviderOfBooking);
   const initializePayment = useServerFn(initializePaystackPayment);
+  const geocode = useServerFn(geocodeLocation);
   const currency = useCurrency();
 
   const { data: provider, isLoading } = useQuery({
@@ -76,6 +78,9 @@ function BookPage() {
         platform_fee_percent: 0,
       }));
       const paymentPayload = buildBookingPaymentData(total, settings);
+      // Best-effort: geocode the service address so the "on the way" map has
+      // a destination pin. A geocode hiccup shouldn't block the booking.
+      const destination = await geocode({ data: { query: address } }).catch(() => null);
       const { data: inserted, error } = await supabase
         .from("bookings")
         .insert({
@@ -87,6 +92,8 @@ function BookPage() {
           address,
           notes: notes || null,
           total_price: total,
+          dest_lat: destination?.found ? destination.lat : null,
+          dest_lng: destination?.found ? destination.lng : null,
           ...paymentPayload,
         })
         .select("id")
@@ -96,7 +103,7 @@ function BookPage() {
         console.warn("[booking] notify failed", err),
       );
 
-      if (settings.payment_enabled && settings.provider === "paystack") {
+      if (settings.payment_enabled && settings.provider === "paystack" && total != null && total > 0) {
         try {
           const { authorizationUrl } = await initializePayment({ data: { bookingId: inserted.id } });
           toast.success("Booking requested — redirecting to checkout…");

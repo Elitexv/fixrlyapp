@@ -7,6 +7,7 @@ import { GoogleMap } from "@/components/GoogleMap";
 import { toast } from "sonner";
 import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
 import { formatMoney, useCurrency } from "@/lib/currency";
+import { formatRelativeTime } from "@/lib/time";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter,
@@ -672,7 +673,7 @@ function BookingsTab() {
     queryFn: async () => {
       const { data } = await supabase
         .from("bookings")
-        .select("id,status,scheduled_at,total_price,duration_hours,address,payment_status,payment_provider,payment_reference,provider:provider_profiles!bookings_provider_id_fkey(business_name),customer:profiles!bookings_customer_id_profiles_fkey(full_name)")
+        .select("id,status,scheduled_at,created_at,total_price,duration_hours,address,payment_status,payment_provider,payment_reference,provider:provider_profiles!bookings_provider_id_fkey(business_name),customer:profiles!bookings_customer_id_profiles_fkey(full_name)")
         .order("created_at", { ascending: false });
       return (data ?? []) as any[];
     },
@@ -706,7 +707,8 @@ function BookingsTab() {
             <div className="min-w-0">
               <div className="font-bold text-sm truncate">{b.provider?.business_name ?? "—"}</div>
               <div className="text-xs text-brand/60 truncate">for {b.customer?.full_name ?? "customer"}</div>
-              <div className="text-xs text-brand/60 mt-0.5">{new Date(b.scheduled_at).toLocaleString()} · {b.duration_hours}h</div>
+              <div className="text-xs text-brand/60 mt-0.5">{new Date(b.scheduled_at).toLocaleString()}</div>
+              <div className="text-[10px] text-brand/40 mt-0.5">Booked {formatRelativeTime(b.created_at)}</div>
               {b.address && <div className="text-xs text-brand/60 truncate">📍 {b.address}</div>}
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">

@@ -6,10 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { useSession, useRoles } from "@/lib/session";
 import { toast } from "sonner";
-import { Star, CalendarCheck, Loader2 } from "lucide-react";
+import { Star, CalendarCheck, Loader2, Navigation } from "lucide-react";
 import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
 import { formatMoney, useCurrency } from "@/lib/currency";
 import { initializePaystackPayment, verifyPaystackPayment } from "@/lib/payments.functions";
+import { getOrCreateConversation, sendChatMessage } from "@/lib/chat";
+import { getCurrentPosition, startLocationSharing } from "@/lib/provider-tracking";
+import { formatRelativeTime } from "@/lib/time";
+import { ProviderTrackingMap } from "@/components/ProviderTrackingMap";
 import { StickyHeader, Tile, StatusBadge, InlineSpinner, EmptyState, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
@@ -23,13 +27,16 @@ function BookingsPage() {
   const isProvider = roles.includes("provider");
   const currency = useCurrency();
   const [tab, setTab] = useState<"customer" | "provider">("customer");
-  const [filter, setFilter] = useState<"all" | "hired" | "pending" | "accepted" | "completed" | "rejected" | "cancelled" | "failed">("all");
+  const [filter, setFilter] = useState<"all" | "hired" | "pending" | "accepted" | "on_the_way" | "completed" | "rejected" | "cancelled" | "failed">("all");
   const qc = useQueryClient();
   const navigate = useNavigate();
   const initializePayment = useServerFn(initializePaystackPayment);
   const verifyPayment = useServerFn(verifyPaystackPayment);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [startingOtwId, setStartingOtwId] = useState<string | null>(null);
   const verifiedRef = useRef<string | null>(null);
+  const trackingStopRef = useRef<(() => void) | null>(null);
+  const trackingBookingIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user || rolesLoading) return;
@@ -47,7 +54,7 @@ function BookingsPage() {
           "*, provider:provider_profiles!bookings_provider_id_fkey(id,business_name), customer:profiles!bookings_customer_id_profiles_fkey(full_name), category:service_categories(name,icon)",
         )
         .eq(col, user!.id)
-        .order("scheduled_at", { ascending: false });
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data as any[];
     },
@@ -90,6 +97,83 @@ function BookingsPage() {
     qc.invalidateQueries({ queryKey: ["bookings", user?.id, tab] });
   };
 
+  // Resumes/stops the live-location watch to match whichever booking (if
+  // any) is currently on_the_way for this provider — so a page reload while
+  // en route just picks tracking back up instead of leaving the customer's
+  // map stale.
+  useEffect(() => {
+    if (tab !== "provider") return;
+    const active = bookings.find((b: any) => b.status === "on_the_way");
+    if (!active) {
+      trackingStopRef.current?.();
+      trackingStopRef.current = null;
+      trackingBookingIdRef.current = null;
+      return;
+    }
+    if (trackingBookingIdRef.current === active.id) return;
+    trackingStopRef.current?.();
+    trackingBookingIdRef.current = active.id;
+    trackingStopRef.current = startLocationSharing(active.id, (msg) => toast.error(msg));
+  }, [bookings, tab]);
+
+  useEffect(() => () => trackingStopRef.current?.(), []);
+
+  // The customer's booking list is a plain react-query fetch, not
+  // live — without this, the "on the way" pin would only move on manual
+  // refresh instead of tracking the provider in real time.
+  useEffect(() => {
+    if (!user || tab !== "customer") return;
+    const channel = supabase
+      .channel(`bookings-live:${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "bookings", filter: `customer_id=eq.${user.id}` },
+        (payload) => {
+          qc.setQueryData(["bookings", user.id, "customer"], (old: any[] = []) =>
+            old.map((b) => (b.id === payload.new.id ? { ...b, ...payload.new } : b)),
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, tab, qc]);
+
+  const startOnTheWay = async (booking: any) => {
+    if (!user) return;
+    setStartingOtwId(booking.id);
+    try {
+      const pos = await getCurrentPosition();
+      const { error } = await supabase
+        .from("bookings")
+        .update({
+          status: "on_the_way",
+          provider_lat: pos.coords.latitude,
+          provider_lng: pos.coords.longitude,
+          provider_location_updated_at: new Date().toISOString(),
+        })
+        .eq("id", booking.id);
+      if (error) throw error;
+
+      // Best-effort: a customer chat message is a nice touch, not the point
+      // of the feature — a failure here shouldn't undo the status change.
+      try {
+        const conversationId = await getOrCreateConversation(user.id, booking.customer_id);
+        await sendChatMessage(conversationId, user.id, "provider", "🚗 I'm on my way!");
+      } catch (chatErr) {
+        console.warn("[bookings] on-the-way chat message failed", chatErr);
+      }
+
+      toast.success("Customer notified — you're on the way!");
+      qc.invalidateQueries({ queryKey: ["bookings", user.id, "provider"] });
+    } catch (err: any) {
+      toast.error(err.message ?? "Couldn't start sharing your location");
+    } finally {
+      setStartingOtwId(null);
+    }
+  };
+
   const payNow = async (id: string) => {
     setPayingId(id);
     try {
@@ -127,6 +211,7 @@ function BookingsPage() {
             { k: "hired", label: "Hired & paid" },
             { k: "pending", label: "Pending" },
             { k: "accepted", label: "Accepted" },
+            { k: "on_the_way", label: "On the way" },
             { k: "completed", label: "Completed" },
             { k: "rejected", label: "Rejected" },
             { k: "cancelled", label: "Cancelled" },
@@ -147,9 +232,10 @@ function BookingsPage() {
         {(() => {
           const visible = bookings.filter((b) => {
             if (filter === "all") return true;
-            if (filter === "hired") return ["accepted", "completed"].includes(b.status) || b.payment_status === "paid";
+            if (filter === "hired") return ["accepted", "on_the_way", "completed"].includes(b.status) || b.payment_status === "paid";
             if (filter === "pending") return b.status === "pending" || b.payment_status === "pending" || (b.payment_status === "not_required" && b.status === "pending");
             if (filter === "accepted") return b.status === "accepted";
+            if (filter === "on_the_way") return b.status === "on_the_way";
             if (filter === "completed") return b.status === "completed";
             if (filter === "rejected") return b.status === "rejected";
             if (filter === "cancelled") return b.status === "cancelled";
@@ -170,9 +256,8 @@ function BookingsPage() {
                   <div className="font-bold truncate">
                     {tab === "customer" ? b.provider?.business_name : (b.customer?.full_name ?? "Customer")}
                   </div>
-                  <div className="text-xs text-brand/60 mt-0.5">
-                    {new Date(b.scheduled_at).toLocaleString()} • {b.duration_hours}h
-                  </div>
+                  <div className="text-xs text-brand/60 mt-0.5">{new Date(b.scheduled_at).toLocaleString()}</div>
+                  <div className="text-[10px] text-brand/40 mt-0.5">Booked {formatRelativeTime(b.created_at)}</div>
                   <div className="text-xs text-brand/60 mt-1">{b.address}</div>
                   {b.notes && <div className="text-xs mt-2 p-2 bg-canvas rounded-lg">{b.notes}</div>}
                 </div>
@@ -182,6 +267,16 @@ function BookingsPage() {
                   <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${getPaymentStatusBadge(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span>
                 </div>
               </div>
+
+              {tab === "customer" && b.status === "on_the_way" && b.provider_lat != null && b.provider_lng != null && (
+                <ProviderTrackingMap
+                  providerLat={b.provider_lat}
+                  providerLng={b.provider_lng}
+                  destLat={b.dest_lat}
+                  destLng={b.dest_lng}
+                  updatedAt={b.provider_location_updated_at}
+                />
+              )}
 
               <div className="mt-3 pt-3 border-t border-brand/5 flex gap-2 flex-wrap">
                 {tab === "customer" && b.payment_status === "pending" && b.payment_provider === "paystack" && (
@@ -201,9 +296,27 @@ function BookingsPage() {
                   </>
                 )}
                 {tab === "provider" && b.status === "accepted" && (
-                  <button onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold transition hover:bg-primary/90">Mark completed</button>
+                  <>
+                    <PrimaryButton
+                      onClick={() => startOnTheWay(b)}
+                      disabled={startingOtwId === b.id}
+                      className="flex-1 py-2 rounded-lg text-xs inline-flex items-center justify-center gap-1.5"
+                    >
+                      {startingOtwId === b.id ? <Loader2 className="size-3.5 animate-spin" /> : <Navigation className="size-3.5" />}
+                      I'm on my way
+                    </PrimaryButton>
+                    <SecondaryButton onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 rounded-lg text-xs">Mark completed</SecondaryButton>
+                  </>
                 )}
-                {tab === "customer" && ["pending", "accepted"].includes(b.status) && (
+                {tab === "provider" && b.status === "on_the_way" && (
+                  <>
+                    <div className="flex-1 py-2 rounded-lg text-xs font-bold text-center bg-orange-50 text-orange-700 inline-flex items-center justify-center gap-1.5">
+                      <Navigation className="size-3.5 animate-pulse" /> Sharing live location
+                    </div>
+                    <button onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold transition hover:bg-primary/90">Mark completed</button>
+                  </>
+                )}
+                {tab === "customer" && ["pending", "accepted", "on_the_way"].includes(b.status) && (
                   <SecondaryButton onClick={() => updateStatus(b.id, "cancelled")} className="flex-1 py-2 rounded-lg text-xs">Cancel</SecondaryButton>
                 )}
                 {b.provider?.id && (

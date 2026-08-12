@@ -4,6 +4,15 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const PAYSTACK_BASE = "https://api.paystack.co";
 
+// The admin "Mode" toggle (Test/sandbox vs Live) only meant anything in the
+// UI — every server call still reached for the one PAYSTACK_SECRET_KEY
+// regardless, so "Test" mode silently charged real cards. Split into two
+// project secrets and pick the right one by the admin_settings row instead.
+function paystackSecretKeyForMode(mode: string | null | undefined): string | undefined {
+  if (mode === "live") return process.env.PAYSTACK_SECRET_KEY;
+  return process.env.PAYSTACK_TEST_SECRET_KEY;
+}
+
 function getOrigin(): string {
   const request = getRequest();
   const headerOrigin = request?.headers.get("origin");
@@ -17,9 +26,6 @@ export const initializePaystackPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { bookingId: string }) => d)
   .handler(async ({ data, context }) => {
-    const secretKey = process.env.PAYSTACK_SECRET_KEY;
-    if (!secretKey) throw new Error("Payments aren't configured yet. Contact support.");
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: booking, error } = await supabaseAdmin
@@ -36,7 +42,7 @@ export const initializePaystackPayment = createServerFn({ method: "POST" })
 
     const { data: settingsRow } = await supabaseAdmin
       .from("admin_settings" as any)
-      .select("provider,payment_enabled,currency")
+      .select("provider,payment_enabled,currency,mode")
       .eq("id", "payments")
       .maybeSingle();
     const settings = settingsRow as any;
@@ -44,6 +50,16 @@ export const initializePaystackPayment = createServerFn({ method: "POST" })
       throw new Error("Paystack payments are not enabled");
     }
     const currency = settings.currency ?? "NGN";
+    const mode = settings.mode === "live" ? "live" : "sandbox";
+
+    const secretKey = paystackSecretKeyForMode(mode);
+    if (!secretKey) {
+      throw new Error(
+        mode === "live"
+          ? "Live payments aren't configured yet. Contact support."
+          : "Test payments aren't configured yet — ask an admin to add the Paystack test secret key.",
+      );
+    }
 
     const { data: authData } = await supabaseAdmin.auth.admin.getUserById(context.userId);
     const email = authData?.user?.email;
@@ -69,7 +85,7 @@ export const initializePaystackPayment = createServerFn({ method: "POST" })
 
     const { error: updateError } = await supabaseAdmin
       .from("bookings")
-      .update({ payment_reference: reference, payment_currency: currency, payment_provider: "paystack" })
+      .update({ payment_reference: reference, payment_currency: currency, payment_provider: "paystack", payment_mode: mode })
       .eq("id", booking.id);
     if (updateError) throw new Error(updateError.message);
 
@@ -80,20 +96,22 @@ export const verifyPaystackPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { reference: string }) => d)
   .handler(async ({ data, context }) => {
-    const secretKey = process.env.PAYSTACK_SECRET_KEY;
-    if (!secretKey) throw new Error("Payments aren't configured");
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: booking, error } = await supabaseAdmin
       .from("bookings")
-      .select("id,customer_id,payment_status,payment_amount,payment_currency")
+      .select("id,customer_id,payment_status,payment_amount,payment_currency,payment_mode")
       .eq("payment_reference", data.reference)
       .maybeSingle();
     if (error || !booking) throw new Error("Payment record not found");
     if (booking.customer_id !== context.userId) throw new Error("Forbidden");
 
     if (booking.payment_status === "paid") return { status: "paid" as const, bookingId: booking.id };
+
+    // Use whichever mode this specific transaction was initialized under —
+    // not the admin's current Mode setting, which may have changed since.
+    const secretKey = paystackSecretKeyForMode(booking.payment_mode);
+    if (!secretKey) throw new Error("Payments aren't configured");
 
     const res = await fetch(`${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(data.reference)}`, {
       headers: { Authorization: `Bearer ${secretKey}` },

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Star } from "lucide-react";
-import { Tile } from "@/components/ui-kit";
+import { Tile, ProviderAvatar } from "@/components/ui-kit";
 import { formatMoney, useCurrency } from "@/lib/currency";
 
 export type ProviderCardData = {
@@ -19,19 +19,16 @@ export type ProviderCardData = {
 };
 
 export function ProviderCard({ p }: { p: ProviderCardData }) {
-  const initial = p.business_name?.[0]?.toUpperCase() ?? "?";
   const currency = useCurrency();
-  const image = p.avatar_url || p.photo_urls[0];
   return (
     <Tile as={Link} to="/provider/$id" params={{ id: p.id }} className="block hover:border-accent/20">
       <div className="flex gap-4">
-        <div className="size-20 rounded-2xl bg-canvas flex-none overflow-hidden grid place-items-center text-brand/40 text-2xl font-bold">
-          {image ? (
-            <img src={image} alt={p.business_name} className="h-full w-full object-cover" />
-          ) : (
-            initial
-          )}
-        </div>
+        <ProviderAvatar
+          name={p.business_name}
+          avatarUrl={p.avatar_url}
+          photoUrl={p.photo_urls[0]}
+          className="size-20 rounded-2xl text-2xl"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
