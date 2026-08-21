@@ -1,1 +1,17 @@
 project_id = "wsxjjgeqalnnfquzddpe"
+
+# Firebase Third-Party Auth is configured directly on the remote project via
+# the Management API (POST /v1/projects/{ref}/config/auth/third-party-auth,
+# oidc_issuer_url = https://securetoken.google.com/jobstream-b77a2) — NOT via
+# this file. Do not run `supabase config push`: this config.toml is a thin
+# stub (missing most of the project's real Auth/Storage settings), and
+# `config push` treats it as the full source of truth, silently overwriting
+# every remote setting it doesn't list with GoTrue defaults. That already
+# happened once (site_url, redirect allow-list, MFA TOTP, SMS OTP settings
+# all got clobbered and had to be restored via direct PATCH calls) — don't
+# repeat it.
+
+[functions.send-push]
+# Called only from the notifications-insert DB trigger, authenticated via a
+# Vault-stored shared secret (X-Webhook-Secret) instead of a Supabase JWT.
+verify_jwt = false

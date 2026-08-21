@@ -250,6 +250,9 @@ const bookingStatusStyles: Record<string, string> = {
   rejected: "bg-red-100 text-red-800",
   completed: "bg-green-100 text-green-800",
   cancelled: "bg-slate-100 text-slate-700",
+  processing: "bg-blue-100 text-blue-800",
+  paid: "bg-green-100 text-green-800",
+  failed: "bg-red-100 text-red-800",
 };
 const bookingStatusLabels: Record<string, string> = {
   on_the_way: "On the way",

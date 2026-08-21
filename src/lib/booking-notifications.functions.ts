@@ -38,8 +38,8 @@ export const notifyProviderOfBooking = createServerFn({ method: "POST" })
     if (error || !booking) throw new Error(error?.message ?? "Booking not found");
     if (booking.customer_id !== context.userId) throw new Error("Forbidden");
 
-    const { data: providerUser } = await supabaseAdmin.auth.admin.getUserById(booking.provider_id);
-    const providerEmail = providerUser?.user?.email;
+    const { data: providerProfile } = await supabaseAdmin.from("profiles").select("email").eq("id", booking.provider_id).maybeSingle();
+    const providerEmail = providerProfile?.email;
     if (!providerEmail) return { sent: false, reason: "provider_no_email" as const };
 
     const { data: customer } = await supabaseAdmin

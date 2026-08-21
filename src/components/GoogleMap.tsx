@@ -1,6 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/lib/theme";
+import { MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Google Maps ignores the page's CSS theme entirely, so without an explicit
 // dark style array it always paints its default light basemap — a jarring
@@ -79,6 +81,7 @@ export function GoogleMap({
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const { resolvedTheme } = useTheme();
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
     let cancelled = false;
@@ -94,8 +97,20 @@ export function GoogleMap({
           gestureHandling: "greedy",
           styles: resolvedTheme === "dark" ? DARK_MAP_STYLES : LIGHT_MAP_STYLES,
         });
+        // Constructing the Map object succeeds even when tiles never
+        // actually paint (e.g. an API key not authorized for this
+        // referrer) — wait for a real "tilesloaded" so the placeholder
+        // doesn't disappear in front of a still-blank map.
+        const timeout = setTimeout(() => { if (!cancelled) setStatus("error"); }, 6000);
+        window.google.maps.event.addListenerOnce(mapRef.current, "tilesloaded", () => {
+          clearTimeout(timeout);
+          if (!cancelled) setStatus("ready");
+        });
       })
-      .catch((e) => console.error(e));
+      .catch((e) => {
+        console.error(e);
+        if (!cancelled) setStatus("error");
+      });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -134,5 +149,21 @@ export function GoogleMap({
     });
   }, [markers]);
 
-  return <div ref={ref} className={`w-full h-full ${className}`} />;
+  return (
+    <div className={cn("relative w-full h-full", className)}>
+      <div ref={ref} className="w-full h-full" />
+      {status !== "ready" && (
+        <div className="absolute inset-0 grid place-items-center bg-canvas pointer-events-none">
+          {status === "loading" ? (
+            <div className="size-8 rounded-full border-2 border-brand/15 border-t-accent animate-spin" />
+          ) : (
+            <div className="flex flex-col items-center gap-1.5 text-brand/40">
+              <MapPin className="size-6" />
+              <span className="text-[11px] font-semibold">Map unavailable</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }

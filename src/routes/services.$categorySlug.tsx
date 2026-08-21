@@ -1,9 +1,11 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
-import { ProviderCard } from "@/components/ProviderCard";
+import { ProviderCard, type ProviderCardData } from "@/components/ProviderCard";
 import { StickyHeader, InlineSpinner, EmptyState, Eyebrow } from "@/components/ui-kit";
 import { fetchActiveProviders, fetchCategories, fetchCategoryBySlug } from "@/lib/providers";
+import { haversineKm } from "@/lib/session";
 import { ArrowLeft, Compass } from "lucide-react";
 
 const SITE_URL = "https://fixrly.app";
@@ -81,6 +83,38 @@ function CategoryPage() {
     queryFn: () => fetchActiveProviders(category.id),
   });
 
+  // Silent, best-effort geolocation — same background auto-detect the
+  // homepage uses (no permission prompt UI here, just fills in distance
+  // when the browser already has/grants it).
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  useEffect(() => {
+    if (!coords && typeof window !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {},
+        { timeout: 4000 },
+      );
+    }
+  }, [coords]);
+
+  const sortedProviders = useMemo(() => {
+    const list = providers as unknown as (ProviderCardData & { latitude: number | null; longitude: number | null })[];
+    const withDistance = list.map((p) => ({
+      ...p,
+      distance_km:
+        coords && p.latitude != null && p.longitude != null
+          ? haversineKm(coords, { lat: p.latitude, lng: p.longitude })
+          : null,
+    }));
+    withDistance.sort((a, b) => {
+      if (a.distance_km == null && b.distance_km == null) return 0;
+      if (a.distance_km == null) return 1;
+      if (b.distance_km == null) return -1;
+      return a.distance_km - b.distance_km;
+    });
+    return withDistance;
+  }, [providers, coords]);
+
   return (
     <div className="min-h-screen bg-canvas font-sans text-brand pb-24">
       <StickyHeader>
@@ -128,12 +162,12 @@ function CategoryPage() {
         <div className="px-4 pb-8 space-y-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-semibold">Top {category.name.toLowerCase()} pros</h2>
-            <span className="font-mono text-xs font-bold uppercase text-brand/40">{providers.length} results</span>
+            <span className="font-mono text-xs font-bold uppercase text-brand/40">{sortedProviders.length} results</span>
           </div>
 
           {isLoading ? (
             <InlineSpinner />
-          ) : providers.length === 0 ? (
+          ) : sortedProviders.length === 0 ? (
             <EmptyState
               icon={Compass}
               title={`No ${category.name.toLowerCase()} pros yet`}
@@ -145,7 +179,7 @@ function CategoryPage() {
               }
             />
           ) : (
-            providers.map((p) => <ProviderCard key={p.id} p={p} />)
+            sortedProviders.map((p) => <ProviderCard key={p.id} p={p} />)
           )}
         </div>
       </div>

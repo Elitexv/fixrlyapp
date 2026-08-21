@@ -59,6 +59,10 @@ export default defineConfig({
         // per-request (auth state, booking/payment data), so a cached app-shell
         // fallback would risk showing stale or wrong-user content.
         navigateFallback: null,
+        // generateSW mode writes the whole service worker for us, so push
+        // event handling (which needs hand-written listener code) is added
+        // via an imported script rather than switching to injectManifest.
+        importScripts: ["push-sw.js"],
         runtimeCaching: [
           {
             // Supabase reads: serve from network, fall back to a short-lived

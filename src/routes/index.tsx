@@ -16,6 +16,25 @@ import { toast } from "sonner";
 
 const SITE_URL = "https://fixrly.app";
 
+// GeolocationPositionError.message is a raw, unfriendly browser string (e.g.
+// "User denied Geolocation"). PERMISSION_DENIED specifically means the
+// browser's site-level permission is blocked — the app can't re-prompt for
+// it, only the user can flip it back on in browser settings — so tell them
+// that and point at the manual search box (which stays fully usable either
+// way) instead of leaving them stuck.
+function friendlyGeoError(err: GeolocationPositionError): string {
+  switch (err.code) {
+    case err.PERMISSION_DENIED:
+      return "Location access is blocked for this site. Enable it in your browser's site settings, or search by city/ZIP instead.";
+    case err.POSITION_UNAVAILABLE:
+      return "Couldn't determine your location. Try searching by city/ZIP instead.";
+    case err.TIMEOUT:
+      return "Location request timed out. Try again, or search by city/ZIP instead.";
+    default:
+      return err.message || "Couldn't get your location.";
+  }
+}
+
 export const Route = createFileRoute("/")({
   // Server-rendered so crawlers (and the first paint) see real provider
   // listings instead of an empty shell waiting on a client-side fetch.
@@ -124,7 +143,7 @@ function Home() {
         setGeoLoading(false);
       },
       (err) => {
-        toast.error(err.message || "Couldn't get location");
+        toast.error(friendlyGeoError(err));
         setGeoLoading(false);
       },
       { enableHighAccuracy: true, timeout: 8000 },

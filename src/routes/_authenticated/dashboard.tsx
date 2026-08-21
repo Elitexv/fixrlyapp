@@ -85,7 +85,16 @@ function DashboardPage() {
   };
 
   const stats = useMemo(() => {
-    const earned = bookings.filter((b: any) => b.status === "completed").reduce((s: number, b: any) => s + (Number(b.total_price) || 0), 0);
+    // Real net payout (booking total minus platform fee), not raw
+    // total_price, and only for bookings actually paid — a completed but
+    // unpaid booking isn't earned yet. This is the same figure
+    // provider_available_balance() draws down from once a withdrawal is
+    // requested, so it can diverge from "available to withdraw" on /payouts
+    // the moment any withdrawal is pending — hence "Total earned" below
+    // rather than "Earnings", to avoid the two being read as the same number.
+    const earned = bookings
+      .filter((b: any) => b.status === "completed" && b.payment_status === "paid")
+      .reduce((s: number, b: any) => s + (Number(b.provider_payout_amount) || 0), 0);
     return {
       pending: bookings.filter((b: any) => b.status === "pending").length,
       accepted: bookings.filter((b: any) => b.status === "accepted").length,
@@ -228,11 +237,14 @@ function DashboardPage() {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
               <StatCard label="Pending" value={stats.pending} />
               <StatCard label="Accepted" value={stats.accepted} />
               <StatCard label="Completed" value={stats.completed} />
-              <StatCard label="Earnings" value={formatMoney(stats.earned, currency)} accent />
+              <StatCard label="Total earned" value={formatMoney(stats.earned, currency)} accent />
+            </div>
+            <div className="mt-3 text-right">
+              <Link to="/payouts" className="text-sm font-bold uppercase tracking-[0.2em] text-accent">Manage payouts →</Link>
             </div>
 
             <div className="mt-6 rounded-2xl bg-canvas p-5 text-sm text-brand/70">
@@ -288,9 +300,9 @@ function DashboardPage() {
                               </SecondaryButton>
                             </>
                           ) : (
-                            <button onClick={() => updateStatus(b.id, "completed")} className="w-full rounded-2xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90">
+                            <PrimaryButton onClick={() => updateStatus(b.id, "completed")} className="w-full rounded-2xl py-2 text-xs">
                               Mark completed
-                            </button>
+                            </PrimaryButton>
                           )}
                         </div>
                       )}
@@ -346,7 +358,7 @@ function DashboardPage() {
                       type="button"
                       key={c.id}
                       onClick={() => setSelectedCats(on ? selectedCats.filter((x) => x !== c.id) : [...selectedCats, c.id])}
-                      className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold transition ${on ? "bg-primary text-primary-foreground" : "light-surface bg-white border border-brand/10 text-brand hover:border-accent/30"}`}
+                      className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold transition ${on ? "bg-accent text-white" : "light-surface bg-white border border-brand/10 text-brand hover:border-accent/30"}`}
                     >
                       {c.icon} {c.name}
                     </button>

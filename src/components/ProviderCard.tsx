@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, MapPin, Star } from "lucide-react";
 import { Tile, ProviderAvatar } from "@/components/ui-kit";
 import { formatMoney, useCurrency } from "@/lib/currency";
 
@@ -38,7 +38,8 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
                   {p.category_names[0] ?? "Service Pro"}
                 </span>
                 {p.city && (
-                  <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-medium text-sky-700">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-medium text-sky-700">
+                    <MapPin className="size-3" />
                     {p.city}
                   </span>
                 )}

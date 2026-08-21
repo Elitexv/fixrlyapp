@@ -1,17 +1,23 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { waitForSupabaseSession } from "@/lib/session";
+import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
+import { firebaseAuth } from "@/integrations/firebase/client";
 import { toast } from "sonner";
 import { PageSpinner, PrimaryButton, TextField } from "@/components/ui-kit";
 
+type Search = { oobCode?: string };
+
 export const Route = createFileRoute("/auth/reset-password")({
+  validateSearch: (s: Record<string, unknown>): Search => ({
+    oobCode: typeof s.oobCode === "string" ? s.oobCode : undefined,
+  }),
   head: () => ({ meta: [{ title: "Reset password — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: ResetPasswordPage,
 });
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
+  const { oobCode } = Route.useSearch();
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [password, setPassword] = useState("");
@@ -19,20 +25,16 @@ function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!oobCode) {
+      setFailed(true);
+      return;
+    }
     let cancelled = false;
-    (async () => {
-      const session = await waitForSupabaseSession(10, 300);
-      if (cancelled) return;
-      if (!session) {
-        setFailed(true);
-        return;
-      }
-      setReady(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    verifyPasswordResetCode(firebaseAuth, oobCode)
+      .then(() => { if (!cancelled) setReady(true); })
+      .catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; };
+  }, [oobCode]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,10 +42,9 @@ function ResetPasswordPage() {
     if (password !== confirm) return toast.error("Passwords don't match");
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      await confirmPasswordReset(firebaseAuth, oobCode!, password);
       toast.success("Password updated");
-      navigate({ to: "/", replace: true });
+      navigate({ to: "/auth", replace: true });
     } catch (err: any) {
       toast.error(err.message ?? "Could not update password");
     } finally {

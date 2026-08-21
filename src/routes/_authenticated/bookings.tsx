@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { firebaseAuth } from "@/integrations/firebase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { useSession, useRoles } from "@/lib/session";
 import { toast } from "sonner";
@@ -313,7 +314,7 @@ function BookingsPage() {
                     <div className="flex-1 py-2 rounded-lg text-xs font-bold text-center bg-orange-50 text-orange-700 inline-flex items-center justify-center gap-1.5">
                       <Navigation className="size-3.5 animate-pulse" /> Sharing live location
                     </div>
-                    <button onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold transition hover:bg-primary/90">Mark completed</button>
+                    <PrimaryButton onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 rounded-lg text-xs">Mark completed</PrimaryButton>
                   </>
                 )}
                 {tab === "customer" && ["pending", "accepted", "on_the_way"].includes(b.status) && (
@@ -362,10 +363,9 @@ function LeaveReviewButton({ booking }: { booking: any }) {
   const submit = async () => {
     setLoading(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
       const { error } = await supabase.from("reviews").insert({
         booking_id: booking.id,
-        customer_id: u.user!.id,
+        customer_id: firebaseAuth.currentUser!.uid,
         provider_id: booking.provider_id,
         rating,
         comment: comment || null,

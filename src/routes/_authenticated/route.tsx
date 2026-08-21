@@ -1,10 +1,10 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { getSupabaseUserOrNull } from "@/lib/session";
+import { getFirebaseUserOrNull } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
-    const user = await getSupabaseUserOrNull();
+    const user = await getFirebaseUserOrNull();
     if (!user) {
       throw redirect({ to: "/auth", search: { redirect: location.href } });
     }

@@ -11,7 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { supabase } from "@/integrations/supabase/client";
+import { onAuthStateChanged } from "firebase/auth";
+import { firebaseAuth } from "@/integrations/firebase/client";
 import { Toaster, toast } from "sonner";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -158,12 +159,20 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+    // The Supabase client is configured with the `accessToken` option (see
+    // integrations/supabase/client.ts) so it no longer owns session state —
+    // calling supabase.auth.onAuthStateChange on a client configured that
+    // way throws. Firebase is the actual source of truth for sign-in state.
+    let first = true;
+    const unsubscribe = onAuthStateChanged(firebaseAuth, () => {
+      if (first) {
+        first = false;
+        return;
+      }
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      queryClient.invalidateQueries();
     });
-    return () => sub.subscription.unsubscribe();
+    return unsubscribe;
   }, [queryClient, router]);
 
   // Registration is prod-only: devOptions is off, so no sw.js exists in dev.

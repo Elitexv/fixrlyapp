@@ -90,6 +90,13 @@ export type Database = {
             referencedRelation: "admin_users_overview"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "admin_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bookings: {
@@ -115,6 +122,7 @@ export type Database = {
           provider_lat: number | null
           provider_lng: number | null
           provider_location_updated_at: string | null
+          provider_payout_amount: number | null
           scheduled_at: string
           status: Database["public"]["Enums"]["booking_status"]
           total_price: number | null
@@ -142,6 +150,7 @@ export type Database = {
           provider_lat?: number | null
           provider_lng?: number | null
           provider_location_updated_at?: string | null
+          provider_payout_amount?: number | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_price?: number | null
@@ -169,6 +178,7 @@ export type Database = {
           provider_lat?: number | null
           provider_lng?: number | null
           provider_location_updated_at?: string | null
+          provider_payout_amount?: number | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_price?: number | null
@@ -184,6 +194,20 @@ export type Database = {
           },
           {
             foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_customer_id_profiles_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "admin_users_overview"
@@ -248,6 +272,13 @@ export type Database = {
             referencedRelation: "admin_users_overview"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       conversations: {
@@ -293,6 +324,13 @@ export type Database = {
             referencedRelation: "admin_users_overview"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       notifications: {
@@ -334,12 +372,20 @@ export type Database = {
             referencedRelation: "admin_users_overview"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -348,6 +394,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
@@ -356,20 +403,13 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "admin_users_overview"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       provider_categories: {
         Row: {
@@ -429,9 +469,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "provider_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "provider_follows_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_payout_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at: string
+          id: string
+          paystack_recipient_code: string | null
+          provider_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at?: string
+          id?: string
+          paystack_recipient_code?: string | null
+          provider_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_code?: string
+          bank_name?: string
+          created_at?: string
+          id?: string
+          paystack_recipient_code?: string | null
+          provider_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_payout_accounts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
             referencedRelation: "provider_profiles"
             referencedColumns: ["id"]
           },
@@ -492,15 +583,7 @@ export type Database = {
           updated_at?: string
           zip?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "provider_profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "admin_users_overview"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       provider_reactions: {
         Row: {
@@ -540,6 +623,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "admin_users_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -625,6 +715,55 @@ export type Database = {
             referencedRelation: "admin_users_overview"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "provider_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       reviews: {
@@ -668,6 +807,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "admin_users_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -736,6 +882,86 @@ export type Database = {
             referencedRelation: "admin_users_overview"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      withdrawal_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          mode: string | null
+          payout_account_id: string
+          paystack_transfer_code: string | null
+          paystack_transfer_reference: string | null
+          provider_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          mode?: string | null
+          payout_account_id: string
+          paystack_transfer_code?: string | null
+          paystack_transfer_reference?: string | null
+          provider_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          mode?: string | null
+          payout_account_id?: string
+          paystack_transfer_code?: string | null
+          paystack_transfer_reference?: string | null
+          provider_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_requests_payout_account_id_fkey"
+            columns: ["payout_account_id"]
+            isOneToOne: false
+            referencedRelation: "provider_payout_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -749,6 +975,24 @@ export type Database = {
           id: string | null
           phone: string | null
           roles: string[] | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          phone?: string | null
+          roles?: never
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          phone?: string | null
+          roles?: never
         }
         Relationships: []
       }
@@ -784,6 +1028,16 @@ export type Database = {
         Args: { _request_id: string }
         Returns: undefined
       }
+      ensure_profile: {
+        Args: {
+          p_avatar_url: string
+          p_email: string
+          p_full_name: string
+          p_phone: string
+          p_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -791,10 +1045,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      provider_available_balance: {
+        Args: { _provider_id: string }
+        Returns: number
+      }
       reject_provider_request: {
         Args: { _notes: string; _request_id: string }
         Returns: undefined
       }
+      reject_withdrawal: {
+        Args: { _id: string; _notes: string }
+        Returns: undefined
+      }
+      request_withdrawal: {
+        Args: { _amount: number }
+        Returns: string
+      }
+      uid: { Args: never; Returns: string }
     }
     Enums: {
       app_role: "admin" | "provider" | "customer"

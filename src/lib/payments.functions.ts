@@ -1,17 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-const PAYSTACK_BASE = "https://api.paystack.co";
-
-// The admin "Mode" toggle (Test/sandbox vs Live) only meant anything in the
-// UI — every server call still reached for the one PAYSTACK_SECRET_KEY
-// regardless, so "Test" mode silently charged real cards. Split into two
-// project secrets and pick the right one by the admin_settings row instead.
-function paystackSecretKeyForMode(mode: string | null | undefined): string | undefined {
-  if (mode === "live") return process.env.PAYSTACK_SECRET_KEY;
-  return process.env.PAYSTACK_TEST_SECRET_KEY;
-}
+import { PAYSTACK_BASE, paystackSecretKeyForMode } from "@/lib/paystack";
 
 function getOrigin(): string {
   const request = getRequest();
@@ -61,8 +51,8 @@ export const initializePaystackPayment = createServerFn({ method: "POST" })
       );
     }
 
-    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(context.userId);
-    const email = authData?.user?.email;
+    const { data: profile } = await supabaseAdmin.from("profiles").select("email").eq("id", context.userId).maybeSingle();
+    const email = profile?.email;
     if (!email) throw new Error("Your account has no email on file");
 
     const reference = `booking_${booking.id}_${Date.now()}`;
@@ -129,9 +119,26 @@ export const verifyPaystackPayment = createServerFn({ method: "POST" })
     // the customer can just retry checkout from the bookings list instead
     // of hitting a dead-end status.
     if (verified) {
+      // Snapshot the provider's net payout at the moment payment is
+      // confirmed, using the fee % in effect right now — a later admin
+      // change to platform_fee_percent must never retroactively rewrite
+      // what a provider was actually owed on a past booking. Computed off
+      // payment_amount (what Paystack actually verified above), not
+      // total_price, since those could in principle diverge.
+      const { data: paymentSettings } = await supabaseAdmin
+        .from("admin_settings" as any)
+        .select("platform_fee_percent")
+        .eq("id", "payments")
+        .maybeSingle();
+      const feePercent = Number((paymentSettings as any)?.platform_fee_percent ?? 0);
+      const payoutAmount =
+        booking.payment_amount != null
+          ? Math.round(Number(booking.payment_amount) * (1 - feePercent / 100) * 100) / 100
+          : null;
+
       const { error: updateError } = await supabaseAdmin
         .from("bookings")
-        .update({ payment_status: "paid", paid_at: new Date().toISOString() })
+        .update({ payment_status: "paid", paid_at: new Date().toISOString(), provider_payout_amount: payoutAmount })
         .eq("id", booking.id);
       if (updateError) throw new Error(updateError.message);
     }

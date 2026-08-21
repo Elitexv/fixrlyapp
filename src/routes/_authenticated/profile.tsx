@@ -1,4 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { signOut } from "firebase/auth";
+import { firebaseAuth } from "@/integrations/firebase/client";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, useRoles } from "@/lib/session";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,20 +8,21 @@ import { BottomNav } from "@/components/BottomNav";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { LogOut, User, Briefcase, Shield, Home, Palette, Sun, Moon, Laptop } from "lucide-react";
+import { LogOut, User, Briefcase, Shield, Home, Palette, Sun, Moon, Laptop, Bell, BellOff } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import { Panel, Eyebrow, FormField, PrimaryButton, PageSpinner } from "@/components/ui-kit";
 import { useTheme, type Theme } from "@/lib/theme";
+import { getPushSubscriptionState, isPushSupported, subscribeToPush, unsubscribeFromPush } from "@/lib/push";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "My profile — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: ProfilePage,
 });
 
-type Section = "profile" | "provider" | "theme" | "admin";
+type Section = "profile" | "provider" | "notifications" | "theme" | "admin";
 
 // This page's account sidebar renders as a plain surface instead of the app's
 // dark navy sidebar panel — scoped to <body> (not just this tree) because the
@@ -83,10 +86,10 @@ function ProfilePage() {
     qc.invalidateQueries({ queryKey: ["profile", user!.id] });
   };
 
-  const signOut = async () => {
+  const handleSignOut = async () => {
     await qc.cancelQueries();
     qc.clear();
-    await supabase.auth.signOut();
+    await signOut(firebaseAuth);
     navigate({ to: "/auth", replace: true });
   };
 
@@ -97,6 +100,7 @@ function ProfilePage() {
   const sections = [
     { id: "profile" as const, label: "Profile", icon: User },
     { id: "provider" as const, label: "Provider", icon: Briefcase },
+    { id: "notifications" as const, label: "Notifications", icon: Bell },
     { id: "theme" as const, label: "Theme", icon: Palette },
     ...(isAdmin ? [{ id: "admin" as const, label: "Admin", icon: Shield }] : []),
   ];
@@ -104,51 +108,7 @@ function ProfilePage() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-canvas">
-        <Sidebar>
-          <SidebarContent>
-            <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
-              <div className="size-9 rounded-xl bg-accent grid place-items-center text-white shadow-lg shadow-accent/20">
-                <User className="size-4" />
-              </div>
-              <div>
-                <Eyebrow>Fixrly</Eyebrow>
-                <div className="text-sm font-black tracking-tight">Account</div>
-              </div>
-            </div>
-            <SidebarGroup>
-              <SidebarGroupLabel>Settings</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {sections.map((s) => {
-                    const Icon = s.icon;
-                    return (
-                      <SidebarMenuItem key={s.id}>
-                        <SidebarMenuButton isActive={section === s.id} onClick={() => setSection(s.id)}>
-                          <Icon className="size-4" />
-                          <span>{s.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-          <SidebarFooter>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/"><Home className="size-4" /><span>Back to app</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={signOut}>
-                  <LogOut className="size-4" /><span>Sign out</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
-        </Sidebar>
+        <ProfileSidebarNav section={section} setSection={setSection} sections={sections} onSignOut={handleSignOut} />
 
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-16 flex items-center gap-3 border-b border-soft bg-surface/90 backdrop-blur sticky top-0 z-20 px-4">
@@ -157,6 +117,15 @@ function ProfilePage() {
               <Eyebrow>Account</Eyebrow>
               <h1 className="text-base font-black tracking-tight truncate">{sections.find((s) => s.id === section)?.label}</h1>
             </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              aria-label="Sign out"
+              className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider text-brand/60 transition hover:bg-canvas hover:text-red-600"
+            >
+              <LogOut className="size-4" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
           </header>
 
           <main className="flex-1 px-4 py-6 pb-28 max-w-3xl w-full mx-auto">
@@ -218,6 +187,8 @@ function ProfilePage() {
               </Panel>
             )}
 
+            {section === "notifications" && <NotificationsSection userId={user!.id} />}
+
             {section === "theme" && <ThemeSection />}
 
             {section === "admin" && isAdmin && (
@@ -244,6 +215,165 @@ function ProfilePage() {
         <BottomNav />
       </div>
     </SidebarProvider>
+  );
+}
+
+// Split out so useSidebar() can close the mobile off-canvas drawer after a
+// section selection — SidebarMenuButton has no such behavior built in, and
+// ProfilePage itself renders the SidebarProvider that owns this context, so
+// it can't call the hook directly (the provider doesn't exist yet during
+// ProfilePage's own render).
+function ProfileSidebarNav({
+  section, setSection, sections, onSignOut,
+}: {
+  section: Section;
+  setSection: (s: Section) => void;
+  sections: { id: Section; label: string; icon: typeof User }[];
+  onSignOut: () => void;
+}) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const selectSection = (s: Section) => {
+    setSection(s);
+    if (isMobile) setOpenMobile(false);
+  };
+
+  return (
+    <Sidebar>
+      <SidebarContent>
+        <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
+          <div className="size-9 rounded-xl bg-accent grid place-items-center text-white shadow-lg shadow-accent/20">
+            <User className="size-4" />
+          </div>
+          <div>
+            <Eyebrow>Fixrly</Eyebrow>
+            <div className="text-sm font-black tracking-tight">Account</div>
+          </div>
+        </div>
+        <SidebarGroup>
+          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {sections.map((s) => {
+                const Icon = s.icon;
+                return (
+                  <SidebarMenuItem key={s.id}>
+                    <SidebarMenuButton isActive={section === s.id} onClick={() => selectSection(s.id)}>
+                      <Icon className="size-4" />
+                      <span>{s.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/"><Home className="size-4" /><span>Back to app</span></Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={onSignOut}>
+              <LogOut className="size-4" /><span>Sign out</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
+
+function NotificationsSection({ userId }: { userId: string }) {
+  const [state, setState] = useState<"loading" | "unsupported" | "denied" | "subscribed" | "unsubscribed">("loading");
+  const [working, setWorking] = useState(false);
+
+  useEffect(() => {
+    getPushSubscriptionState().then(setState);
+  }, []);
+
+  const enable = async () => {
+    setWorking(true);
+    try {
+      await subscribeToPush(userId);
+      setState("subscribed");
+      toast.success("Push notifications enabled");
+    } catch (err: any) {
+      toast.error(err.message ?? "Couldn't enable push notifications");
+      setState(await getPushSubscriptionState());
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const disable = async () => {
+    setWorking(true);
+    try {
+      await unsubscribeFromPush(userId);
+      setState("unsubscribed");
+      toast.success("Push notifications turned off");
+    } catch (err: any) {
+      toast.error(err.message ?? "Couldn't turn off push notifications");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  return (
+    <Panel>
+      <Eyebrow>Push notifications</Eyebrow>
+      <h2 className="mt-2 text-lg font-black tracking-tight">Stay in the loop</h2>
+      <p className="mt-2 text-sm text-brand/60">
+        Get notified the moment a booking is accepted, your provider is on the way, or a customer books you — even
+        when Fixrly isn't open.
+      </p>
+
+      <div className="mt-5">
+        {state === "loading" && <p className="text-sm text-brand/50">Checking status…</p>}
+
+        {state === "unsupported" && (
+          <p className="text-sm text-brand/50">Push notifications aren't supported in this browser.</p>
+        )}
+
+        {state === "denied" && (
+          <p className="text-sm text-brand/50">
+            Notifications are blocked for Fixrly in your browser settings. Allow them from your browser's site
+            settings to turn this on.
+          </p>
+        )}
+
+        {state === "unsubscribed" && (
+          <button
+            type="button"
+            onClick={enable}
+            disabled={working}
+            className="inline-flex items-center gap-2 rounded-2xl bg-accent px-5 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500 disabled:opacity-60"
+          >
+            <Bell className="size-4" />
+            {working ? "Enabling…" : "Enable push notifications"}
+          </button>
+        )}
+
+        {state === "subscribed" && (
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent">
+              <Bell className="size-3.5" /> Enabled on this device
+            </span>
+            <button
+              type="button"
+              onClick={disable}
+              disabled={working}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-brand/50 hover:text-red-600 disabled:opacity-60"
+            >
+              <BellOff className="size-3.5" />
+              {working ? "Turning off…" : "Turn off"}
+            </button>
+          </div>
+        )}
+      </div>
+    </Panel>
   );
 }
 

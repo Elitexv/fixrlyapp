@@ -1,12 +1,49 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  updateProfile,
+} from "firebase/auth";
+import type { User as FirebaseUser } from "firebase/auth";
+import { firebaseAuth, googleProvider } from "@/integrations/firebase/client";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
-import { waitForSupabaseSession } from "@/lib/session";
+import { safeRedirectPath } from "@/lib/session";
+import { ensureAuthClaim } from "@/lib/firebase-auth.functions";
 import { toast } from "sonner";
 import { PrimaryButton, TextField } from "@/components/ui-kit";
 
 type Search = { redirect?: string };
+
+// Firebase's JS SDK (v9.6.2+) collapses "no such user" and "wrong password"
+// into one auth/invalid-credential code for both sign-in methods, for
+// security reasons (doesn't reveal which part was wrong) — but that also
+// hides the single most common real cause during the Supabase Auth ->
+// Firebase Auth cutover: pre-migration accounts that only ever existed in
+// Supabase and have no Firebase counterpart. err.message otherwise surfaces
+// the raw "Firebase: Error (auth/...)" string verbatim, which isn't
+// actionable for an end user.
+function friendlyAuthError(err: any): string {
+  switch (err?.code) {
+    case "auth/invalid-credential":
+      return "Incorrect email or password. If you had an account before our recent update, please create a new one.";
+    case "auth/email-already-in-use":
+      return "An account with this email already exists — try signing in instead.";
+    case "auth/weak-password":
+      return "Password must be at least 6 characters.";
+    case "auth/invalid-email":
+      return "That doesn't look like a valid email address.";
+    case "auth/too-many-requests":
+      return "Too many attempts — please wait a moment and try again.";
+    case "auth/network-request-failed":
+      return "Network error — check your connection and try again.";
+    default:
+      return err?.message ?? "Something went wrong. Please try again.";
+  }
+}
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): Search => ({
@@ -16,10 +53,36 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+// Runs after every successful Firebase sign-in (signup, signin, Google) —
+// idempotent throughout, safe to call every time, not just the first:
+//   1. Make sure the token carries the `role: authenticated` custom claim
+//      Supabase's Third-Party Auth requires to route requests to the
+//      `authenticated` Postgres role (Firebase doesn't set this itself).
+//   2. Force-refresh the ID token so *this* sign-in's token actually has
+//      the claim, not just the next one.
+//   3. Seed/refresh profiles + user_roles via ensure_profile — no-ops
+//      (fills-if-empty) after the first call.
+async function completeSignIn(user: FirebaseUser, opts: { fullName?: string | null; avatarUrl?: string | null; phone?: string | null; role: "customer" | "provider"; email: string | null }) {
+  await ensureAuthClaim();
+  await user.getIdToken(true);
+
+  // Supabase's codegen doesn't mark these text params nullable even though
+  // ensure_profile's SQL signature accepts NULL for all of them — same gap
+  // as the admin_settings `as any` casts elsewhere in this codebase.
+  const { error } = await supabase.rpc("ensure_profile", {
+    p_full_name: opts.fullName ?? null,
+    p_avatar_url: opts.avatarUrl ?? null,
+    p_phone: opts.phone ?? null,
+    p_role: opts.role,
+    p_email: opts.email,
+  } as any);
+  if (error) throw error;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
-  const goNext = () => navigate({ to: redirect && redirect.startsWith("/") ? redirect : "/" });
+  const goNext = () => navigate({ to: safeRedirectPath(redirect) });
 
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [role, setRole] = useState<"customer" | "provider">("customer");
@@ -32,14 +95,17 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     try {
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-      if (result.error) return toast.error(result.error.message);
-      if (result.redirected) return;
-
-      await waitForSupabaseSession(6, 250);
+      const result = await signInWithPopup(firebaseAuth, googleProvider);
+      await completeSignIn(result.user, {
+        fullName: result.user.displayName,
+        avatarUrl: result.user.photoURL,
+        role: "customer",
+        email: result.user.email,
+      });
       goNext();
     } catch (err: any) {
-      toast.error(err.message ?? "Google sign-in failed");
+      if (err?.code === "auth/popup-closed-by-user") return;
+      toast.error(friendlyAuthError(err));
     }
   };
 
@@ -47,13 +113,13 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+      await sendPasswordResetEmail(firebaseAuth, email, {
+        url: `${window.location.origin}/auth/reset-password`,
+        handleCodeInApp: true,
       });
-      if (error) throw error;
       setResetSent(true);
     } catch (err: any) {
-      toast.error(err.message ?? "Could not send reset email");
+      toast.error(friendlyAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -64,54 +130,20 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        console.log("[Auth] Signing up with email:", email);
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          phone: phone || undefined,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: { full_name: fullName, role, phone },
-          },
-        });
-        if (error) {
-          console.error("[Auth] Signup error:", error);
-          throw error;
-        }
-
-        console.log("[Auth] Signup successful, session:", data.session ? "yes" : "no", "user_confirmed:", data.user?.user_metadata?.email_verified);
-        
-        if (!data.session) {
-          toast.success("Account created! Check your email to confirm, then sign in.");
-          setMode("signin");
-          setEmail("");
-          setPassword("");
-          return;
-        }
-
-        await waitForSupabaseSession(6, 250);
+        const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+        if (fullName) await updateProfile(cred.user, { displayName: fullName });
+        void sendEmailVerification(cred.user).catch(() => {});
+        await completeSignIn(cred.user, { fullName, phone, role, email: cred.user.email });
         toast.success("Account created");
         goNext();
       } else {
-        console.log("[Auth] Signing in with email:", email);
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          console.error("[Auth] Sign-in error:", error);
-          throw error;
-        }
-        if (!data.session) {
-          console.error("[Auth] No session after sign-in");
-          throw new Error("We couldn't start your session. Please try again.");
-        }
-
-        console.log("[Auth] Sign-in successful, waiting for session...");
-        await waitForSupabaseSession(6, 250);
+        const cred = await signInWithEmailAndPassword(firebaseAuth, email, password);
+        await completeSignIn(cred.user, { fullName: cred.user.displayName, phone: null, role: "customer", email: cred.user.email });
         toast.success("Signed in");
         goNext();
       }
     } catch (err: any) {
-      console.error("[Auth] Error:", err);
-      toast.error(err.message ?? "Failed");
+      toast.error(friendlyAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -220,14 +252,14 @@ function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setRole("customer")}
-                  className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${role === "customer" ? "bg-primary text-primary-foreground border-primary" : "bg-canvas border-brand/10 hover:border-brand/20"}`}
+                  className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${role === "customer" ? "bg-accent text-white border-accent" : "bg-canvas border-brand/10 hover:border-brand/20"}`}
                 >
                   I need services
                 </button>
                 <button
                   type="button"
                   onClick={() => setRole("provider")}
-                  className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${role === "provider" ? "bg-primary text-primary-foreground border-primary" : "bg-canvas border-brand/10 hover:border-brand/20"}`}
+                  className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${role === "provider" ? "bg-accent text-white border-accent" : "bg-canvas border-brand/10 hover:border-brand/20"}`}
                 >
                   I offer services
                 </button>

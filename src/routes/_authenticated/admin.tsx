@@ -1,8 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
+import { signOut } from "firebase/auth";
+import { firebaseAuth } from "@/integrations/firebase/client";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, useRoles } from "@/lib/session";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { approveWithdrawal } from "@/lib/withdrawals.functions";
 import { GoogleMap } from "@/components/GoogleMap";
 import { toast } from "sonner";
 import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
@@ -10,20 +14,23 @@ import { formatMoney, useCurrency } from "@/lib/currency";
 import { formatRelativeTime } from "@/lib/time";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  Check, X, FileText, IdCard, LayoutDashboard, Users, MapPin,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Check, X, FileText, IdCard, LayoutDashboard, Users, MapPin, Banknote,
   Briefcase, CalendarCheck, ClipboardList, Shield, ShieldOff, Power, CreditCard, Home, LogOut, Inbox,
 } from "lucide-react";
-import { Panel, Tile, StatCard, StatusBadge, Eyebrow, PrimaryButton, FormField, EmptyState, PageSpinner, InlineSpinner } from "@/components/ui-kit";
+import { Panel, Tile, StatCard, StatusBadge, Eyebrow, PrimaryButton, SecondaryButton, FormField, TextAreaField, EmptyState, PageSpinner, InlineSpinner } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: AdminPage,
 });
 
-type Tab = "overview" | "requests" | "settings" | "users" | "providers" | "map" | "bookings";
+type Tab = "overview" | "requests" | "settings" | "users" | "providers" | "map" | "bookings" | "withdrawals";
 
 const tabs: { id: Tab; label: string; icon: any; group: "main" | "manage" | "system" }[] = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard, group: "main" },
@@ -32,6 +39,7 @@ const tabs: { id: Tab; label: string; icon: any; group: "main" | "manage" | "sys
   { id: "users", label: "Manage Users", icon: Users, group: "manage" },
   { id: "providers", label: "Manage Providers", icon: Briefcase, group: "manage" },
   { id: "map", label: "Manage Map", icon: MapPin, group: "manage" },
+  { id: "withdrawals", label: "Withdrawals", icon: Banknote, group: "manage" },
   { id: "settings", label: "Manage Payment Provider", icon: CreditCard, group: "system" },
 ];
 
@@ -67,51 +75,7 @@ function AdminPage() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-canvas">
-        <Sidebar collapsible="icon">
-          <SidebarContent>
-            <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
-              <div className="size-9 rounded-xl bg-primary grid place-items-center text-primary-foreground shadow-lg shadow-primary/20"><Shield className="size-4" /></div>
-              <div className="group-data-[collapsible=icon]:hidden">
-                <Eyebrow>Fixrly</Eyebrow>
-                <div className="text-sm font-black tracking-tight">Admin Console</div>
-              </div>
-            </div>
-            {groups.map((g) => (
-              <SidebarGroup key={g.key}>
-                <SidebarGroupLabel>{g.label}</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {tabs.filter((t) => t.group === g.key).map((t) => {
-                      const Icon = t.icon;
-                      return (
-                        <SidebarMenuItem key={t.id}>
-                          <SidebarMenuButton isActive={tab === t.id} onClick={() => setTab(t.id)}>
-                            <Icon className="size-4" />
-                            <span>{t.label}</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            ))}
-          </SidebarContent>
-          <SidebarFooter>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/"><Home className="size-4" /><span>Back to app</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={async () => { await supabase.auth.signOut(); location.href = "/auth"; }}>
-                  <LogOut className="size-4" /><span>Sign out</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
-        </Sidebar>
+        <AdminSidebarNav tab={tab} setTab={setTab} groups={groups} />
 
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-16 flex items-center gap-3 border-b border-soft bg-surface/90 backdrop-blur sticky top-0 z-20 px-4">
@@ -120,6 +84,15 @@ function AdminPage() {
               <Eyebrow>Admin</Eyebrow>
               <h1 className="text-base font-black tracking-tight truncate">{tabs.find((t) => t.id === tab)?.label}</h1>
             </div>
+            <button
+              type="button"
+              onClick={async () => { await signOut(firebaseAuth); location.href = "/auth"; }}
+              aria-label="Sign out"
+              className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider text-brand/60 transition hover:bg-canvas hover:text-red-600"
+            >
+              <LogOut className="size-4" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
           </header>
           <main className="flex-1 px-4 py-6 max-w-6xl w-full mx-auto">
             {tab === "overview" && <OverviewTab />}
@@ -129,10 +102,78 @@ function AdminPage() {
             {tab === "providers" && <ProvidersTab />}
             {tab === "map" && <MapTab />}
             {tab === "bookings" && <BookingsTab />}
+            {tab === "withdrawals" && <WithdrawalsTab />}
           </main>
         </div>
       </div>
     </SidebarProvider>
+  );
+}
+
+// Split out so useSidebar() can close the mobile off-canvas drawer after a
+// nav selection — SidebarMenuButton has no such behavior built in, and
+// AdminPage itself renders the SidebarProvider that owns this context, so
+// it can't call the hook directly (the provider doesn't exist yet during
+// AdminPage's own render).
+function AdminSidebarNav({
+  tab, setTab, groups,
+}: {
+  tab: Tab;
+  setTab: (t: Tab) => void;
+  groups: { key: "main" | "manage" | "system"; label: string }[];
+}) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const selectTab = (t: Tab) => {
+    setTab(t);
+    if (isMobile) setOpenMobile(false);
+  };
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarContent>
+        <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
+          <div className="size-9 rounded-xl bg-primary grid place-items-center text-primary-foreground shadow-lg shadow-primary/20"><Shield className="size-4" /></div>
+          <div className="group-data-[collapsible=icon]:hidden">
+            <Eyebrow>Fixrly</Eyebrow>
+            <div className="text-sm font-black tracking-tight">Admin Console</div>
+          </div>
+        </div>
+        {groups.map((g) => (
+          <SidebarGroup key={g.key}>
+            <SidebarGroupLabel>{g.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {tabs.filter((t) => t.group === g.key).map((t) => {
+                  const Icon = t.icon;
+                  return (
+                    <SidebarMenuItem key={t.id}>
+                      <SidebarMenuButton isActive={tab === t.id} onClick={() => selectTab(t.id)}>
+                        <Icon className="size-4" />
+                        <span>{t.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/"><Home className="size-4" /><span>Back to app</span></Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={async () => { await signOut(firebaseAuth); location.href = "/auth"; }}>
+              <LogOut className="size-4" /><span>Sign out</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
 
@@ -164,7 +205,7 @@ function OverviewTab() {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard label="Total users" value={stats?.users ?? 0} />
         <StatCard label="Providers" value={stats?.providers ?? 0} />
         <StatCard label="Bookings" value={stats?.bookings ?? 0} />
@@ -381,6 +422,10 @@ function RequestsTab() {
     },
   });
 
+  const [rejecting, setRejecting] = useState<{ id: string; businessName: string } | null>(null);
+  const [rejectNotes, setRejectNotes] = useState("");
+  const [rejectSaving, setRejectSaving] = useState(false);
+
   const viewDoc = async (path: string) => {
     const { data, error } = await supabase.storage.from("provider-docs").createSignedUrl(path, 300);
     if (error || !data) return toast.error(error?.message ?? "Cannot open");
@@ -392,12 +437,15 @@ function RequestsTab() {
     toast.success("Provider approved");
     qc.invalidateQueries();
   };
-  const reject = async (id: string) => {
-    const notes = prompt("Reason for rejection (shown to applicant):", "");
-    if (notes === null) return;
-    const { error } = await supabase.rpc("reject_provider_request", { _request_id: id, _notes: notes });
+  const confirmReject = async () => {
+    if (!rejecting) return;
+    setRejectSaving(true);
+    const { error } = await supabase.rpc("reject_provider_request", { _request_id: rejecting.id, _notes: rejectNotes });
+    setRejectSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Rejected");
+    setRejecting(null);
+    setRejectNotes("");
     qc.invalidateQueries();
   };
 
@@ -405,6 +453,30 @@ function RequestsTab() {
 
   return (
     <div className="space-y-3">
+      <Dialog open={!!rejecting} onOpenChange={(open) => { if (!open) { setRejecting(null); setRejectNotes(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject {rejecting?.businessName}</DialogTitle>
+            <DialogDescription>This reason is shown to the applicant.</DialogDescription>
+          </DialogHeader>
+          <TextAreaField
+            value={rejectNotes}
+            onChange={(e) => setRejectNotes(e.target.value)}
+            placeholder="Reason for rejection…"
+            rows={4}
+            autoFocus
+          />
+          <DialogFooter>
+            <SecondaryButton type="button" onClick={() => { setRejecting(null); setRejectNotes(""); }}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton type="button" onClick={confirmReject} disabled={rejectSaving} loading={rejectSaving}>
+              Reject request
+            </PrimaryButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {requests.map((r) => (
         <Tile key={r.id} className="space-y-2 hover:shadow-sm">
           <div className="flex justify-between items-start gap-2">
@@ -433,13 +505,137 @@ function RequestsTab() {
               <button onClick={() => approve(r.id)} className="flex-1 py-2.5 rounded-xl bg-green-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition hover:bg-green-500">
                 <Check className="size-3.5" /> Approve
               </button>
-              <button onClick={() => reject(r.id)} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition hover:bg-red-500">
+              <button onClick={() => setRejecting({ id: r.id, businessName: r.business_name })} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition hover:bg-red-500">
                 <X className="size-3.5" /> Reject
               </button>
             </div>
           )}
           {r.status === "rejected" && r.review_notes && (
             <div className="text-[11px] text-red-700 bg-red-50 rounded-lg p-2.5">Note: {r.review_notes}</div>
+          )}
+        </Tile>
+      ))}
+    </div>
+  );
+}
+
+/* ---------- Withdrawals ---------- */
+function maskAccountNumber(accountNumber: string): string {
+  if (accountNumber.length <= 4) return accountNumber;
+  return `${"•".repeat(accountNumber.length - 4)}${accountNumber.slice(-4)}`;
+}
+
+function WithdrawalsTab() {
+  const qc = useQueryClient();
+  const approve = useServerFn(approveWithdrawal);
+  const { data: withdrawals = [] } = useQuery({
+    queryKey: ["admin-withdrawals"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("withdrawal_requests")
+        .select(
+          "*, provider:provider_profiles!withdrawal_requests_provider_id_fkey(business_name), payout_account:provider_payout_accounts!withdrawal_requests_payout_account_id_fkey(bank_name,account_number,account_name)",
+        )
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const [rejecting, setRejecting] = useState<{ id: string; providerName: string } | null>(null);
+  const [rejectNotes, setRejectNotes] = useState("");
+  const [rejectSaving, setRejectSaving] = useState(false);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const doApprove = async (id: string) => {
+    setApprovingId(id);
+    try {
+      await approve({ data: { withdrawalId: id } });
+      toast.success("Transfer initiated");
+      qc.invalidateQueries();
+    } catch (err: any) {
+      toast.error(err.message ?? "Approval failed");
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const confirmReject = async () => {
+    if (!rejecting) return;
+    setRejectSaving(true);
+    const { error } = await supabase.rpc("reject_withdrawal", { _id: rejecting.id, _notes: rejectNotes });
+    setRejectSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Rejected");
+    setRejecting(null);
+    setRejectNotes("");
+    qc.invalidateQueries();
+  };
+
+  if (withdrawals.length === 0) return <EmptyState icon={Inbox} title="No withdrawal requests yet" />;
+
+  return (
+    <div className="space-y-3">
+      <Dialog open={!!rejecting} onOpenChange={(open) => { if (!open) { setRejecting(null); setRejectNotes(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject {rejecting?.providerName}'s request</DialogTitle>
+            <DialogDescription>This reason is shown to the provider.</DialogDescription>
+          </DialogHeader>
+          <TextAreaField
+            value={rejectNotes}
+            onChange={(e) => setRejectNotes(e.target.value)}
+            placeholder="Reason for rejection…"
+            rows={4}
+            autoFocus
+          />
+          <DialogFooter>
+            <SecondaryButton type="button" onClick={() => { setRejecting(null); setRejectNotes(""); }}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton type="button" onClick={confirmReject} disabled={rejectSaving} loading={rejectSaving}>
+              Reject request
+            </PrimaryButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {withdrawals.map((w) => (
+        <Tile key={w.id} className="space-y-2 hover:shadow-sm">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0">
+              <div className="font-bold text-sm truncate">{w.provider?.business_name ?? "Provider"}</div>
+              <div className="font-mono text-sm font-bold text-accent">{formatMoney(w.amount, w.currency)}</div>
+              <div className="text-xs text-brand/60 truncate">
+                {w.payout_account?.bank_name} · {w.payout_account?.account_number ? maskAccountNumber(w.payout_account.account_number) : "—"}
+              </div>
+              <div className="text-[10px] text-brand/40">{formatRelativeTime(w.created_at)}</div>
+            </div>
+            <StatusBadge status={w.status} />
+          </div>
+          {(w.status === "processing" || w.status === "paid") && w.paystack_transfer_reference && (
+            <div className="text-[11px] text-brand/50">Ref: {w.paystack_transfer_reference}</div>
+          )}
+          {(w.status === "rejected" || w.status === "failed") && w.admin_notes && (
+            <div className="text-[11px] text-red-700 bg-red-50 rounded-lg p-2.5">Note: {w.admin_notes}</div>
+          )}
+          {w.status === "pending" && (
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => doApprove(w.id)}
+                disabled={approvingId === w.id}
+                className="flex-1 py-2.5 rounded-xl bg-green-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition hover:bg-green-500 disabled:opacity-60"
+              >
+                {approvingId === w.id ? "Processing…" : (<><Check className="size-3.5" /> Approve</>)}
+              </button>
+              <button
+                onClick={() => setRejecting({ id: w.id, providerName: w.provider?.business_name ?? "this provider" })}
+                disabled={approvingId === w.id}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition hover:bg-red-500 disabled:opacity-60"
+              >
+                <X className="size-3.5" /> Reject
+              </button>
+            </div>
           )}
         </Tile>
       ))}
@@ -504,7 +700,7 @@ function UsersTab() {
                   key={r}
                   onClick={() => setRole(u.id, r, !has(r))}
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${
-                    has(r) ? "bg-primary text-primary-foreground" : "bg-canvas border border-brand/10 text-brand/60 hover:border-brand/20"
+                    has(r) ? "bg-accent text-white" : "bg-canvas border border-brand/10 text-brand/60 hover:border-brand/20"
                   }`}
                 >
                   {has(r) ? <ShieldOff className="size-3" /> : <Shield className="size-3" />}
@@ -694,7 +890,7 @@ function BookingsTab() {
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase ${filter === s ? "bg-primary text-primary-foreground" : "bg-surface border border-brand/10 text-brand/60"}`}
+            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase ${filter === s ? "bg-accent text-white" : "bg-surface border border-brand/10 text-brand/60"}`}
           >
             {s}
           </button>
