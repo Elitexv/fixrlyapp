@@ -1,46 +1,19 @@
-// Server-only Firebase Admin SDK client. Verifies Firebase ID tokens. Never
-// import this from a route file or *.functions.ts — those ship to the
-// client bundle. Load it inside server handlers only, e.g.:
-//   const { firebaseAdminAuth } = await import("@/integrations/firebase/admin");
+// Server-only Firebase admin operations. Never import this from a route
+// file or *.functions.ts — those ship to the client bundle. Load it inside
+// server handlers only, e.g.:
+//   const { verifyFirebaseIdToken } = await import("@/integrations/firebase/admin");
 //
-// Only verifyIdToken goes through the real firebase-admin package below —
-// that's pure local JWT/JWKS verification and survives Vite's SSR bundling
-// fine. Anything that needs a live network round-trip to Google (getUser,
-// setCustomUserClaims, ...) does NOT: firebase-admin's OAuth2/credential
-// machinery relies on Node's CommonJS require()/__dirname resolution
-// internally, which breaks once Vite rolls it into a single ESM chunk —
-// confirmed live via a real signup attempt against the deployed app, which
-// threw "Cannot read properties of undefined (reading 'SDK_VERSION')" from
-// exactly that code path. getFirebaseUserCustomClaims/setFirebaseCustomClaims
-// below reimplement just those two calls as plain Identity Toolkit REST
-// requests (see firebase-auth.functions.ts's ensureAuthClaim, the only
-// caller) — no SDK, so nothing to break under bundling.
-import { initializeApp, getApps, getApp, cert, type App } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { SignJWT, importPKCS8 } from "jose";
-
-function createFirebaseAdminApp(): App {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-  if (!raw) {
-    throw new Error("Missing FIREBASE_SERVICE_ACCOUNT_KEY environment variable.");
-  }
-
-  const serviceAccount = JSON.parse(raw);
-  return getApps().length ? getApp() : initializeApp({ credential: cert(serviceAccount) });
-}
-
-let _app: App | undefined;
-
-function getFirebaseAdminApp(): App {
-  if (!_app) _app = createFirebaseAdminApp();
-  return _app;
-}
-
-export const firebaseAdminAuth = new Proxy({} as ReturnType<typeof getAuth>, {
-  get(_, prop, receiver) {
-    return Reflect.get(getAuth(getFirebaseAdminApp()), prop, receiver);
-  },
-});
+// Deliberately does NOT use the firebase-admin package. Confirmed via a
+// live repro against the deployed app: merely importing firebase-admin/app
+// or firebase-admin/auth in a request-time code path (even just to verify
+// a token — nothing SDK-specific was actually called yet) throws "Cannot
+// read properties of undefined (reading 'SDK_VERSION')" once Vite's SSR
+// build rolls it into a single ESM chunk — its internals depend on Node's
+// CommonJS require()/__dirname resolution, which doesn't survive that.
+// Everything below is implemented as plain REST calls / local JWT
+// verification instead, using `jose` (built on Web Crypto, no CJS
+// internals to break under bundling).
+import { SignJWT, importPKCS8, createRemoteJWKSet, jwtVerify } from "jose";
 
 type ServiceAccount = { project_id: string; client_email: string; private_key: string };
 
@@ -50,6 +23,33 @@ function getServiceAccount(): ServiceAccount {
     throw new Error("Missing FIREBASE_SERVICE_ACCOUNT_KEY environment variable.");
   }
   return JSON.parse(raw);
+}
+
+// Google's actual JWKS endpoint for Firebase ID tokens (not the x509 cert
+// endpoint firebase-admin uses internally — this one is real JWKS format,
+// consumable directly by jose). Cached/rotated automatically by jose.
+const firebaseJwks = createRemoteJWKSet(
+  new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"),
+);
+
+export async function verifyFirebaseIdToken(token: string): Promise<{ uid: string } & Record<string, unknown>> {
+  const { project_id } = getServiceAccount();
+  const { payload } = await jwtVerify(token, firebaseJwks, {
+    issuer: `https://securetoken.google.com/${project_id}`,
+    audience: project_id,
+  });
+
+  // jwtVerify already checked signature/exp/iat/iss/aud. Firebase's own
+  // verification recipe additionally requires sub non-empty and auth_time
+  // in the past — see https://firebase.google.com/docs/auth/admin/verify-id-tokens#verify_id_tokens_using_a_third-party_jwt_library
+  if (!payload.sub) {
+    throw new Error("Invalid Firebase ID token: missing subject");
+  }
+  if (typeof payload.auth_time !== "number" || payload.auth_time > Date.now() / 1000 + 5) {
+    throw new Error("Invalid Firebase ID token: auth_time in the future");
+  }
+
+  return { ...payload, uid: payload.sub };
 }
 
 let cachedAccessToken: { token: string; expiresAt: number } | undefined;

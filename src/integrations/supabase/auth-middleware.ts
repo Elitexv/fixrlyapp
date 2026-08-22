@@ -71,13 +71,13 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     }
 
     // Verify the Firebase ID token server-side (signature, expiry, issuer,
-    // audience all checked by the Admin SDK against Firebase's own JWKS —
-    // independent of, and in addition to, Postgres verifying it again via
-    // Supabase's Third-Party Auth trust when the client below makes queries).
-    const { firebaseAdminAuth } = await import('@/integrations/firebase/admin');
+    // audience all checked against Firebase's own JWKS — independent of,
+    // and in addition to, Postgres verifying it again via Supabase's
+    // Third-Party Auth trust when the client below makes queries).
+    const { verifyFirebaseIdToken } = await import('@/integrations/firebase/admin');
     let decoded;
     try {
-      decoded = await firebaseAdminAuth.verifyIdToken(token);
+      decoded = await verifyFirebaseIdToken(token);
     } catch {
       throw new Error('Unauthorized: Invalid token');
     }

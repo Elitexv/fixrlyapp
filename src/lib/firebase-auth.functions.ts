@@ -11,18 +11,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const ensureAuthClaim = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    try {
-      const { getFirebaseUserCustomClaims, setFirebaseCustomClaims } = await import("@/integrations/firebase/admin");
-      const claims = await getFirebaseUserCustomClaims(context.userId);
-      if (claims.role === "authenticated") {
-        return { updated: false };
-      }
-      await setFirebaseCustomClaims(context.userId, { ...claims, role: "authenticated" });
-      return { updated: true };
-    } catch (err) {
-      return {
-        updated: false,
-        debugError: err instanceof Error ? { message: err.message, stack: err.stack, name: err.name } : String(err),
-      };
+    const { getFirebaseUserCustomClaims, setFirebaseCustomClaims } = await import("@/integrations/firebase/admin");
+    const claims = await getFirebaseUserCustomClaims(context.userId);
+    if (claims.role === "authenticated") {
+      return { updated: false };
     }
+    await setFirebaseCustomClaims(context.userId, { ...claims, role: "authenticated" });
+    return { updated: true };
   });
