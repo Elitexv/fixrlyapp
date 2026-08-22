@@ -20,7 +20,9 @@ export const ensureAuthClaim = createServerFn({ method: "POST" })
       await setFirebaseCustomClaims(context.userId, { ...claims, role: "authenticated" });
       return { updated: true };
     } catch (err) {
-      console.error("[ensureAuthClaim] DEBUG", err instanceof Error ? err.stack : err);
-      throw err;
+      return {
+        updated: false,
+        debugError: err instanceof Error ? { message: err.message, stack: err.stack, name: err.name } : String(err),
+      };
     }
   });
