@@ -9,6 +9,31 @@ import { cn } from "@/lib/utils";
  * and rounded, soft-shadow "marketplace" look reads as one product.
  */
 
+/* ---------- Neutral sidebar surface ---------- */
+// The shadcn Sidebar's default theme is a dark navy/black panel (see
+// --sidebar in styles.css) — right for a dense admin-console feel, but not
+// for an account-settings-style page. Call this in any page using
+// `<SidebarProvider>` to render its sidebar as a plain light surface
+// instead. Scoped to <body> (not just the calling component's tree) because
+// the Sidebar's mobile drawer is a Radix portal appended outside it.
+export function useNeutralSidebarSurface() {
+  React.useEffect(() => {
+    const body = document.body;
+    const overrides: [string, string][] = [
+      ["--sidebar", "var(--surface)"],
+      ["--sidebar-foreground", "var(--foreground)"],
+      ["--sidebar-primary", "var(--accent)"],
+      ["--sidebar-primary-foreground", "var(--accent-foreground)"],
+      ["--sidebar-accent", "var(--muted)"],
+      ["--sidebar-accent-foreground", "var(--foreground)"],
+      ["--sidebar-border", "var(--border)"],
+      ["--sidebar-ring", "var(--accent)"],
+    ];
+    overrides.forEach(([k, v]) => body.style.setProperty(k, v));
+    return () => overrides.forEach(([k]) => body.style.removeProperty(k));
+  }, []);
+}
+
 /* ---------- Hero header (gradient, decorative blobs) ---------- */
 export function PageHero({
   eyebrow,

@@ -13,7 +13,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
-import { Panel, Eyebrow, FormField, PrimaryButton, PageSpinner } from "@/components/ui-kit";
+import { Panel, Eyebrow, FormField, PrimaryButton, PageSpinner, useNeutralSidebarSurface } from "@/components/ui-kit";
 import { useTheme, type Theme } from "@/lib/theme";
 import { getPushSubscriptionState, isPushSupported, subscribeToPush, unsubscribeFromPush } from "@/lib/push";
 
@@ -23,27 +23,6 @@ export const Route = createFileRoute("/_authenticated/profile")({
 });
 
 type Section = "profile" | "provider" | "notifications" | "theme" | "admin";
-
-// This page's account sidebar renders as a plain surface instead of the app's
-// dark navy sidebar panel — scoped to <body> (not just this tree) because the
-// Sidebar's mobile drawer is a Radix portal appended outside this component.
-function useNeutralSidebarSurface() {
-  useEffect(() => {
-    const body = document.body;
-    const overrides: [string, string][] = [
-      ["--sidebar", "var(--surface)"],
-      ["--sidebar-foreground", "var(--foreground)"],
-      ["--sidebar-primary", "var(--accent)"],
-      ["--sidebar-primary-foreground", "var(--accent-foreground)"],
-      ["--sidebar-accent", "var(--muted)"],
-      ["--sidebar-accent-foreground", "var(--foreground)"],
-      ["--sidebar-border", "var(--border)"],
-      ["--sidebar-ring", "var(--accent)"],
-    ];
-    overrides.forEach(([k, v]) => body.style.setProperty(k, v));
-    return () => overrides.forEach(([k]) => body.style.removeProperty(k));
-  }, []);
-}
 
 function ProfilePage() {
   const { user, loading: sessionLoading } = useSession();

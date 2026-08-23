@@ -23,7 +23,7 @@ import {
   Check, X, FileText, IdCard, LayoutDashboard, Users, MapPin, Banknote,
   Briefcase, CalendarCheck, ClipboardList, Shield, ShieldOff, Power, CreditCard, Home, LogOut, Inbox,
 } from "lucide-react";
-import { Panel, Tile, StatCard, StatusBadge, Eyebrow, PrimaryButton, SecondaryButton, FormField, TextAreaField, EmptyState, PageSpinner, InlineSpinner } from "@/components/ui-kit";
+import { Panel, Tile, StatCard, StatusBadge, Eyebrow, PrimaryButton, SecondaryButton, FormField, TextAreaField, EmptyState, PageSpinner, InlineSpinner, useNeutralSidebarSurface } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Fixrly" }, { name: "robots", content: "noindex" }] }),
@@ -48,6 +48,7 @@ function AdminPage() {
   const { data: roles = [], isLoading: rolesLoading } = useRoles(user);
   const isAdmin = roles.includes("admin");
   const [tab, setTab] = useState<Tab>("overview");
+  useNeutralSidebarSurface();
 
   if (rolesLoading) {
     return <PageSpinner />;
@@ -129,11 +130,11 @@ function AdminSidebarNav({
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar>
       <SidebarContent>
         <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
-          <div className="size-9 rounded-xl bg-primary grid place-items-center text-primary-foreground shadow-lg shadow-primary/20"><Shield className="size-4" /></div>
-          <div className="group-data-[collapsible=icon]:hidden">
+          <div className="size-9 rounded-xl bg-accent grid place-items-center text-white shadow-lg shadow-accent/20"><Shield className="size-4" /></div>
+          <div>
             <Eyebrow>Fixrly</Eyebrow>
             <div className="text-sm font-black tracking-tight">Admin Console</div>
           </div>
