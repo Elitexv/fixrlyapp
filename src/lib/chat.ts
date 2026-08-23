@@ -9,7 +9,9 @@ export type ChatConversation = {
   last_message_at: string | null;
   last_message_preview: string | null;
   customer_name: string | null;
+  customer_avatar_url: string | null;
   provider_name: string | null;
+  provider_photo_url: string | null;
 };
 
 export async function getOrCreateConversation(providerId: string, userId: string) {
@@ -64,6 +66,54 @@ export async function fetchConversationMessages(conversationId: string) {
   return data ?? [];
 }
 
+export async function markConversationRead(conversationId: string, myUserId: string) {
+  const { error } = await supabase
+    .from("chat_messages")
+    .update({ is_read: true })
+    .eq("conversation_id", conversationId)
+    .neq("sender_id", myUserId)
+    .eq("is_read", false);
+
+  if (error) throw error;
+}
+
+// One query for however many conversations are in the inbox, rather than
+// one per row — reduced client-side into a per-conversation tally.
+export async function fetchUnreadCounts(conversationIds: string[], myUserId: string): Promise<Record<string, number>> {
+  if (conversationIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .select("conversation_id")
+    .in("conversation_id", conversationIds)
+    .neq("sender_id", myUserId)
+    .eq("is_read", false);
+
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) counts[row.conversation_id] = (counts[row.conversation_id] ?? 0) + 1;
+  return counts;
+}
+
+export async function fetchTotalUnreadCount(userId: string): Promise<number> {
+  const { data: convRows, error: convError } = await supabase
+    .from("conversations")
+    .select("id")
+    .or(`user_id.eq.${userId},provider_id.eq.${userId}`);
+  if (convError) throw convError;
+
+  const ids = (convRows ?? []).map((c) => c.id);
+  if (ids.length === 0) return 0;
+
+  const { count, error } = await supabase
+    .from("chat_messages")
+    .select("id", { count: "exact", head: true })
+    .in("conversation_id", ids)
+    .neq("sender_id", userId)
+    .eq("is_read", false);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function fetchConversationsForUser(userId: string): Promise<ChatConversation[]> {
   const { data, error } = await supabase
     .from("conversations")
@@ -79,16 +129,18 @@ export async function fetchConversationsForUser(userId: string): Promise<ChatCon
   const providerIds = Array.from(new Set(rows.map((r) => r.provider_id)));
 
   const [{ data: customers }, { data: providers }] = await Promise.all([
-    supabase.from("profiles").select("id,full_name").in("id", customerIds),
-    supabase.from("provider_profiles").select("id,business_name").in("id", providerIds),
+    supabase.from("profiles").select("id,full_name,avatar_url").in("id", customerIds),
+    supabase.from("provider_profiles").select("id,business_name,photo_urls").in("id", providerIds),
   ]);
 
-  const customerMap = new Map((customers ?? []).map((c) => [c.id, c.full_name as string | null]));
-  const providerMap = new Map((providers ?? []).map((p) => [p.id, p.business_name as string | null]));
+  const customerMap = new Map((customers ?? []).map((c) => [c.id, c]));
+  const providerMap = new Map((providers ?? []).map((p) => [p.id, p]));
 
   return rows.map((r) => ({
     ...r,
-    customer_name: customerMap.get(r.user_id) ?? null,
-    provider_name: providerMap.get(r.provider_id) ?? null,
+    customer_name: customerMap.get(r.user_id)?.full_name ?? null,
+    customer_avatar_url: customerMap.get(r.user_id)?.avatar_url ?? null,
+    provider_name: providerMap.get(r.provider_id)?.business_name ?? null,
+    provider_photo_url: providerMap.get(r.provider_id)?.photo_urls?.[0] ?? null,
   }));
 }

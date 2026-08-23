@@ -1,6 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, CalendarCheck, User, LayoutDashboard, MessageSquare } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useSession, useRoles } from "@/lib/session";
+import { fetchTotalUnreadCount } from "@/lib/chat";
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -8,10 +10,17 @@ export function BottomNav() {
   const { data: roles = [] } = useRoles(user);
   const isProvider = roles.includes("provider");
 
+  const { data: unreadMessages = 0 } = useQuery({
+    queryKey: ["unread-messages-total", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchTotalUnreadCount(user!.id),
+    refetchInterval: 30_000,
+  });
+
   const items = [
     { to: "/", label: "Home", icon: Home },
     { to: "/bookings", label: "Bookings", icon: CalendarCheck },
-    { to: "/messages", label: "Messages", icon: MessageSquare },
+    { to: "/messages", label: "Messages", icon: MessageSquare, badge: unreadMessages },
     ...(isProvider ? [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }] : []),
     { to: "/profile", label: "Profile", icon: User },
   ] as const;
@@ -19,7 +28,7 @@ export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-soft bg-surface/95 backdrop-blur-md shadow-[0_-8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.4)] px-4 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
       <div className="mx-auto flex max-w-lg justify-between">
-        {items.map(({ to, label, icon: Icon }) => {
+        {items.map(({ to, label, icon: Icon, badge }: any) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
           return (
             <Link
@@ -30,6 +39,11 @@ export function BottomNav() {
               <span className={`relative grid place-items-center rounded-xl px-3.5 py-1 transition-all duration-200 ${active ? "-translate-y-0.5 bg-accent/10 scale-105" : "scale-100"}`}>
                 <Icon className="size-5 transition-transform duration-200" strokeWidth={active ? 2.5 : 2} />
                 <span className={`absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-accent transition-all duration-200 ${active ? "opacity-100 scale-100" : "opacity-0 scale-0"}`} />
+                {!!badge && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-white text-[9px] font-bold grid place-items-center">
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                )}
               </span>
               <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
             </Link>
