@@ -45,10 +45,10 @@ export function PageHero({
 }
 
 /* ---------- Compact sticky header (search bars, back nav, etc.) ---------- */
-export function StickyHeader({ className, children }: { className?: string; children: React.ReactNode }) {
+export function StickyHeader({ className, wide, children }: { className?: string; wide?: boolean; children: React.ReactNode }) {
   return (
     <header className={cn("sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-soft px-4 pt-6 pb-4", className)}>
-      <div className="max-w-lg mx-auto">{children}</div>
+      <div className={cn("mx-auto", wide ? "max-w-lg lg:max-w-6xl" : "max-w-lg")}>{children}</div>
     </header>
   );
 }

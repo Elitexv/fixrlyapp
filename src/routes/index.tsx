@@ -191,8 +191,8 @@ function Home() {
           needs one real <h1> stating what it's about for crawlers and
           screen readers. */}
       <h1 className="sr-only">Find and book trusted local service providers near you</h1>
-      <StickyHeader>
-        <div className="flex items-center justify-between mb-4">
+      <StickyHeader wide>
+        <div className="flex items-center justify-between mb-4 lg:mb-3">
           <div className="flex flex-col min-w-0">
             <Eyebrow>Location</Eyebrow>
             <span className="text-sm font-semibold truncate">{coords?.label ?? "Set your location below"}</span>
@@ -212,40 +212,41 @@ function Home() {
           </div>
         </div>
 
-        <form onSubmit={submitLocation} className="flex gap-2 mb-3">
+        <div className="lg:flex lg:gap-3 lg:items-start">
+          <form onSubmit={submitLocation} className="flex gap-2 mb-3 lg:mb-0 lg:w-72 lg:shrink-0">
+            <div className="relative flex-1">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-brand/40" />
+              <input
+                value={locationText}
+                onChange={(e) => setLocationText(e.target.value)}
+                placeholder="City, ZIP, or address"
+                className="w-full bg-canvas rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-accent/30"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={useMyLocation}
+              disabled={geoLoading}
+              className="px-3 rounded-xl bg-brand/5 text-xs font-bold uppercase tracking-wider text-brand/70 transition hover:bg-brand/10 disabled:opacity-50"
+            >
+              {geoLoading ? <Loader2 className="size-4 animate-spin" /> : "GPS"}
+            </button>
+          </form>
+
           <div className="relative flex-1">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-brand/40" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-brand/40" />
             <input
-              value={locationText}
-              onChange={(e) => setLocationText(e.target.value)}
-              placeholder="City, ZIP, or address"
-              className="w-full bg-canvas rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-accent/30"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={() => setSearchOpen(false)}
+              onKeyDown={(e) => e.key === "Escape" && e.currentTarget.blur()}
+              placeholder="Search for cleaning, plumbing, tutoring..."
+              className="w-full bg-canvas rounded-xl py-3.5 pl-11 pr-4 text-sm outline-none transition focus:ring-2 focus:ring-accent/30"
             />
-          </div>
-          <button
-            type="button"
-            onClick={useMyLocation}
-            disabled={geoLoading}
-            className="px-3 rounded-xl bg-brand/5 text-xs font-bold uppercase tracking-wider text-brand/70 transition hover:bg-brand/10 disabled:opacity-50"
-          >
-            {geoLoading ? <Loader2 className="size-4 animate-spin" /> : "GPS"}
-          </button>
-        </form>
 
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-brand/40" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setSearchOpen(true)}
-            onBlur={() => setSearchOpen(false)}
-            onKeyDown={(e) => e.key === "Escape" && e.currentTarget.blur()}
-            placeholder="Search for cleaning, plumbing, tutoring..."
-            className="w-full bg-canvas rounded-xl py-3.5 pl-11 pr-4 text-sm outline-none transition focus:ring-2 focus:ring-accent/30"
-          />
-
-          {searchOpen && query.trim() && (
-            <div className="light-surface absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-[70vh] overflow-y-auto rounded-2xl border border-soft bg-white shadow-soft">
+            {searchOpen && query.trim() && (
+              <div className="light-surface absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-[70vh] overflow-y-auto rounded-2xl border border-soft bg-white shadow-soft">
               {searchSuggestions.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-8 text-center">
                   <SearchX className="size-5 text-brand/30" />
@@ -292,10 +293,11 @@ function Home() {
               )}
             </div>
           )}
+          </div>
         </div>
       </StickyHeader>
 
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg mx-auto lg:max-w-6xl">
         <div className="flex gap-2.5 overflow-x-auto px-4 py-4 no-scrollbar">
           <button
             onClick={() => setSelectedCat(null)}
@@ -315,44 +317,48 @@ function Home() {
           ))}
         </div>
 
-        <div className="px-4 mb-6">
-          <div className="relative w-full h-44 rounded-3xl overflow-hidden border border-soft shadow-soft bg-canvas">
-            <GoogleMap center={mapCenter} markers={markers} zoom={coords ? 12 : 10} />
-            <div className="absolute bottom-3 left-3 pointer-events-none">
-              <div className="bg-surface px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-xl flex items-center gap-2">
-                <span className="size-1.5 bg-green-500 rounded-full animate-pulse" />
-                {filtered.length} PROS {coords ? "NEAR YOU" : "AVAILABLE"}
+        <div className="px-4 pb-8 lg:grid lg:grid-cols-[1fr_400px] lg:items-start lg:gap-6">
+          <div className="mb-6 lg:col-start-2 lg:row-start-1 lg:mb-0 lg:sticky lg:top-28">
+            <div className="relative w-full h-44 lg:h-[calc(100vh-9rem)] rounded-3xl overflow-hidden border border-soft shadow-soft bg-canvas">
+              <GoogleMap center={mapCenter} markers={markers} zoom={coords ? 12 : 10} />
+              <div className="absolute bottom-3 left-3 pointer-events-none">
+                <div className="bg-surface px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-xl flex items-center gap-2">
+                  <span className="size-1.5 bg-green-500 rounded-full animate-pulse" />
+                  {filtered.length} PROS {coords ? "NEAR YOU" : "AVAILABLE"}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="px-4 pb-8 space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold">
-              {coords ? "Nearest to you" : "Top providers"}
-            </h2>
-            <span className="font-mono text-xs font-bold uppercase text-brand/40">{filtered.length} results</span>
+          <div className="lg:col-start-1 lg:row-start-1 space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-semibold">
+                {coords ? "Nearest to you" : "Top providers"}
+              </h2>
+              <span className="font-mono text-xs font-bold uppercase text-brand/40">{filtered.length} results</span>
+            </div>
+
+            {isLoading ? (
+              <InlineSpinner />
+            ) : filtered.length === 0 ? (
+              <EmptyState
+                icon={Compass}
+                title="No providers match yet"
+                description="Try a different search, category, or location."
+                action={
+                  !roles?.includes("provider") && (
+                    <button onClick={() => navigate({ to: "/dashboard" })} className="text-accent font-bold text-sm underline underline-offset-2">
+                      Become a provider
+                    </button>
+                  )
+                }
+              />
+            ) : (
+              <div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
+                {filtered.map((p) => <ProviderCard key={p.id} p={p} />)}
+              </div>
+            )}
           </div>
-
-          {isLoading ? (
-            <InlineSpinner />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={Compass}
-              title="No providers match yet"
-              description="Try a different search, category, or location."
-              action={
-                !roles?.includes("provider") && (
-                  <button onClick={() => navigate({ to: "/dashboard" })} className="text-accent font-bold text-sm underline underline-offset-2">
-                    Become a provider
-                  </button>
-                )
-              }
-            />
-          ) : (
-            filtered.map((p) => <ProviderCard key={p.id} p={p} />)
-          )}
         </div>
 
         {categories.length > 0 && (
