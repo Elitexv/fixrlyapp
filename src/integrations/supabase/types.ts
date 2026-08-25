@@ -102,6 +102,7 @@ export type Database = {
       bookings: {
         Row: {
           address: string
+          assigned_staff_id: string | null
           booking_number: string | null
           category_id: string | null
           created_at: string
@@ -130,6 +131,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          assigned_staff_id?: string | null
           booking_number?: string | null
           category_id?: string | null
           created_at?: string
@@ -158,6 +160,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          assigned_staff_id?: string | null
           booking_number?: string | null
           category_id?: string | null
           created_at?: string
@@ -225,6 +228,13 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_assigned_staff_id_fkey"
+            columns: ["assigned_staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -524,6 +534,178 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: true
             referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_staff: {
+        Row: {
+          created_at: string
+          id: string
+          invite_token: string | null
+          invited_at: string
+          invited_by: string | null
+          invited_email: string
+          joined_at: string | null
+          provider_id: string
+          role: string
+          staff_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string
+          invited_by?: string | null
+          invited_email: string
+          joined_at?: string | null
+          provider_id: string
+          role?: string
+          staff_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string
+          invited_by?: string | null
+          invited_email?: string
+          joined_at?: string | null
+          provider_id?: string
+          role?: string
+          staff_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_staff_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_staff_staff_user_id_fkey"
+            columns: ["staff_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_staff_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          booking_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          line_items: Json
+          notes: string | null
+          paid_at: string | null
+          provider_id: string
+          status: string
+          subtotal: number
+          tax_percent: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          line_items?: Json
+          notes?: string | null
+          paid_at?: string | null
+          provider_id: string
+          status?: string
+          subtotal?: number
+          tax_percent?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          line_items?: Json
+          notes?: string | null
+          paid_at?: string | null
+          provider_id?: string
+          status?: string
+          subtotal?: number
+          tax_percent?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_client_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          note: string
+          provider_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          note: string
+          provider_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          note?: string
+          provider_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_client_notes_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_client_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1048,6 +1230,30 @@ export type Database = {
       provider_available_balance: {
         Args: { _provider_id: string }
         Returns: number
+      }
+      is_provider_staff: {
+        Args: { _provider_id: string; _uid?: string }
+        Returns: boolean
+      }
+      invite_staff_member: {
+        Args: { _email: string; _role: string }
+        Returns: string
+      }
+      claim_staff_invite: {
+        Args: { _token: string }
+        Returns: undefined
+      }
+      manage_staff_member: {
+        Args: { _staff_id: string; _role: string | null; _status: string | null }
+        Returns: undefined
+      }
+      upsert_invoice: {
+        Args: { _id: string | null; _booking_id: string; _line_items: Json; _tax_percent: number; _notes: string | null }
+        Returns: string
+      }
+      mark_invoice_paid: {
+        Args: { _id: string }
+        Returns: undefined
       }
       reject_provider_request: {
         Args: { _notes: string; _request_id: string }

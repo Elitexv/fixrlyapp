@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useSession, useRoles } from "@/lib/session";
+import { useSession, useRoles, useMyBusiness } from "@/lib/session";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BottomNav } from "@/components/BottomNav";
@@ -31,8 +31,11 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function DashboardPage() {
   const { user } = useSession();
+  const navigate = useNavigate();
   const { data: roles = [] } = useRoles(user);
   const isProvider = roles.includes("provider");
+  const { data: business, isLoading: businessLoading } = useMyBusiness(user, roles);
+  const isStaffOnly = !isProvider && business?.role !== "owner" && !!business;
   const qc = useQueryClient();
   const geocode = useServerFn(geocodeLocation);
   const currency = useCurrency();
@@ -141,7 +144,14 @@ function DashboardPage() {
   }, [profile]);
   useEffect(() => setSelectedCats(myCategories), [myCategories]);
 
+  useEffect(() => {
+    if (isStaffOnly) navigate({ to: "/business", replace: true });
+  }, [isStaffOnly, navigate]);
+
   if (!isProvider) {
+    if (businessLoading || isStaffOnly) {
+      return <div className="min-h-screen bg-canvas" />;
+    }
     return (
       <div className="min-h-screen bg-canvas grid place-items-center px-6 pb-24">
         <div className="text-center max-w-sm">
@@ -243,7 +253,8 @@ function DashboardPage() {
               <StatCard label="Completed" value={stats.completed} />
               <StatCard label="Total earned" value={formatMoney(stats.earned, currency)} accent />
             </div>
-            <div className="mt-3 text-right">
+            <div className="mt-3 flex justify-end gap-4">
+              <Link to="/business" className="text-sm font-bold uppercase tracking-[0.2em] text-accent">Business tools →</Link>
               <Link to="/payouts" className="text-sm font-bold uppercase tracking-[0.2em] text-accent">Manage payouts →</Link>
             </div>
 

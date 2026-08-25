@@ -1,14 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, CalendarCheck, User, LayoutDashboard, MessageSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useSession, useRoles } from "@/lib/session";
+import { useSession, useRoles, useMyBusiness } from "@/lib/session";
 import { fetchTotalUnreadCount } from "@/lib/chat";
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useSession();
   const { data: roles = [] } = useRoles(user);
-  const isProvider = roles.includes("provider");
+  const { data: business } = useMyBusiness(user, roles);
+  const isProvider = roles.includes("provider") || !!business;
 
   const { data: unreadMessages = 0 } = useQuery({
     queryKey: ["unread-messages-total", user?.id],

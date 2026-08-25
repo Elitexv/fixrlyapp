@@ -14,11 +14,13 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesCategorySlugRouteImport } from './routes/services.$categorySlug'
 import { Route as ProviderIdRouteImport } from './routes/provider.$id'
+import { Route as JoinTeamTokenRouteImport } from './routes/join-team.$token'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPayoutsRouteImport } from './routes/_authenticated/payouts'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticated/business'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedBecomeProviderRouteImport } from './routes/_authenticated/become-provider'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -49,6 +51,11 @@ const ProviderIdRoute = ProviderIdRouteImport.update({
   path: '/provider/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinTeamTokenRoute = JoinTeamTokenRouteImport.update({
+  id: '/join-team/$token',
+  path: '/join-team/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -72,6 +79,11 @@ const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBusinessRoute = AuthenticatedBusinessRouteImport.update({
+  id: '/business',
+  path: '/business',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
@@ -108,11 +120,13 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/become-provider': typeof AuthenticatedBecomeProviderRoute
   '/bookings': typeof AuthenticatedBookingsRouteWithChildren
+  '/business': typeof AuthenticatedBusinessRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/payouts': typeof AuthenticatedPayoutsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/join-team/$token': typeof JoinTeamTokenRoute
   '/provider/$id': typeof ProviderIdRoute
   '/services/$categorySlug': typeof ServicesCategorySlugRoute
   '/book/$id': typeof AuthenticatedBookIdRoute
@@ -124,11 +138,13 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/become-provider': typeof AuthenticatedBecomeProviderRoute
   '/bookings': typeof AuthenticatedBookingsRouteWithChildren
+  '/business': typeof AuthenticatedBusinessRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/payouts': typeof AuthenticatedPayoutsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/join-team/$token': typeof JoinTeamTokenRoute
   '/provider/$id': typeof ProviderIdRoute
   '/services/$categorySlug': typeof ServicesCategorySlugRoute
   '/book/$id': typeof AuthenticatedBookIdRoute
@@ -142,11 +158,13 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/become-provider': typeof AuthenticatedBecomeProviderRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRouteWithChildren
+  '/_authenticated/business': typeof AuthenticatedBusinessRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/_authenticated/payouts': typeof AuthenticatedPayoutsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/join-team/$token': typeof JoinTeamTokenRoute
   '/provider/$id': typeof ProviderIdRoute
   '/services/$categorySlug': typeof ServicesCategorySlugRoute
   '/_authenticated/book/$id': typeof AuthenticatedBookIdRoute
@@ -160,11 +178,13 @@ export interface FileRouteTypes {
     | '/admin'
     | '/become-provider'
     | '/bookings'
+    | '/business'
     | '/dashboard'
     | '/messages'
     | '/payouts'
     | '/profile'
     | '/auth/reset-password'
+    | '/join-team/$token'
     | '/provider/$id'
     | '/services/$categorySlug'
     | '/book/$id'
@@ -176,11 +196,13 @@ export interface FileRouteTypes {
     | '/admin'
     | '/become-provider'
     | '/bookings'
+    | '/business'
     | '/dashboard'
     | '/messages'
     | '/payouts'
     | '/profile'
     | '/auth/reset-password'
+    | '/join-team/$token'
     | '/provider/$id'
     | '/services/$categorySlug'
     | '/book/$id'
@@ -193,11 +215,13 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/become-provider'
     | '/_authenticated/bookings'
+    | '/_authenticated/business'
     | '/_authenticated/dashboard'
     | '/_authenticated/messages'
     | '/_authenticated/payouts'
     | '/_authenticated/profile'
     | '/auth/reset-password'
+    | '/join-team/$token'
     | '/provider/$id'
     | '/services/$categorySlug'
     | '/_authenticated/book/$id'
@@ -208,6 +232,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  JoinTeamTokenRoute: typeof JoinTeamTokenRoute
   ProviderIdRoute: typeof ProviderIdRoute
   ServicesCategorySlugRoute: typeof ServicesCategorySlugRoute
 }
@@ -249,6 +274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProviderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join-team/$token': {
+      id: '/join-team/$token'
+      path: '/join-team/$token'
+      fullPath: '/join-team/$token'
+      preLoaderRoute: typeof JoinTeamTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/reset-password': {
       id: '/auth/reset-password'
       path: '/reset-password'
@@ -282,6 +314,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/business': {
+      id: '/_authenticated/business'
+      path: '/business'
+      fullPath: '/business'
+      preLoaderRoute: typeof AuthenticatedBusinessRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bookings': {
@@ -339,6 +378,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBecomeProviderRoute: typeof AuthenticatedBecomeProviderRoute
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRouteWithChildren
+  AuthenticatedBusinessRoute: typeof AuthenticatedBusinessRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
   AuthenticatedPayoutsRoute: typeof AuthenticatedPayoutsRoute
@@ -350,6 +390,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBecomeProviderRoute: AuthenticatedBecomeProviderRoute,
   AuthenticatedBookingsRoute: AuthenticatedBookingsRouteWithChildren,
+  AuthenticatedBusinessRoute: AuthenticatedBusinessRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
   AuthenticatedPayoutsRoute: AuthenticatedPayoutsRoute,
@@ -374,6 +415,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  JoinTeamTokenRoute: JoinTeamTokenRoute,
   ProviderIdRoute: ProviderIdRoute,
   ServicesCategorySlugRoute: ServicesCategorySlugRoute,
 }

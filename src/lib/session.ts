@@ -78,6 +78,37 @@ export function useRoles(user: AppUser | null) {
   });
 }
 
+export type MyBusiness = { providerId: string; role: "owner" | "dispatcher" | "technician" };
+
+// Resolves which provider business (if any) the current user acts for: the
+// one they own (their own provider_profiles row), or one they're an active
+// staff member of. A user can own at most one business today and — for
+// this first slice — is assumed to staff at most one too, so this returns
+// a single business rather than a list.
+export function useMyBusiness(user: AppUser | null, roles: AppRole[] | undefined) {
+  const isProvider = !!roles?.includes("provider");
+  return useQuery({
+    queryKey: ["my-business", user?.id, isProvider],
+    enabled: !!user,
+    queryFn: async (): Promise<MyBusiness | null> => {
+      if (isProvider) {
+        const { data, error } = await supabase.from("provider_profiles").select("id").eq("id", user!.id).maybeSingle();
+        if (error) throw error;
+        if (data) return { providerId: data.id, role: "owner" };
+      }
+      const { data: staffRow, error: staffError } = await supabase
+        .from("provider_staff")
+        .select("provider_id,role")
+        .eq("staff_user_id", user!.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (staffError) throw staffError;
+      if (staffRow) return { providerId: staffRow.provider_id, role: staffRow.role as "dispatcher" | "technician" };
+      return null;
+    },
+  });
+}
+
 export function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const R = 6371;
   const toRad = (d: number) => (d * Math.PI) / 180;
