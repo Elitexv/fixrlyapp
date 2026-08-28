@@ -146,7 +146,7 @@ function ProfilePage() {
                     need to hunt through the sidebar for it. */}
                 <Link
                   to={isProvider ? "/dashboard" : "/become-provider"}
-                  className="relative flex items-center gap-4 overflow-hidden rounded-[2rem] bg-brand p-6 text-brand-foreground shadow-soft transition hover:opacity-95"
+                  className="relative flex items-center gap-4 overflow-hidden rounded-[2rem] bg-[#0f172a] p-6 text-white shadow-soft transition hover:opacity-95"
                 >
                   <div className="pointer-events-none absolute -right-6 -top-8 size-32 rounded-full bg-accent/25" />
                   <div className="relative grid size-12 shrink-0 place-items-center rounded-2xl bg-accent">
@@ -154,11 +154,11 @@ function ProfilePage() {
                   </div>
                   <div className="relative min-w-0 flex-1">
                     <div className="text-sm font-bold">{isProvider ? "Provider dashboard" : "Start earning today"}</div>
-                    <div className="text-xs text-brand-foreground/60">
+                    <div className="text-xs text-white/60">
                       {isProvider ? "Manage jobs, staff & payouts" : "List your services and get booked"}
                     </div>
                   </div>
-                  <ArrowRight className="relative size-4 shrink-0 text-brand-foreground/40" />
+                  <ArrowRight className="relative size-4 shrink-0 text-white/40" />
                 </Link>
 
                 {/* Grouped settings — icon-leading rows, jump straight to a section. */}

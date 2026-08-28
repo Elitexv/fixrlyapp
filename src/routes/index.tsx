@@ -303,7 +303,7 @@ function Home() {
           <button onClick={() => setSelectedCat(null)} className="flex-none w-16 flex flex-col items-center gap-2">
             <div
               className={`grid size-14 place-items-center rounded-[20px] transition-all ${
-                !selectedCat ? "bg-brand shadow-lg shadow-brand/25" : "bg-surface shadow-sm"
+                !selectedCat ? "bg-[#0f172a] shadow-lg shadow-[#0f172a]/25" : "bg-surface shadow-sm"
               }`}
             >
               <LayoutGrid className={`size-6 ${!selectedCat ? "text-white" : "text-brand/70"}`} strokeWidth={2} />
@@ -314,7 +314,7 @@ function Home() {
             <button key={c.id} onClick={() => setSelectedCat(c.id === selectedCat ? null : c.id)} className="flex-none w-16 flex flex-col items-center gap-2">
               <div
                 className={`grid size-14 place-items-center rounded-[20px] text-2xl transition-all ${
-                  selectedCat === c.id ? "bg-brand shadow-lg shadow-brand/25" : "bg-surface shadow-sm"
+                  selectedCat === c.id ? "bg-[#0f172a] shadow-lg shadow-[#0f172a]/25" : "bg-surface shadow-sm"
                 }`}
               >
                 {c.icon}

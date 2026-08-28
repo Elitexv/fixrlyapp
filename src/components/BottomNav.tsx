@@ -28,7 +28,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-4 z-40 mx-auto max-w-lg rounded-[26px] bg-brand/95 backdrop-blur-xl px-3 py-2.5 shadow-[0_20px_44px_rgba(15,23,42,0.35)]"
+      className="fixed inset-x-4 z-40 mx-auto max-w-lg rounded-[26px] bg-[#0f172a]/95 backdrop-blur-xl px-3 py-2.5 shadow-[0_20px_44px_rgba(15,23,42,0.35)]"
       style={{ bottom: "max(env(safe-area-inset-bottom), 1rem)" }}
     >
       <div className="flex items-center justify-between">
@@ -47,7 +47,7 @@ export function BottomNav() {
                   color={active ? "#ffffff" : "rgba(255,255,255,0.5)"}
                 />
                 {!!badge && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-white text-[9px] font-bold grid place-items-center border-2 border-brand">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-white text-[9px] font-bold grid place-items-center border-2 border-[#0f172a]">
                     {badge > 9 ? "9+" : badge}
                   </span>
                 )}
