@@ -11,7 +11,7 @@ import { GoogleMap } from "@/components/GoogleMap";
 import { ProviderCard, type ProviderCardData } from "@/components/ProviderCard";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { StickyHeader, InlineSpinner, EmptyState, Eyebrow, ProviderAvatar } from "@/components/ui-kit";
-import { Search, MapPin, Loader2, Compass, SearchX } from "lucide-react";
+import { Search, MapPin, Loader2, Compass, SearchX, LocateFixed, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 
 const SITE_URL = "https://fixrly.app";
@@ -212,29 +212,30 @@ function Home() {
           </div>
         </div>
 
-        <div className="lg:flex lg:gap-3 lg:items-start">
-          <form onSubmit={submitLocation} className="flex gap-2 mb-3 lg:mb-0 lg:w-72 lg:shrink-0">
-            <div className="relative flex-1">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-brand/40" />
-              <input
-                value={locationText}
-                onChange={(e) => setLocationText(e.target.value)}
-                placeholder="City, ZIP, or address"
-                className="w-full bg-canvas rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-accent/30"
-              />
-            </div>
+        <div className="rounded-3xl bg-surface p-1.5 shadow-[0_20px_48px_rgba(15,23,42,0.14)] lg:flex lg:items-stretch">
+          <form onSubmit={submitLocation} className="flex items-center gap-2 rounded-[20px] px-3.5 py-2.5 lg:w-72 lg:shrink-0">
+            <MapPin className="size-4 text-brand/40 shrink-0" />
+            <input
+              value={locationText}
+              onChange={(e) => setLocationText(e.target.value)}
+              placeholder="City, ZIP, or address"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+            />
             <button
               type="button"
               onClick={useMyLocation}
               disabled={geoLoading}
-              className="px-3 rounded-xl bg-brand/5 text-xs font-bold uppercase tracking-wider text-brand/70 transition hover:bg-brand/10 disabled:opacity-50"
+              aria-label="Use my current location"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-brand/5 text-brand/70 transition hover:bg-brand/10 disabled:opacity-50"
             >
-              {geoLoading ? <Loader2 className="size-4 animate-spin" /> : "GPS"}
+              {geoLoading ? <Loader2 className="size-4 animate-spin" /> : <LocateFixed className="size-4" />}
             </button>
           </form>
 
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-brand/40" />
+          <div className="h-px bg-[var(--soft-border)] mx-3.5 lg:h-auto lg:w-px lg:mx-0" />
+
+          <div className="relative flex flex-1 items-center gap-2 rounded-[20px] px-3.5 py-2.5">
+            <Search className="size-4 text-brand/40 shrink-0" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -242,11 +243,11 @@ function Home() {
               onBlur={() => setSearchOpen(false)}
               onKeyDown={(e) => e.key === "Escape" && e.currentTarget.blur()}
               placeholder="Search for cleaning, plumbing, tutoring..."
-              className="w-full bg-canvas rounded-xl py-3.5 pl-11 pr-4 text-sm outline-none transition focus:ring-2 focus:ring-accent/30"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none"
             />
 
             {searchOpen && query.trim() && (
-              <div className="light-surface absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-[70vh] overflow-y-auto rounded-2xl border border-soft bg-white shadow-soft">
+              <div className="light-surface absolute inset-x-0 top-[calc(100%+0.75rem)] z-30 max-h-[70vh] overflow-y-auto rounded-2xl border border-soft bg-white shadow-soft">
               {searchSuggestions.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-8 text-center">
                   <SearchX className="size-5 text-brand/30" />
@@ -298,21 +299,29 @@ function Home() {
       </StickyHeader>
 
       <div className="max-w-lg mx-auto lg:max-w-6xl">
-        <div className="flex gap-2.5 overflow-x-auto px-4 py-4 no-scrollbar">
-          <button
-            onClick={() => setSelectedCat(null)}
-            className={`flex-none px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-colors ${!selectedCat ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-surface border border-brand/5 shadow-sm text-brand/70 hover:border-accent/20"}`}
-          >
-            All Services
+        <div className="flex gap-3.5 overflow-x-auto px-4 py-4 no-scrollbar">
+          <button onClick={() => setSelectedCat(null)} className="flex-none w-16 flex flex-col items-center gap-2">
+            <div
+              className={`grid size-14 place-items-center rounded-[20px] transition-all ${
+                !selectedCat ? "bg-brand shadow-lg shadow-brand/25" : "bg-surface shadow-sm"
+              }`}
+            >
+              <LayoutGrid className={`size-6 ${!selectedCat ? "text-white" : "text-brand/70"}`} strokeWidth={2} />
+            </div>
+            <span className={`text-[11px] font-semibold ${!selectedCat ? "text-brand" : "text-brand/60"}`}>All</span>
           </button>
           {categories.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedCat(c.id === selectedCat ? null : c.id)}
-              className={`flex-none px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-colors ${selectedCat === c.id ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-surface border border-brand/5 shadow-sm text-brand/70 hover:border-accent/20"}`}
-            >
-              <span className="mr-1">{c.icon}</span>
-              {c.name}
+            <button key={c.id} onClick={() => setSelectedCat(c.id === selectedCat ? null : c.id)} className="flex-none w-16 flex flex-col items-center gap-2">
+              <div
+                className={`grid size-14 place-items-center rounded-[20px] text-2xl transition-all ${
+                  selectedCat === c.id ? "bg-brand shadow-lg shadow-brand/25" : "bg-surface shadow-sm"
+                }`}
+              >
+                {c.icon}
+              </div>
+              <span className={`w-full truncate text-center text-[11px] font-semibold ${selectedCat === c.id ? "text-brand" : "text-brand/60"}`}>
+                {c.name}
+              </span>
             </button>
           ))}
         </div>

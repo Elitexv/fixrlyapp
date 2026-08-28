@@ -27,26 +27,31 @@ export function BottomNav() {
   ] as const;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-soft bg-surface/95 backdrop-blur-md shadow-[0_-8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.4)] px-4 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-      <div className="mx-auto flex max-w-lg justify-between">
+    <nav
+      className="fixed inset-x-4 z-40 mx-auto max-w-lg rounded-[26px] bg-brand/95 backdrop-blur-xl px-3 py-2.5 shadow-[0_20px_44px_rgba(15,23,42,0.35)]"
+      style={{ bottom: "max(env(safe-area-inset-bottom), 1rem)" }}
+    >
+      <div className="flex items-center justify-between">
         {items.map(({ to, label, icon: Icon, badge }: any) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
           return (
-            <Link
-              key={to}
-              to={to}
-              className={`flex flex-1 flex-col items-center gap-1 py-1.5 transition-colors duration-200 active:scale-90 ${active ? "text-accent" : "text-brand/40 hover:text-brand/70"}`}
-            >
-              <span className={`relative grid place-items-center rounded-xl px-3.5 py-1 transition-all duration-200 ${active ? "-translate-y-0.5 bg-accent/10 scale-105" : "scale-100"}`}>
-                <Icon className="size-5 transition-transform duration-200" strokeWidth={active ? 2.5 : 2} />
-                <span className={`absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-accent transition-all duration-200 ${active ? "opacity-100 scale-100" : "opacity-0 scale-0"}`} />
+            <Link key={to} to={to} aria-label={label} className="flex flex-1 justify-center py-1 transition-transform duration-200 active:scale-90">
+              <span
+                className={`relative grid place-items-center rounded-2xl px-4 py-2 transition-all duration-200 ${
+                  active ? "bg-accent shadow-lg shadow-accent/30" : ""
+                }`}
+              >
+                <Icon
+                  className="size-5 transition-colors duration-200"
+                  strokeWidth={active ? 2.4 : 2.1}
+                  color={active ? "#ffffff" : "rgba(255,255,255,0.5)"}
+                />
                 {!!badge && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-white text-[9px] font-bold grid place-items-center">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-white text-[9px] font-bold grid place-items-center border-2 border-brand">
                     {badge > 9 ? "9+" : badge}
                   </span>
                 )}
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
             </Link>
           );
         })}
