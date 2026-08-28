@@ -18,8 +18,9 @@ export const Route = createFileRoute("/_authenticated/book/$id")({
   component: BookPage,
 });
 
-const fieldClass = "w-full bg-surface border border-brand/5 rounded-2xl py-3 px-3 text-sm outline-none transition focus:ring-2 focus:ring-accent/30 focus:border-accent/30";
-const labelClass = "text-[10px] font-bold uppercase tracking-widest text-brand/40 block mb-1.5 flex items-center gap-1";
+const fieldClass = "w-full bg-transparent text-sm outline-none";
+const fieldWrapClass = "light-surface flex items-center gap-2.5 bg-white rounded-2xl py-3 px-3.5 shadow-soft transition focus-within:ring-2 focus-within:ring-accent/30";
+const labelClass = "text-[10px] font-bold uppercase tracking-widest text-brand/40 block mb-1.5";
 
 function BookPage() {
   const { id } = Route.useParams();
@@ -175,62 +176,76 @@ function BookPage() {
         {categories.length > 0 && (
           <div>
             <label className={labelClass}>Service</label>
-            <select
-              value={categoryId || categories[0]?.id}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className={fieldClass}
-            >
-              {categories.map((c: any) => (
-                <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-              ))}
-            </select>
+            <div className={fieldWrapClass}>
+              <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-base">{categories.find((c: any) => c.id === (categoryId || categories[0]?.id))?.icon}</span>
+              <select
+                value={categoryId || categories[0]?.id}
+                onChange={(e) => setCategoryId(e.target.value)}
+                className={fieldClass}
+              >
+                {categories.map((c: any) => (
+                  <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
 
         <div>
-          <label className={labelClass}><Calendar className="size-3" /> When</label>
-          <input
-            type="datetime-local"
-            required
-            min={minScheduledAt}
-            value={scheduledAt}
-            onChange={(e) => setScheduledAt(e.target.value)}
-            className={fieldClass}
-          />
+          <label className={labelClass}>When</label>
+          <div className={fieldWrapClass}>
+            <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent"><Calendar className="size-4" /></span>
+            <input
+              type="datetime-local"
+              required
+              min={minScheduledAt}
+              value={scheduledAt}
+              onChange={(e) => setScheduledAt(e.target.value)}
+              className={fieldClass}
+            />
+          </div>
         </div>
 
         <div>
-          <label className={labelClass}><Clock className="size-3" /> Duration (hours)</label>
-          <input
-            type="number"
-            min={0.5}
-            step={0.5}
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-            className={fieldClass}
-          />
+          <label className={labelClass}>Duration (hours)</label>
+          <div className={fieldWrapClass}>
+            <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent"><Clock className="size-4" /></span>
+            <input
+              type="number"
+              min={0.5}
+              step={0.5}
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+              className={fieldClass}
+            />
+          </div>
         </div>
 
         <div>
-          <label className={labelClass}><MapPin className="size-3" /> Service address</label>
-          <input
-            required
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Where should the pro come?"
-            className={fieldClass}
-          />
+          <label className={labelClass}>Service address</label>
+          <div className={fieldWrapClass}>
+            <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent"><MapPin className="size-4" /></span>
+            <input
+              required
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Where should the pro come?"
+              className={fieldClass}
+            />
+          </div>
         </div>
 
         <div>
           <label className={labelClass}>Notes (optional)</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            placeholder="Anything the pro should know?"
-            className={`${fieldClass} resize-none`}
-          />
+          <div className={fieldWrapClass}>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              placeholder="Anything the pro should know?"
+              className={`${fieldClass} resize-none`}
+            />
+          </div>
         </div>
 
         {total != null && (

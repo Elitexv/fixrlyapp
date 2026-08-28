@@ -15,7 +15,7 @@ import { getOrCreateConversation, sendChatMessage } from "@/lib/chat";
 import { getCurrentPosition, startLocationSharing } from "@/lib/provider-tracking";
 import { formatRelativeTime } from "@/lib/time";
 import { ProviderTrackingMap } from "@/components/ProviderTrackingMap";
-import { StickyHeader, Tile, StatusBadge, InlineSpinner, EmptyState, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
+import { StickyHeader, Panel, StatusBadge, InlineSpinner, EmptyState, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   head: () => ({ meta: [{ title: "My bookings — Fixrly" }, { name: "robots", content: "noindex" }] }),
@@ -191,16 +191,16 @@ function BookingsPage() {
       <StickyHeader className="pb-3">
         <h1 className="text-xl font-black tracking-tight">My bookings</h1>
         {isProvider && (
-          <div className="mt-3 flex gap-2 bg-canvas rounded-xl p-1">
+          <div className="mt-3 flex gap-1 rounded-2xl bg-brand/5 p-1.5">
             <button
               onClick={() => setTab("customer")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${tab === "customer" ? "light-surface bg-white shadow-sm text-brand" : "text-brand/50 hover:text-brand/70"}`}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition ${tab === "customer" ? "light-surface bg-white shadow-soft text-brand" : "text-brand/50 hover:text-brand/70"}`}
             >
               As customer
             </button>
             <button
               onClick={() => setTab("provider")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${tab === "provider" ? "light-surface bg-white shadow-sm text-brand" : "text-brand/50 hover:text-brand/70"}`}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition ${tab === "provider" ? "light-surface bg-white shadow-soft text-brand" : "text-brand/50 hover:text-brand/70"}`}
             >
               As provider
             </button>
@@ -221,7 +221,7 @@ function BookingsPage() {
             <button
               key={f.k}
               onClick={() => setFilter(f.k)}
-              className={`flex-none px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition ${filter === f.k ? "bg-accent text-white shadow-lg shadow-accent/20" : "bg-canvas text-brand/60 border border-brand/5 hover:border-accent/20"}`}
+              className={`flex-none px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition ${filter === f.k ? "bg-[#0f172a] text-white shadow-lg shadow-[#0f172a]/20" : "bg-brand/5 text-brand/60 hover:bg-brand/10"}`}
             >
               {f.label}
             </button>
@@ -247,25 +247,25 @@ function BookingsPage() {
           if (visible.length === 0)
             return <EmptyState icon={CalendarCheck} title="No bookings in this view" description="Bookings you make or receive will show up here." />;
           return visible.map((b) => (
-            <Tile key={b.id}>
+            <Panel key={b.id} className="rounded-[1.75rem] p-5">
               <div className="flex justify-between items-start gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-brand/40">
                     <span>{b.category?.icon} {b.category?.name}</span>
                     {b.booking_number && <span className="font-mono normal-case text-brand/30">· {b.booking_number}</span>}
                   </div>
-                  <div className="font-bold truncate">
+                  <div className="font-bold truncate mt-0.5">
                     {tab === "customer" ? b.provider?.business_name : (b.customer?.full_name ?? "Customer")}
                   </div>
                   <div className="text-xs text-brand/60 mt-0.5">{new Date(b.scheduled_at).toLocaleString()}</div>
                   <div className="text-[10px] text-brand/40 mt-0.5">Booked {formatRelativeTime(b.created_at)}</div>
                   <div className="text-xs text-brand/60 mt-1">{b.address}</div>
-                  {b.notes && <div className="text-xs mt-2 p-2 bg-canvas rounded-lg">{b.notes}</div>}
+                  {b.notes && <div className="text-xs mt-2 p-2.5 bg-brand/5 rounded-xl">{b.notes}</div>}
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <StatusBadge status={b.status} />
-                  {b.total_price && <span className="font-mono font-bold text-sm text-accent">{formatMoney(b.total_price, currency)}</span>}
-                  <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${getPaymentStatusBadge(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span>
+                  {b.total_price && <span className="font-mono font-bold text-base text-accent">{formatMoney(b.total_price, currency)}</span>}
+                  <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${getPaymentStatusBadge(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span>
                 </div>
               </div>
 
@@ -279,12 +279,12 @@ function BookingsPage() {
                 />
               )}
 
-              <div className="mt-3 pt-3 border-t border-brand/5 flex gap-2 flex-wrap">
+              <div className="mt-4 pt-4 border-t border-soft flex gap-2 flex-wrap">
                 {tab === "customer" && b.payment_status === "pending" && b.payment_provider === "paystack" && (
                   <button
                     onClick={() => payNow(b.id)}
                     disabled={payingId === b.id}
-                    className="flex-1 py-2 bg-accent text-white rounded-lg text-xs font-bold transition hover:bg-orange-500 disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 bg-accent text-white rounded-xl text-xs font-bold transition hover:bg-orange-500 disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
                   >
                     {payingId === b.id ? <Loader2 className="size-3.5 animate-spin" /> : null}
                     Pay now
@@ -292,8 +292,8 @@ function BookingsPage() {
                 )}
                 {tab === "provider" && b.status === "pending" && (
                   <>
-                    <PrimaryButton onClick={() => updateStatus(b.id, "accepted")} className="flex-1 py-2 rounded-lg text-xs">Accept</PrimaryButton>
-                    <SecondaryButton onClick={() => updateStatus(b.id, "rejected")} className="flex-1 py-2 rounded-lg text-xs">Reject</SecondaryButton>
+                    <PrimaryButton onClick={() => updateStatus(b.id, "accepted")} className="flex-1 py-2.5 rounded-xl text-xs">Accept</PrimaryButton>
+                    <SecondaryButton onClick={() => updateStatus(b.id, "rejected")} className="flex-1 py-2.5 rounded-xl text-xs">Reject</SecondaryButton>
                   </>
                 )}
                 {tab === "provider" && b.status === "accepted" && (
@@ -301,32 +301,32 @@ function BookingsPage() {
                     <PrimaryButton
                       onClick={() => startOnTheWay(b)}
                       disabled={startingOtwId === b.id}
-                      className="flex-1 py-2 rounded-lg text-xs inline-flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2.5 rounded-xl text-xs inline-flex items-center justify-center gap-1.5"
                     >
                       {startingOtwId === b.id ? <Loader2 className="size-3.5 animate-spin" /> : <Navigation className="size-3.5" />}
                       I'm on my way
                     </PrimaryButton>
-                    <SecondaryButton onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 rounded-lg text-xs">Mark completed</SecondaryButton>
+                    <SecondaryButton onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2.5 rounded-xl text-xs">Mark completed</SecondaryButton>
                   </>
                 )}
                 {tab === "provider" && b.status === "on_the_way" && (
                   <>
-                    <div className="flex-1 py-2 rounded-lg text-xs font-bold text-center bg-orange-50 text-orange-700 inline-flex items-center justify-center gap-1.5">
+                    <div className="flex-1 py-2.5 rounded-xl text-xs font-bold text-center bg-orange-50 text-orange-700 inline-flex items-center justify-center gap-1.5">
                       <Navigation className="size-3.5 animate-pulse" /> Sharing live location
                     </div>
-                    <PrimaryButton onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2 rounded-lg text-xs">Mark completed</PrimaryButton>
+                    <PrimaryButton onClick={() => updateStatus(b.id, "completed")} className="flex-1 py-2.5 rounded-xl text-xs">Mark completed</PrimaryButton>
                   </>
                 )}
                 {tab === "customer" && ["pending", "accepted", "on_the_way"].includes(b.status) && (
-                  <SecondaryButton onClick={() => updateStatus(b.id, "cancelled")} className="flex-1 py-2 rounded-lg text-xs">Cancel</SecondaryButton>
+                  <SecondaryButton onClick={() => updateStatus(b.id, "cancelled")} className="flex-1 py-2.5 rounded-xl text-xs">Cancel</SecondaryButton>
                 )}
                 {b.provider?.id && (
-                  <SecondaryButton onClick={() => navigate({ to: "/provider/$id", params: { id: b.provider.id } })} className="py-2 px-3 rounded-xl text-xs">
+                  <SecondaryButton onClick={() => navigate({ to: "/provider/$id", params: { id: b.provider.id } })} className="py-2.5 px-3 rounded-xl text-xs">
                     View provider profile
                   </SecondaryButton>
                 )}
                 {["pending", "completed"].includes(b.status) && (
-                  <SecondaryButton onClick={() => navigate({ to: "/bookings/$id/receipt", params: { id: b.id } })} className="py-2 px-3 rounded-xl text-xs">
+                  <SecondaryButton onClick={() => navigate({ to: "/bookings/$id/receipt", params: { id: b.id } })} className="py-2.5 px-3 rounded-xl text-xs">
                     Receipt
                   </SecondaryButton>
                 )}
@@ -334,7 +334,7 @@ function BookingsPage() {
                   <LeaveReviewButton booking={b} />
                 )}
               </div>
-            </Tile>
+            </Panel>
           ));
         })()}
       </div>

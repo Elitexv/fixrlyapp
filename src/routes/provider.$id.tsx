@@ -9,7 +9,7 @@ import { ArrowLeft, Star, MapPin, Phone, Mail, Heart, Users, ThumbsUp, ThumbsDow
 import { toast } from "sonner";
 import { getOrCreateConversation } from "@/lib/chat";
 import { formatMoney, useCurrency } from "@/lib/currency";
-import { Panel, Tile, Eyebrow, PrimaryButton, SecondaryButton, PageSpinner } from "@/components/ui-kit";
+import { Panel, Eyebrow, PrimaryButton, PageSpinner } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/provider/$id")({
   loader: async ({ params }) => {
@@ -237,46 +237,48 @@ function ProviderPage() {
   return (
     <div className="min-h-screen bg-canvas pb-32">
       <div className="max-w-lg mx-auto">
-      <div className="relative h-56 bg-brand/10">
+      <div className="relative h-64 bg-gradient-to-br from-accent/80 to-[#0f172a] overflow-hidden">
         {data.photo_urls?.[0] ? (
           <img src={data.photo_urls[0]} alt={data.business_name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full grid place-items-center text-brand/30 font-black text-6xl">
+          <div className="w-full h-full grid place-items-center text-white/70 font-black text-6xl">
             {data.business_name?.[0]}
           </div>
         )}
         <button
           onClick={() => navigate({ to: "/" })}
-          className="light-surface absolute top-4 left-4 size-10 rounded-full bg-white/90 backdrop-blur grid place-items-center shadow-lg"
+          className="absolute top-5 left-4 size-10 rounded-2xl bg-white/20 backdrop-blur-md grid place-items-center text-white shadow-lg"
         >
           <ArrowLeft className="size-4" />
         </button>
       </div>
 
-      <div className="px-4 -mt-6 relative space-y-4">
-        <Panel className="p-5">
+      <div className="px-4 -mt-9 relative space-y-4">
+        <Panel className="rounded-[2rem] p-5">
           <div className="flex justify-between items-start gap-3">
             <div className="min-w-0">
               <h1 className="text-xl font-black tracking-tight truncate">{data.business_name}</h1>
               {data.city && <div className="text-xs text-brand/60 flex items-center gap-1 mt-1"><MapPin className="size-3" />{data.city}</div>}
             </div>
-            <div className="flex items-center gap-1 bg-brand/5 px-2.5 py-1 rounded-lg text-xs font-bold shrink-0">
-              <Star className="size-3.5 fill-yellow-500 text-yellow-500" />
-              {rating ? rating.toFixed(1) : "New"}
-              <span className="text-brand/40">({reviews.length})</span>
+            <div className="flex flex-col items-center gap-0.5 rounded-2xl bg-accent/10 px-3 py-2 shrink-0">
+              <div className="flex items-center gap-1">
+                <Star className="size-3.5 fill-yellow-500 text-yellow-500" />
+                <span className="font-bold text-sm">{rating ? rating.toFixed(1) : "New"}</span>
+              </div>
+              <span className="font-mono text-[9px] font-bold uppercase text-brand/40">{reviews.length} reviews</span>
             </div>
           </div>
 
-          <div className="flex gap-2 mt-3 flex-wrap">
+          <div className="flex gap-2 mt-4 flex-wrap">
             {categories.map((c: any) => (
-              <span key={c.id} className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-brand/5">
+              <span key={c.id} className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl bg-brand/5">
                 {c.icon} {c.name}
               </span>
             ))}
           </div>
 
           {data.hourly_rate != null && (
-            <div className="mt-4 pt-4 border-t border-brand/5 flex items-center justify-between">
+            <div className="mt-4 pt-4 border-t border-soft flex items-center justify-between">
               <div>
                 <Eyebrow>Rate</Eyebrow>
                 <div className="mt-1 font-mono font-bold text-lg text-accent">{formatMoney(data.hourly_rate, currency)}<span className="text-xs text-brand/60">/hr</span></div>
@@ -292,30 +294,37 @@ function ProviderPage() {
         </Panel>
 
         {data.bio && (
-          <Tile className="hover:shadow-sm">
+          <Panel className="rounded-[1.75rem] p-5">
             <Eyebrow className="mb-1.5">About</Eyebrow>
-            <p className="text-sm leading-relaxed">{data.bio}</p>
-          </Tile>
+            <p className="text-sm leading-relaxed text-brand/80">{data.bio}</p>
+          </Panel>
         )}
 
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <Tile as="button" onClick={openChat} disabled={chatLoading} className="flex items-center gap-2 font-semibold hover:shadow-sm disabled:opacity-60">
-            <MessageSquare className="size-4 text-accent" /> {chatLoading ? "Opening…" : "Chat"}
-          </Tile>
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            onClick={openChat}
+            disabled={chatLoading}
+            className="light-surface flex flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-soft transition disabled:opacity-60"
+          >
+            <span className="grid size-10 place-items-center rounded-xl bg-accent/10 text-accent"><MessageSquare className="size-4" /></span>
+            <span className="text-xs font-bold text-brand">{chatLoading ? "Opening…" : "Chat"}</span>
+          </button>
           {data.phone && (
-            <Tile as="a" href={`tel:${data.phone}`} className="flex items-center gap-2 font-semibold hover:shadow-sm">
-              <Phone className="size-4 text-accent" /> Call
-            </Tile>
+            <a href={`tel:${data.phone}`} className="light-surface flex flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-soft transition">
+              <span className="grid size-10 place-items-center rounded-xl bg-accent/10 text-accent"><Phone className="size-4" /></span>
+              <span className="text-xs font-bold text-brand">Call</span>
+            </a>
           )}
           {(data.profiles as any)?.full_name && (
-            <Tile className="flex items-center gap-2 font-semibold truncate hover:shadow-sm">
-              <Mail className="size-4 text-accent" /> {(data.profiles as any).full_name}
-            </Tile>
+            <div className="light-surface flex flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-soft">
+              <span className="grid size-10 place-items-center rounded-xl bg-accent/10 text-accent"><Mail className="size-4" /></span>
+              <span className="w-full truncate text-center text-xs font-bold text-brand">{(data.profiles as any).full_name}</span>
+            </div>
           )}
         </div>
 
         {data.latitude && data.longitude && (
-          <div className="h-40 rounded-2xl overflow-hidden border border-brand/10 shadow-sm">
+          <div className="h-40 rounded-[1.75rem] overflow-hidden shadow-soft">
             <GoogleMap
               center={{ lat: data.latitude, lng: data.longitude }}
               markers={[{ lat: data.latitude, lng: data.longitude, id: data.id }]}
@@ -324,15 +333,15 @@ function ProviderPage() {
           </div>
         )}
 
-        <Tile className="flex items-center justify-between hover:shadow-sm">
+        <Panel className="flex items-center justify-between rounded-[1.75rem] p-5">
           <Eyebrow>Reactions</Eyebrow>
           <div className="flex gap-2">
             <button
               onClick={() => react("like")}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
                 reactions?.mine === "like"
-                  ? "bg-green-600 text-white border-green-600"
-                  : "light-surface bg-white border-brand/10 text-brand hover:border-green-500"
+                  ? "bg-green-600 text-white"
+                  : "bg-brand/5 text-brand hover:bg-green-50 hover:text-green-700"
               }`}
             >
               <ThumbsUp className={`size-4 ${reactions?.mine === "like" ? "fill-white" : ""}`} />
@@ -340,26 +349,26 @@ function ProviderPage() {
             </button>
             <button
               onClick={() => react("dislike")}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
                 reactions?.mine === "dislike"
-                  ? "bg-red-600 text-white border-red-600"
-                  : "light-surface bg-white border-brand/10 text-brand hover:border-red-500"
+                  ? "bg-red-600 text-white"
+                  : "bg-brand/5 text-brand hover:bg-red-50 hover:text-red-700"
               }`}
             >
               <ThumbsDown className={`size-4 ${reactions?.mine === "dislike" ? "fill-white" : ""}`} />
               {reactions?.dislikes ?? 0}
             </button>
           </div>
-        </Tile>
+        </Panel>
 
         <div className="pt-2">
-          <h2 className="font-bold text-lg mb-3">Reviews</h2>
+          <h2 className="font-black text-lg mb-3 tracking-tight">Reviews</h2>
           {reviews.length === 0 ? (
             <p className="text-sm text-brand/50">No reviews yet.</p>
           ) : (
             <div className="space-y-3">
               {reviews.map((r) => (
-                <Tile key={r.id} className="hover:shadow-sm">
+                <Panel key={r.id} className="rounded-[1.5rem] p-4">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold">{r.profiles?.full_name ?? "Customer"}</div>
                     <div className="flex items-center gap-0.5">
@@ -369,7 +378,7 @@ function ProviderPage() {
                     </div>
                   </div>
                   {r.comment && <p className="text-sm mt-1 text-brand/80">{r.comment}</p>}
-                </Tile>
+                </Panel>
               ))}
             </div>
           )}
@@ -377,11 +386,13 @@ function ProviderPage() {
       </div>
       </div>
 
-      <div className="light-surface fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-border p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+      <div className="light-surface fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-soft p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
         <div className="max-w-lg mx-auto flex gap-2 items-center">
-          <SecondaryButton
+          <button
             onClick={toggleFollow}
-            className={`h-12 px-4 py-0 text-xs gap-1.5 ${followData?.following ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" : ""}`}
+            className={`flex h-12 shrink-0 items-center gap-1.5 rounded-2xl px-4 text-xs font-bold transition ${
+              followData?.following ? "bg-[#0f172a] text-white" : "bg-brand/5 text-brand hover:bg-brand/10"
+            }`}
           >
             <Heart className={`size-4 ${followData?.following ? "fill-white" : ""}`} />
             {followData?.following ? "Following" : "Follow"}
@@ -390,13 +401,13 @@ function ProviderPage() {
                 <Users className="size-3" /> {followData.count}
               </span>
             )}
-          </SecondaryButton>
+          </button>
           <PrimaryButton
             onClick={() => {
               if (!user) return navigate({ to: "/auth", search: { redirect: `/book/${id}` } });
               navigate({ to: "/book/$id", params: { id } });
             }}
-            className="flex-1 h-12 py-0 text-sm"
+            className="flex-1 h-12 rounded-2xl py-0 text-sm"
           >
             Book now
           </PrimaryButton>
