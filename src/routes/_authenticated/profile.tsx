@@ -8,7 +8,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { LogOut, User, Briefcase, Shield, Home, Palette, Sun, Moon, Laptop, Bell, BellOff } from "lucide-react";
+import { LogOut, User, Briefcase, Shield, Home, Palette, Sun, Moon, Laptop, Bell, BellOff, ChevronRight, ArrowRight } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarFooter, useSidebar,
@@ -32,6 +32,7 @@ function ProfilePage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [section, setSection] = useState<Section>("profile");
+  const { theme } = useTheme();
   useNeutralSidebarSurface();
 
   const { data: profile } = useQuery({
@@ -109,36 +110,107 @@ function ProfilePage() {
 
           <main className="flex-1 px-4 py-6 pb-28 max-w-3xl w-full mx-auto">
             {section === "profile" && (
-              <Panel>
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                  <AvatarUpload
-                    userId={user!.id}
-                    avatarUrl={profile?.avatar_url ?? null}
-                    label={(user?.email?.[0] ?? "?").toUpperCase()}
-                  />
-                  <div className="min-w-0">
-                    <h2 className="text-lg font-semibold">Welcome back</h2>
-                    <p className="text-sm text-brand/60 truncate">{user?.email}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {roles.map((role) => (
-                        <span key={role} className="rounded-full bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">
-                          {role}
-                        </span>
-                      ))}
+              <div className="space-y-4">
+                <Panel>
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                    <AvatarUpload
+                      userId={user!.id}
+                      avatarUrl={profile?.avatar_url ?? null}
+                      label={(user?.email?.[0] ?? "?").toUpperCase()}
+                    />
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-black tracking-tight">{profile?.full_name || "Welcome back"}</h2>
+                      <p className="text-sm text-brand/60 truncate">{user?.email}</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {roles.map((role) => (
+                          <span key={role} className="rounded-full bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">
+                            {role}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <form onSubmit={save} className="mt-6 space-y-5">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <FormField label="Full name" required value={fullName} onChange={setFullName} />
-                    <FormField label="Phone" value={phone} onChange={setPhone} />
+                  <form onSubmit={save} className="mt-6 space-y-5">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <FormField label="Full name" required value={fullName} onChange={setFullName} />
+                      <FormField label="Phone" value={phone} onChange={setPhone} />
+                    </div>
+                    <PrimaryButton disabled={saving} loading={saving} className="w-full">
+                      Save profile
+                    </PrimaryButton>
+                  </form>
+                </Panel>
+
+                {/* Quick-access banner — one tap to the provider tools, no
+                    need to hunt through the sidebar for it. */}
+                <Link
+                  to={isProvider ? "/dashboard" : "/become-provider"}
+                  className="relative flex items-center gap-4 overflow-hidden rounded-[2rem] bg-brand p-6 text-brand-foreground shadow-soft transition hover:opacity-95"
+                >
+                  <div className="pointer-events-none absolute -right-6 -top-8 size-32 rounded-full bg-accent/25" />
+                  <div className="relative grid size-12 shrink-0 place-items-center rounded-2xl bg-accent">
+                    <Briefcase className="size-5 text-white" />
                   </div>
-                  <PrimaryButton disabled={saving} loading={saving} className="w-full">
-                    Save profile
-                  </PrimaryButton>
-                </form>
-              </Panel>
+                  <div className="relative min-w-0 flex-1">
+                    <div className="text-sm font-bold">{isProvider ? "Provider dashboard" : "Start earning today"}</div>
+                    <div className="text-xs text-brand-foreground/60">
+                      {isProvider ? "Manage jobs, staff & payouts" : "List your services and get booked"}
+                    </div>
+                  </div>
+                  <ArrowRight className="relative size-4 shrink-0 text-brand-foreground/40" />
+                </Link>
+
+                {/* Grouped settings — icon-leading rows, jump straight to a section. */}
+                <Panel className="p-0 overflow-hidden divide-y divide-soft">
+                  <button
+                    type="button"
+                    onClick={() => setSection("notifications")}
+                    className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-canvas"
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600">
+                      <Bell className="size-4" />
+                    </span>
+                    <span className="flex-1 text-sm font-semibold">Notifications</span>
+                    <ChevronRight className="size-4 text-brand/30" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSection("theme")}
+                    className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-canvas"
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-purple-50 text-purple-600">
+                      <Palette className="size-4" />
+                    </span>
+                    <span className="flex-1 text-sm font-semibold">Appearance</span>
+                    <span className="text-xs font-medium capitalize text-brand/40">{theme}</span>
+                    <ChevronRight className="size-4 text-brand/30" />
+                  </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => setSection("admin")}
+                      className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-canvas"
+                    >
+                      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-600">
+                        <Shield className="size-4" />
+                      </span>
+                      <span className="flex-1 text-sm font-semibold">Admin console</span>
+                      <ChevronRight className="size-4 text-brand/30" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-canvas"
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-red-50 text-red-600">
+                      <LogOut className="size-4" />
+                    </span>
+                    <span className="flex-1 text-sm font-semibold text-red-600">Sign out</span>
+                  </button>
+                </Panel>
+              </div>
             )}
 
             {section === "provider" && (
