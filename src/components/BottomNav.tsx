@@ -28,7 +28,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="light-surface fixed inset-x-4 z-40 mx-auto max-w-lg rounded-[26px] bg-white/95 backdrop-blur-xl px-3 py-2.5 shadow-soft"
+      className="light-surface fixed inset-x-4 z-40 mx-auto max-w-lg rounded-[26px] border border-black/5 bg-white/95 px-3 py-2.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-black/95 dark:shadow-black/50"
       style={{ bottom: "max(env(safe-area-inset-bottom), 1rem)" }}
     >
       <div className="flex items-center justify-between">
@@ -42,7 +42,7 @@ export function BottomNav() {
                 }`}
               >
                 <Icon
-                  className={`size-5 transition-colors duration-200 ${active ? "text-white" : "text-brand/40"}`}
+                  className={`size-5 transition-colors duration-200 ${active ? "text-white" : "text-brand/40 dark:text-white/60"}`}
                   strokeWidth={active ? 2.4 : 2.1}
                 />
                 {!!badge && (
