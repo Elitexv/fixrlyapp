@@ -12,6 +12,8 @@ import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-paym
 import { currencySymbol, formatMoney, useCurrency } from "@/lib/currency";
 import { formatRelativeTime } from "@/lib/time";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import {
   PageHero,
   Panel,
@@ -105,6 +107,46 @@ function DashboardPage() {
       earned,
     };
   }, [bookings]);
+
+  // Last 8 Monday-starting weeks. Volume buckets by created_at (when the
+  // request came in); earnings buckets by paid_at (when it was actually
+  // earned) — the same paid+completed filter stats.earned above uses, just
+  // spread across weeks instead of summed into one number.
+  const weeklyData = useMemo(() => {
+    const startOfWeek = (d: Date) => {
+      const date = new Date(d);
+      const day = date.getDay();
+      date.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
+      date.setHours(0, 0, 0, 0);
+      return date;
+    };
+    const weeks: { key: string; label: string }[] = [];
+    const thisWeekStart = startOfWeek(new Date());
+    for (let i = 7; i >= 0; i--) {
+      const start = new Date(thisWeekStart);
+      start.setDate(start.getDate() - i * 7);
+      weeks.push({
+        key: start.toISOString().slice(0, 10),
+        label: start.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      });
+    }
+    const volume = new Map(weeks.map((w) => [w.key, 0]));
+    const earnings = new Map(weeks.map((w) => [w.key, 0]));
+    const weekKeyFor = (dateStr: string) => startOfWeek(new Date(dateStr)).toISOString().slice(0, 10);
+
+    for (const b of bookings as any[]) {
+      const createdKey = weekKeyFor(b.created_at);
+      if (volume.has(createdKey)) volume.set(createdKey, (volume.get(createdKey) ?? 0) + 1);
+      if (b.status === "completed" && b.payment_status === "paid" && b.paid_at) {
+        const paidKey = weekKeyFor(b.paid_at);
+        if (earnings.has(paidKey)) earnings.set(paidKey, (earnings.get(paidKey) ?? 0) + (Number(b.provider_payout_amount) || 0));
+      }
+    }
+    return weeks.map((w) => ({ week: w.label, bookings: volume.get(w.key) ?? 0, earnings: earnings.get(w.key) ?? 0 }));
+  }, [bookings]);
+
+  const bookingsChartConfig = { bookings: { label: "Bookings", color: "#ff5a1f" } } satisfies ChartConfig;
+  const earningsChartConfig = { earnings: { label: "Earnings", color: "#ff5a1f" } } satisfies ChartConfig;
 
   const [form, setForm] = useState({
     business_name: "",
@@ -232,31 +274,88 @@ function DashboardPage() {
       />
 
       <main className="mx-auto max-w-6xl px-4 -mt-10 space-y-4">
+        {/* Overview: at-a-glance numbers, separated from the editable
+            listing form below so status and settings don't blend together. */}
+        <Panel>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <Eyebrow>Overview</Eyebrow>
+              <h2 className="mt-2 text-2xl font-black tracking-tight">{profile?.business_name ?? "Your provider listing"}</h2>
+            </div>
+            <div className="rounded-2xl bg-brand/5 px-4 py-3 text-sm font-semibold text-brand/70">
+              {form.is_active ? "Active and accepting bookings" : "Inactive listing"}
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <StatCard label="Pending" value={stats.pending} />
+            <StatCard label="Accepted" value={stats.accepted} />
+            <StatCard label="Completed" value={stats.completed} />
+            <StatCard label="Total earned" value={formatMoney(stats.earned, currency)} accent />
+          </div>
+          <div className="mt-3 flex justify-end gap-4">
+            <Link to="/business" className="text-sm font-bold uppercase tracking-[0.2em] text-accent">Business tools →</Link>
+            <Link to="/payouts" className="text-sm font-bold uppercase tracking-[0.2em] text-accent">Manage payouts →</Link>
+          </div>
+        </Panel>
+
+        {/* Trends: same booking data as the stat cards above, spread across
+            the last 8 weeks instead of summed into one number. */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Panel className="p-5">
+            <Eyebrow>Volume</Eyebrow>
+            <h3 className="mt-1 text-lg font-semibold">Bookings per week</h3>
+            <ChartContainer config={bookingsChartConfig} className="mt-4 aspect-auto h-48 w-full">
+              <BarChart data={weeklyData} margin={{ left: -20 }}>
+                <CartesianGrid vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="week" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />
+                <YAxis tickLine={false} axisLine={false} tickMargin={8} fontSize={11} allowDecimals={false} width={28} />
+                <ChartTooltip cursor={{ fill: "var(--muted)" }} content={<ChartTooltipContent />} />
+                <Bar dataKey="bookings" fill="var(--color-bookings)" radius={[4, 4, 0, 0]} maxBarSize={28} />
+              </BarChart>
+            </ChartContainer>
+          </Panel>
+
+          <Panel className="p-5">
+            <Eyebrow>Revenue</Eyebrow>
+            <h3 className="mt-1 text-lg font-semibold">Earnings per week</h3>
+            <ChartContainer config={earningsChartConfig} className="mt-4 aspect-auto h-48 w-full">
+              <BarChart data={weeklyData} margin={{ left: -20 }}>
+                <CartesianGrid vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="week" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  fontSize={11}
+                  width={40}
+                  tickFormatter={(v: number) => (v >= 1000 ? `${currencySymbol(currency)}${(v / 1000).toFixed(0)}k` : `${currencySymbol(currency)}${v}`)}
+                />
+                <ChartTooltip
+                  cursor={{ fill: "var(--muted)" }}
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value, name) => (
+                        <div className="flex w-full items-center justify-between gap-3">
+                          <span className="text-muted-foreground">{name}</span>
+                          <span className="font-mono font-medium tabular-nums text-foreground">{formatMoney(Number(value), currency)}</span>
+                        </div>
+                      )}
+                    />
+                  }
+                />
+                <Bar dataKey="earnings" fill="var(--color-earnings)" radius={[4, 4, 0, 0]} maxBarSize={28} />
+              </BarChart>
+            </ChartContainer>
+          </Panel>
+        </div>
+
         <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
           <Panel>
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <Eyebrow>Live status</Eyebrow>
-                <h2 className="mt-2 text-2xl font-black tracking-tight">{profile?.business_name ?? "Your provider listing"}</h2>
-                <p className="mt-2 text-sm text-brand/60">
-                  {profile?.bio ?? "Update your profile and service area details to stay visible to customers."}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-brand/5 px-4 py-3 text-sm font-semibold text-brand/70">
-                {form.is_active ? "Active and accepting bookings" : "Inactive listing"}
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
-              <StatCard label="Pending" value={stats.pending} />
-              <StatCard label="Accepted" value={stats.accepted} />
-              <StatCard label="Completed" value={stats.completed} />
-              <StatCard label="Total earned" value={formatMoney(stats.earned, currency)} accent />
-            </div>
-            <div className="mt-3 flex justify-end gap-4">
-              <Link to="/business" className="text-sm font-bold uppercase tracking-[0.2em] text-accent">Business tools →</Link>
-              <Link to="/payouts" className="text-sm font-bold uppercase tracking-[0.2em] text-accent">Manage payouts →</Link>
-            </div>
+            <Eyebrow>Listing</Eyebrow>
+            <p className="mt-2 text-sm text-brand/60">
+              {profile?.bio ?? "Update your profile and service area details to stay visible to customers."}
+            </p>
 
             <div className="mt-6 rounded-2xl bg-canvas p-5 text-sm text-brand/70">
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
