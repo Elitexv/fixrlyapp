@@ -657,11 +657,13 @@ function InvoicesTab({ providerId, canManage }: { providerId: string; canManage:
 
             <div className="space-y-2">
               {items.map((item, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <TextField placeholder="Description" value={item.description} onChange={(e) => updateItem(i, { description: e.target.value })} className="flex-1" />
-                  <TextField type="number" min={0} step="1" value={String(item.quantity)} onChange={(e) => updateItem(i, { quantity: Number(e.target.value) || 0 })} className="w-16" />
-                  <TextField type="number" min={0} step="0.01" value={String(item.unit_price)} onChange={(e) => updateItem(i, { unit_price: Number(e.target.value) || 0 })} className="w-24" />
-                  <button type="button" onClick={() => removeItem(i)} className="shrink-0 text-brand/40 hover:text-red-600"><Trash2 className="size-4" /></button>
+                <div key={i} className="flex flex-col gap-2 rounded-xl bg-canvas/60 p-2 sm:flex-row sm:items-center sm:bg-transparent sm:p-0">
+                  <TextField placeholder="Description" value={item.description} onChange={(e) => updateItem(i, { description: e.target.value })} className="min-w-0 flex-1" />
+                  <div className="flex items-center gap-2">
+                    <TextField type="number" min={0} step="1" value={String(item.quantity)} onChange={(e) => updateItem(i, { quantity: Number(e.target.value) || 0 })} className="w-16" />
+                    <TextField type="number" min={0} step="0.01" value={String(item.unit_price)} onChange={(e) => updateItem(i, { unit_price: Number(e.target.value) || 0 })} className="w-24" />
+                    <button type="button" onClick={() => removeItem(i)} className="shrink-0 text-brand/40 hover:text-red-600"><Trash2 className="size-4" /></button>
+                  </div>
                 </div>
               ))}
               <SecondaryButton type="button" onClick={addItem} className="w-full py-2 text-xs"><Plus className="size-3.5" /> Add line item</SecondaryButton>

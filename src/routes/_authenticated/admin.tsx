@@ -206,7 +206,7 @@ function OverviewTab() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Total users" value={stats?.users ?? 0} />
         <StatCard label="Providers" value={stats?.providers ?? 0} />
         <StatCard label="Bookings" value={stats?.bookings ?? 0} />

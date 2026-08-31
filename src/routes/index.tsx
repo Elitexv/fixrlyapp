@@ -363,7 +363,7 @@ function Home() {
                 }
               />
             ) : (
-              <div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
+              <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
                 {filtered.map((p) => <ProviderCard key={p.id} p={p} />)}
               </div>
             )}

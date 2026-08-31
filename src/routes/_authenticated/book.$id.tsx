@@ -273,9 +273,11 @@ function BookPage() {
             onClick={submit}
             loading={loading}
             disabled={!scheduledAt || !address}
-            className="flex-1 h-12 rounded-xl"
+            className="h-12 min-w-0 flex-1 rounded-xl"
           >
-            Confirm booking{total != null ? ` — ${formatMoney(total, currency)}` : ""}
+            <span className="truncate">
+              Confirm booking{total != null ? ` — ${formatMoney(total, currency)}` : ""}
+            </span>
           </PrimaryButton>
         </div>
       </div>

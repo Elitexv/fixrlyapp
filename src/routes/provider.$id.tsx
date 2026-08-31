@@ -300,23 +300,23 @@ function ProviderPage() {
           </Panel>
         )}
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={openChat}
             disabled={chatLoading}
-            className="light-surface flex flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-soft transition disabled:opacity-60"
+            className="light-surface flex min-w-[100px] flex-1 basis-[30%] flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-soft transition disabled:opacity-60"
           >
             <span className="grid size-10 place-items-center rounded-xl bg-accent/10 text-accent"><MessageSquare className="size-4" /></span>
             <span className="text-xs font-bold text-brand">{chatLoading ? "Opening…" : "Chat"}</span>
           </button>
           {data.phone && (
-            <a href={`tel:${data.phone}`} className="light-surface flex flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-soft transition">
+            <a href={`tel:${data.phone}`} className="light-surface flex min-w-[100px] flex-1 basis-[30%] flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-soft transition">
               <span className="grid size-10 place-items-center rounded-xl bg-accent/10 text-accent"><Phone className="size-4" /></span>
               <span className="text-xs font-bold text-brand">Call</span>
             </a>
           )}
           {(data.profiles as any)?.full_name && (
-            <div className="light-surface flex flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-soft">
+            <div className="light-surface flex min-w-[100px] flex-1 basis-[30%] flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-soft">
               <span className="grid size-10 place-items-center rounded-xl bg-accent/10 text-accent"><Mail className="size-4" /></span>
               <span className="w-full truncate text-center text-xs font-bold text-brand">{(data.profiles as any).full_name}</span>
             </div>
