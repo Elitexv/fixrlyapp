@@ -83,6 +83,19 @@ async function completeSignIn(user: FirebaseUser, opts: { fullName?: string | nu
 const fieldWrap = "light-surface flex items-center gap-2.5 bg-white rounded-2xl py-3 px-3.5 shadow-soft transition focus-within:ring-2 focus-within:ring-accent/30";
 const fieldInput = "w-full bg-transparent text-sm outline-none placeholder:text-brand/40";
 
+// Inline recreation of the Fixrly mark (public/icon.png is only 48x48 — soft
+// at the size the branded panel needs it). Vector, so it's crisp at any size
+// and on any display density.
+function LogoMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="none">
+      <rect x="4" y="5" width="17" height="6" rx="3" fill="currentColor" />
+      <rect x="4" y="13" width="24" height="6" rx="3" fill="currentColor" />
+      <rect x="4" y="21" width="13" height="6" rx="3" fill="currentColor" opacity="0.65" />
+    </svg>
+  );
+}
+
 const HIGHLIGHTS = [
   { icon: MapPin, text: "Book vetted local pros in minutes" },
   { icon: Zap, text: "Live tracking when they're on the way" },
@@ -162,12 +175,12 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-canvas lg:flex">
       {/* Branded panel — desktop only. Real, current features, not filler. */}
-      <div className="relative hidden overflow-hidden bg-[#0f172a] px-12 py-14 text-white lg:flex lg:w-[42%] lg:flex-col lg:justify-between">
-        <div className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 right-0 size-96 rounded-full bg-accent/10 blur-3xl" />
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-orange-950 via-orange-800 to-accent px-12 py-14 text-white lg:flex lg:w-[42%] lg:flex-col lg:justify-between">
+        <div className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 right-0 size-96 rounded-full bg-orange-950/40 blur-3xl" />
 
         <div className="relative flex items-center gap-2.5">
-          <img src="/icon.png" alt="" className="size-8" />
+          <LogoMark className="size-8 text-white" />
           <span className="text-lg font-black tracking-tight">Fixrly</span>
         </div>
 
@@ -193,8 +206,10 @@ function AuthPage() {
       {/* Form */}
       <div className="grid flex-1 place-items-center px-4 py-10">
         <div className="w-full max-w-sm">
-          <div className="mb-6 text-center lg:hidden">
-            <img src="/icon.png" alt="Fixrly" className="inline-block size-12" />
+          <div className="mb-6 flex justify-center lg:hidden">
+            <span className="grid size-12 place-items-center rounded-2xl bg-accent/10">
+              <LogoMark className="size-6 text-accent" />
+            </span>
           </div>
 
           {mode === "forgot" ? (
