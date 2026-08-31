@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -175,12 +175,12 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-canvas lg:flex">
       {/* Branded panel — desktop only. Real, current features, not filler. */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-orange-950 via-orange-800 to-accent px-12 py-14 text-white lg:flex lg:w-[42%] lg:flex-col lg:justify-between">
-        <div className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 right-0 size-96 rounded-full bg-orange-950/40 blur-3xl" />
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-black via-neutral-900 to-black px-12 py-14 text-white lg:flex lg:w-[42%] lg:flex-col lg:justify-between">
+        <div className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-accent/20 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 right-0 size-96 rounded-full bg-accent/10 blur-3xl" />
 
         <div className="relative flex items-center gap-2.5">
-          <LogoMark className="size-8 text-white" />
+          <LogoMark className="size-8 text-accent" />
           <span className="text-lg font-black tracking-tight">Fixrly</span>
         </div>
 
@@ -191,7 +191,7 @@ function AuthPage() {
           <div className="mt-8 space-y-4">
             {HIGHLIGHTS.map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/10">
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent">
                   <Icon className="size-4" />
                 </span>
                 <span className="text-sm font-medium text-white/80">{text}</span>
@@ -354,10 +354,15 @@ function AuthPage() {
               </form>
 
               <p className="text-center text-[11px] leading-relaxed text-brand/40">
-                Protected by reCAPTCHA and subject to the Google{" "}
+                By continuing, you agree to Fixrly's{" "}
+                <Link to="/terms" className="underline hover:text-brand/60">Terms</Link>{" "}
+                and{" "}
+                <Link to="/privacy" className="underline hover:text-brand/60">Privacy Policy</Link>.
+                {" "}This site is protected by reCAPTCHA and the Google{" "}
                 <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="underline hover:text-brand/60">Privacy Policy</a>{" "}
                 and{" "}
-                <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="underline hover:text-brand/60">Terms of Service</a>.
+                <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="underline hover:text-brand/60">Terms of Service</a>{" "}
+                apply.
               </p>
             </div>
           )}

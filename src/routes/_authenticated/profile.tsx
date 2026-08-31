@@ -8,7 +8,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { LogOut, User, Briefcase, Shield, Palette, Sun, Moon, Laptop, Bell, BellOff, ChevronRight, ChevronLeft, ArrowRight } from "lucide-react";
+import { LogOut, User, Briefcase, Shield, ShieldCheck, FileText, Palette, Sun, Moon, Laptop, Bell, BellOff, ChevronRight, ChevronLeft, ArrowRight } from "lucide-react";
 import { Panel, Eyebrow, FormField, PrimaryButton, PageSpinner } from "@/components/ui-kit";
 import { useTheme, type Theme } from "@/lib/theme";
 import { getPushSubscriptionState, isPushSupported, subscribeToPush, unsubscribeFromPush } from "@/lib/push";
@@ -198,6 +198,26 @@ function ProfilePage() {
                   <ChevronRight className="size-4 text-brand/30" />
                 </button>
               )}
+              <Link
+                to="/privacy"
+                className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-canvas"
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <ShieldCheck className="size-4" />
+                </span>
+                <span className="flex-1 text-sm font-semibold">Privacy Policy</span>
+                <ChevronRight className="size-4 text-brand/30" />
+              </Link>
+              <Link
+                to="/terms"
+                className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-canvas"
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-600">
+                  <FileText className="size-4" />
+                </span>
+                <span className="flex-1 text-sm font-semibold">Terms and Conditions</span>
+                <ChevronRight className="size-4 text-brand/30" />
+              </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
