@@ -287,13 +287,13 @@ function DashboardPage() {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
             <StatCard label="Pending" value={stats.pending} />
             <StatCard label="Accepted" value={stats.accepted} />
             <StatCard label="Completed" value={stats.completed} />
             <StatCard label="Total earned" value={formatMoney(stats.earned, currency)} accent />
           </div>
-          <div className="mt-3 flex justify-end gap-4">
+          <div className="mt-3 flex flex-wrap justify-end gap-x-4 gap-y-1.5">
             <Link to="/business" className="text-sm font-bold uppercase tracking-[0.2em] text-accent">Business tools →</Link>
             <Link to="/payouts" className="text-sm font-bold uppercase tracking-[0.2em] text-accent">Manage payouts →</Link>
           </div>
@@ -305,10 +305,10 @@ function DashboardPage() {
           <Panel className="p-5">
             <Eyebrow>Volume</Eyebrow>
             <h3 className="mt-1 text-lg font-semibold">Bookings per week</h3>
-            <ChartContainer config={bookingsChartConfig} className="mt-4 aspect-auto h-48 w-full">
+            <ChartContainer config={bookingsChartConfig} className="mt-4 aspect-auto h-52 w-full sm:h-56">
               <BarChart data={weeklyData} margin={{ left: -20 }}>
                 <CartesianGrid vertical={false} stroke="var(--border)" />
-                <XAxis dataKey="week" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />
+                <XAxis dataKey="week" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} interval="preserveStartEnd" minTickGap={16} />
                 <YAxis tickLine={false} axisLine={false} tickMargin={8} fontSize={11} allowDecimals={false} width={28} />
                 <ChartTooltip cursor={{ fill: "var(--muted)" }} content={<ChartTooltipContent />} />
                 <Bar dataKey="bookings" fill="var(--color-bookings)" radius={[4, 4, 0, 0]} maxBarSize={28} />
@@ -319,10 +319,10 @@ function DashboardPage() {
           <Panel className="p-5">
             <Eyebrow>Revenue</Eyebrow>
             <h3 className="mt-1 text-lg font-semibold">Earnings per week</h3>
-            <ChartContainer config={earningsChartConfig} className="mt-4 aspect-auto h-48 w-full">
+            <ChartContainer config={earningsChartConfig} className="mt-4 aspect-auto h-52 w-full sm:h-56">
               <BarChart data={weeklyData} margin={{ left: -20 }}>
                 <CartesianGrid vertical={false} stroke="var(--border)" />
-                <XAxis dataKey="week" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />
+                <XAxis dataKey="week" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} interval="preserveStartEnd" minTickGap={16} />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
@@ -350,7 +350,7 @@ function DashboardPage() {
           </Panel>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
+        <div className="grid gap-4 lg:grid-cols-[1.3fr_0.9fr]">
           <Panel>
             <Eyebrow>Listing</Eyebrow>
             <p className="mt-2 text-sm text-brand/60">
@@ -424,7 +424,7 @@ function DashboardPage() {
           </section>
         </div>
 
-        <form onSubmit={save} className="grid gap-4 xl:grid-cols-[1fr_1.05fr]">
+        <form onSubmit={save} className="grid gap-4 lg:grid-cols-[1fr_1.05fr]">
           <Panel>
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">Listing details</h2>
