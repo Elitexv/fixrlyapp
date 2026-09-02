@@ -174,12 +174,12 @@ function Home() {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude, label: "Current location" }),
         () => {},
-        { timeout: 4000 },
+        { timeout: 8000, enableHighAccuracy: true },
       );
     }
   }, [coords]);
 
-  const mapCenter = coords ?? { lat: 40.7128, lng: -74.006 };
+  const mapCenter = coords ?? { lat: 9.082, lng: 8.6753 };
   const markers = filtered
     .filter((p) => p.latitude != null && p.longitude != null)
     .slice(0, 30)
@@ -329,7 +329,7 @@ function Home() {
         <div className="px-4 pb-8 lg:grid lg:grid-cols-[1fr_400px] lg:items-start lg:gap-6">
           <div className="mb-6 lg:col-start-2 lg:row-start-1 lg:mb-0 lg:sticky lg:top-28">
             <div className="relative w-full h-44 lg:h-[calc(100vh-9rem)] rounded-3xl overflow-hidden border border-soft shadow-soft bg-canvas">
-              <GoogleMap center={mapCenter} markers={markers} zoom={coords ? 12 : 10} />
+              <GoogleMap center={mapCenter} markers={markers} zoom={coords ? 12 : 6} />
               <div className="absolute bottom-3 left-3 pointer-events-none">
                 <div className="bg-surface px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-xl flex items-center gap-2">
                   <span className="size-1.5 bg-green-500 rounded-full animate-pulse" />
