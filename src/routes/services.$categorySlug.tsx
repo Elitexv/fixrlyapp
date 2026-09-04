@@ -1,11 +1,12 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { ProviderCard, type ProviderCardData } from "@/components/ProviderCard";
 import { StickyHeader, InlineSpinner, EmptyState, Eyebrow } from "@/components/ui-kit";
 import { fetchActiveProviders, fetchCategories, fetchCategoryBySlug } from "@/lib/providers";
 import { haversineKm } from "@/lib/session";
+import { useUserLocation } from "@/lib/location";
 import { ArrowLeft, Compass } from "lucide-react";
 
 const SITE_URL = "https://fixrly.app";
@@ -83,19 +84,10 @@ function CategoryPage() {
     queryFn: () => fetchActiveProviders(category.id),
   });
 
-  // Silent, best-effort geolocation — same background auto-detect the
-  // homepage uses (no permission prompt UI here, just fills in distance
-  // when the browser already has/grants it).
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  useEffect(() => {
-    if (!coords && typeof window !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {},
-        { timeout: 4000 },
-      );
-    }
-  }, [coords]);
+  // Shared location — whatever the customer already set on the homepage
+  // (device GPS or a typed city/ZIP) carries over here automatically, with
+  // a silent background geolocation attempt as a fallback if nothing's set.
+  const [coords] = useUserLocation();
 
   const sortedProviders = useMemo(() => {
     const list = providers as unknown as (ProviderCardData & { latitude: number | null; longitude: number | null })[];

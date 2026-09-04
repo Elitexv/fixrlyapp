@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { haversineKm, useRoles, useSession } from "@/lib/session";
+import { useUserLocation } from "@/lib/location";
 import { geocodeLocation } from "@/lib/geocode.functions";
 import { fetchActiveProviders, fetchCategories, type Category } from "@/lib/providers";
 import { BottomNav } from "@/components/BottomNav";
@@ -72,8 +73,8 @@ function Home() {
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [locationText, setLocationText] = useState("");
-  const [coords, setCoords] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [coords, setCoords] = useUserLocation();
+  const [locationText, setLocationText] = useState(coords?.label ?? "");
   const [geoLoading, setGeoLoading] = useState(false);
 
   const { data: profile } = useQuery({
@@ -168,16 +169,6 @@ function Home() {
       setGeoLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!coords && typeof window !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude, label: "Current location" }),
-        () => {},
-        { timeout: 8000, enableHighAccuracy: true },
-      );
-    }
-  }, [coords]);
 
   const mapCenter = coords ?? { lat: 9.082, lng: 8.6753 };
   const markers = filtered

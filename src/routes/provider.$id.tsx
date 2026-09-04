@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSession } from "@/lib/session";
+import { haversineKm, useSession } from "@/lib/session";
+import { formatDistance, useUserLocation } from "@/lib/location";
 import { GoogleMap } from "@/components/GoogleMap";
 import { BottomNav } from "@/components/BottomNav";
 import { ArrowLeft, Star, MapPin, Phone, Mail, Heart, Users, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
@@ -84,6 +85,7 @@ function ProviderPage() {
   const navigate = useNavigate();
   const { user } = useSession();
   const currency = useCurrency();
+  const [userCoords] = useUserLocation();
 
   const { data, isLoading } = useQuery({
     queryKey: ["provider", id],
@@ -233,6 +235,10 @@ function ProviderPage() {
 
   const rating = reviews.length ? reviews.reduce((a, b) => a + b.rating, 0) / reviews.length : null;
   const categories = (data.provider_categories ?? []).map((pc: any) => pc.service_categories).filter(Boolean);
+  const distanceKm =
+    userCoords && data.latitude != null && data.longitude != null
+      ? haversineKm(userCoords, { lat: data.latitude, lng: data.longitude })
+      : null;
 
   return (
     <div className="min-h-screen bg-canvas pb-32">
@@ -258,7 +264,16 @@ function ProviderPage() {
           <div className="flex justify-between items-start gap-3">
             <div className="min-w-0">
               <h1 className="text-xl font-black tracking-tight truncate">{data.business_name}</h1>
-              {data.city && <div className="text-xs text-brand/60 flex items-center gap-1 mt-1"><MapPin className="size-3" />{data.city}</div>}
+              {(data.city || distanceKm !== null) && (
+                <div className="text-xs text-brand/60 flex items-center gap-1 mt-1">
+                  <MapPin className="size-3" />
+                  {data.city}
+                  {data.city && distanceKm !== null && <span className="text-brand/30">·</span>}
+                  {distanceKm !== null && (
+                    <span className="font-semibold text-brand/80">{formatDistance(distanceKm)}{!data.city && " away"}</span>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex flex-col items-center gap-0.5 rounded-2xl bg-accent/10 px-3 py-2 shrink-0">
               <div className="flex items-center gap-1">

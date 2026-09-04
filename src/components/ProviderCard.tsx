@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, MapPin, Star } from "lucide-react";
 import { Tile, ProviderAvatar } from "@/components/ui-kit";
 import { formatMoney, useCurrency } from "@/lib/currency";
+import { formatDistance } from "@/lib/location";
 
 export type ProviderCardData = {
   id: string;
@@ -37,10 +38,14 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
                 <span className="rounded-full bg-brand/5 px-2.5 py-1 text-[11px] font-medium text-brand/65">
                   {p.category_names[0] ?? "Service Pro"}
                 </span>
-                {p.city && (
+                {(p.city || p.distance_km !== null) && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-medium text-sky-700">
                     <MapPin className="size-3" />
                     {p.city}
+                    {p.city && p.distance_km !== null && <span className="text-sky-700/60">·</span>}
+                    {p.distance_km !== null && (
+                      <span className="font-bold">{formatDistance(p.distance_km)}{!p.city && " away"}</span>
+                    )}
                   </span>
                 )}
               </div>
@@ -53,12 +58,6 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
           </div>
 
           <div className="mt-3 flex flex-wrap gap-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em]">
-            {p.distance_km !== null && (
-              <div className="flex flex-col">
-                <span className="text-brand/40">Distance</span>
-                <span className="text-brand">{p.distance_km.toFixed(1)} km</span>
-              </div>
-            )}
             {p.hourly_rate !== null && (
               <div className="flex flex-col">
                 <span className="text-brand/40">Rate</span>
