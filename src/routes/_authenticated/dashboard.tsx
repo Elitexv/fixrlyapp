@@ -230,6 +230,25 @@ function DashboardPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      // "Pin on map" is easy to skip — if an address was typed but never
+      // pinned, geocode it now so distance-to-customer and map markers
+      // work instead of silently saving with no coordinates.
+      let { latitude, longitude } = form;
+      if (latitude == null) {
+        const q = [form.address, form.city, form.zip].filter(Boolean).join(", ");
+        if (q) {
+          try {
+            const res = await geocode({ data: { query: q } });
+            if (res.found) {
+              latitude = res.lat;
+              longitude = res.lng;
+            }
+          } catch {
+            /* best-effort — save without coordinates rather than block */
+          }
+        }
+      }
+
       const payload = {
         id: user!.id,
         business_name: form.business_name,
@@ -242,8 +261,8 @@ function DashboardPage() {
         phone: form.phone || null,
         availability_note: form.availability_note || null,
         is_active: form.is_active,
-        latitude: form.latitude,
-        longitude: form.longitude,
+        latitude,
+        longitude,
       };
       const { error } = await supabase.from("provider_profiles").upsert(payload);
       if (error) throw error;

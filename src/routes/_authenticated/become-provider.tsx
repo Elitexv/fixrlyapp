@@ -175,6 +175,26 @@ function BecomeProviderPage() {
     if (!form.national_id_url) return toast.error("Upload your National ID");
     setSaving(true);
     try {
+      // "Pin location" is easy to skip — if the applicant typed an address
+      // but never clicked it, geocode it now so distance-to-customer and
+      // map markers work once the listing goes live, instead of silently
+      // shipping with no coordinates.
+      let { latitude, longitude } = form;
+      if (latitude == null) {
+        const q = [form.address, form.city, form.zip].filter(Boolean).join(", ");
+        if (q) {
+          try {
+            const res = await geocode({ data: { query: q } });
+            if (res.found) {
+              latitude = res.lat;
+              longitude = res.lng;
+            }
+          } catch {
+            /* best-effort — submit without coordinates rather than block */
+          }
+        }
+      }
+
       const { error } = await supabase.from("provider_requests").insert({
         user_id: user!.id,
         business_name: form.business_name,
@@ -186,8 +206,8 @@ function BecomeProviderPage() {
         city: form.city || null,
         zip: form.zip || null,
         availability_note: form.availability_note || null,
-        latitude: form.latitude,
-        longitude: form.longitude,
+        latitude,
+        longitude,
         category_ids: selectedCats,
         service_id_url: form.service_id_url,
         national_id_url: form.national_id_url,
