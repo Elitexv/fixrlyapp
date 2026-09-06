@@ -183,3 +183,12 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes top-loader-slide {
+  0% { transform: translateX(-100%); }
+  60% { transform: translateX(40%); }
+  100% { transform: translateX(150%); }
+}
+@utility top-loader-bar {
+  animation: top-loader-slide 1.1s ease-in-out infinite;
+}

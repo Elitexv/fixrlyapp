@@ -16,6 +16,7 @@ import { ensureAuthClaim } from "@/lib/firebase-auth.functions";
 import { toast } from "sonner";
 import { Mail, Lock, User as UserIcon, Phone, Home, Briefcase, ChevronLeft, MapPin, ShieldCheck, Zap } from "lucide-react";
 import { PrimaryButton } from "@/components/ui-kit";
+import { LogoMark } from "@/components/Logo";
 
 type Search = { redirect?: string };
 
@@ -82,19 +83,6 @@ async function completeSignIn(user: FirebaseUser, opts: { fullName?: string | nu
 
 const fieldWrap = "light-surface flex items-center gap-2.5 bg-white rounded-2xl py-3 px-3.5 shadow-soft transition focus-within:ring-2 focus-within:ring-accent/30";
 const fieldInput = "w-full bg-transparent text-sm outline-none placeholder:text-brand/40";
-
-// Inline recreation of the Fixrly mark (public/icon.png is only 48x48 — soft
-// at the size the branded panel needs it). Vector, so it's crisp at any size
-// and on any display density.
-function LogoMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} fill="none">
-      <rect x="4" y="5" width="17" height="6" rx="3" fill="currentColor" />
-      <rect x="4" y="13" width="24" height="6" rx="3" fill="currentColor" />
-      <rect x="4" y="21" width="13" height="6" rx="3" fill="currentColor" opacity="0.65" />
-    </svg>
-  );
-}
 
 const HIGHLIGHTS = [
   { icon: MapPin, text: "Book vetted local pros in minutes" },

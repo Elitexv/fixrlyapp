@@ -4,6 +4,7 @@ import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { firebaseAuth } from "@/integrations/firebase/client";
 import { toast } from "sonner";
 import { PageSpinner, PrimaryButton, TextField } from "@/components/ui-kit";
+import { LogoMark } from "@/components/Logo";
 
 type Search = { oobCode?: string };
 
@@ -74,7 +75,9 @@ function ResetPasswordPage() {
     <div className="min-h-screen bg-canvas grid place-items-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-6">
-          <img src="/icon.png" alt="Fixrly" className="inline-block size-12" />
+          <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-accent/10">
+            <LogoMark className="size-6 text-accent" />
+          </span>
           <h1 className="mt-3 text-2xl font-black tracking-tight">Set a new password</h1>
           <p className="text-sm text-brand/60 mt-1">Choose a new password for your account.</p>
         </div>
