@@ -16,7 +16,6 @@ import { firebaseAuth } from "@/integrations/firebase/client";
 import { Toaster, toast } from "sonner";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { TopLoader } from "@/components/TopLoader";
 import { NetworkStatus } from "@/components/NetworkStatus";
 
 const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("fixrly-theme");var d=s==="dark"||((!s||s==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");}catch(e){}})();`;
@@ -195,7 +194,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <TopLoader />
         <NetworkStatus />
         <Outlet />
         <ThemedToaster />
