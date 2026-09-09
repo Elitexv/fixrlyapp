@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WifiOff } from "lucide-react";
 import { toast } from "sonner";
 
@@ -7,28 +7,48 @@ import { toast } from "sonner";
 // notifyNetworkError below), since "you're offline" is a standing condition
 // worth stating plainly rather than a one-off popup.
 export function NetworkStatus() {
-  const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine));
+  const [online, setOnline] = useState(true);
+  const offlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // The initial useState read can catch navigator.onLine mid-flip (e.g.
-    // right after page load, before the browser's connectivity check
-    // settles) — since nothing actually "transitions" in that case, no
-    // online/offline event ever fires to correct it. Resync immediately,
-    // and again whenever the tab regains focus, as a defensive backstop.
-    const resync = () => setOnline(navigator.onLine);
+    const clearTimer = () => {
+      if (offlineTimer.current) {
+        clearTimeout(offlineTimer.current);
+        offlineTimer.current = null;
+      }
+    };
+
+    // navigator.onLine can report a stale/wrong value for a brief window
+    // right after a cold launch, before the OS network stack finishes
+    // settling — and since nothing "transitions" in that case, no
+    // online/offline event fires to correct it. So never trust a single
+    // reading: debounce "offline" for a moment and re-check navigator.onLine
+    // when the timer fires, rather than acting on what it said 600ms ago.
+    const goOffline = () => {
+      clearTimer();
+      offlineTimer.current = setTimeout(() => {
+        if (!navigator.onLine) setOnline(false);
+      }, 600);
+    };
+    const goOnline = (announce: boolean) => {
+      clearTimer();
+      setOnline((wasOnline) => {
+        if (!wasOnline && announce) toast.success("Back online");
+        return true;
+      });
+    };
+    const resync = () => (navigator.onLine ? goOnline(true) : goOffline());
     resync();
 
-    const goOnline = () => {
-      setOnline(true);
-      toast.success("Back online");
-    };
-    const goOffline = () => setOnline(false);
-    window.addEventListener("online", goOnline);
-    window.addEventListener("offline", goOffline);
+    const onOnlineEvent = () => goOnline(true);
+    const onOfflineEvent = () => goOffline();
+    window.addEventListener("online", onOnlineEvent);
+    window.addEventListener("offline", onOfflineEvent);
     document.addEventListener("visibilitychange", resync);
     return () => {
-      window.removeEventListener("online", goOnline);
-      window.removeEventListener("offline", goOffline);
+      clearTimer();
+      window.removeEventListener("online", onOnlineEvent);
+      window.removeEventListener("offline", onOfflineEvent);
       document.removeEventListener("visibilitychange", resync);
     };
   }, []);
