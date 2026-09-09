@@ -20,6 +20,19 @@ import { NetworkStatus } from "@/components/NetworkStatus";
 
 const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("fixrly-theme");var d=s==="dark"||((!s||s==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");}catch(e){}})();`;
 
+// Only ever shown for installed/standalone launches (display-mode: standalone)
+// — a plain browser tab already gets real, server-rendered content on first
+// paint, so a splash there would just be an artificial delay. For a home
+// screen launch, the OS's own native splash (manifest icon + background_color)
+// hands off to this the instant our HTML paints, then this hands off to the
+// real page once React mounts — same brand orange the whole way through so
+// there's no color jump or blank flash in between.
+const SPLASH_STYLE = `
+#app-splash{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:#ff5a1f;transition:opacity .35s ease;}
+#app-splash.app-splash-hide{opacity:0;pointer-events:none;}
+@media (display-mode: standalone){#app-splash{display:flex;}}
+`;
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
@@ -145,9 +158,17 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <style dangerouslySetInnerHTML={{ __html: SPLASH_STYLE }} />
         <HeadContent />
       </head>
       <body>
+        <div id="app-splash" aria-hidden="true">
+          <svg viewBox="0 0 100 100" width="72" height="72" fill="#ffffff">
+            <rect x="31" y="23" width="38" height="14" rx="7" />
+            <rect x="31" y="41" width="38" height="14" rx="7" />
+            <circle cx="38" cy="64" r="7" />
+          </svg>
+        </div>
         {children}
         <Scripts />
       </body>
@@ -158,6 +179,20 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+
+  useEffect(() => {
+    // Hand off from the static splash to the real (already-rendered) page
+    // once React has mounted. The short delay is a guaranteed minimum
+    // display time so a fast launch doesn't just flash the splash for one
+    // frame — it's not covering up any real loading work.
+    const splash = document.getElementById("app-splash");
+    if (!splash) return;
+    const timer = setTimeout(() => {
+      splash.classList.add("app-splash-hide");
+      setTimeout(() => splash.remove(), 400);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // The Supabase client is configured with the `accessToken` option (see

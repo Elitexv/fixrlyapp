@@ -10,6 +10,14 @@ export function NetworkStatus() {
   const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine));
 
   useEffect(() => {
+    // The initial useState read can catch navigator.onLine mid-flip (e.g.
+    // right after page load, before the browser's connectivity check
+    // settles) — since nothing actually "transitions" in that case, no
+    // online/offline event ever fires to correct it. Resync immediately,
+    // and again whenever the tab regains focus, as a defensive backstop.
+    const resync = () => setOnline(navigator.onLine);
+    resync();
+
     const goOnline = () => {
       setOnline(true);
       toast.success("Back online");
@@ -17,16 +25,21 @@ export function NetworkStatus() {
     const goOffline = () => setOnline(false);
     window.addEventListener("online", goOnline);
     window.addEventListener("offline", goOffline);
+    document.addEventListener("visibilitychange", resync);
     return () => {
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
+      document.removeEventListener("visibilitychange", resync);
     };
   }, []);
 
   if (online) return null;
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[150] flex items-center justify-center gap-2 bg-brand px-4 py-2 text-center text-xs font-semibold text-white">
+    // Deliberately the literal navy, not bg-brand — --brand flips to white
+    // in dark mode (it's a text-color token), which turned this into an
+    // invisible white-on-white bar there.
+    <div className="fixed inset-x-0 top-0 z-[150] flex items-center justify-center gap-2 bg-[#0f172a] px-4 py-2 text-center text-xs font-semibold text-white">
       <WifiOff className="size-3.5 shrink-0" />
       You're offline — check your connection. We'll keep trying.
     </div>

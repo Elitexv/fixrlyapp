@@ -43,7 +43,7 @@ export default defineConfig({
         scope: "/",
         display: "standalone",
         orientation: "portrait-primary",
-        background_color: "#f8fafc",
+        background_color: "#ff5a1f",
         theme_color: "#ff5a1f",
         categories: ["business", "lifestyle"],
         icons: [
