@@ -123,7 +123,11 @@ export function GoogleMap({
   useEffect(() => {
     if (!mapRef.current || !window.google) return;
     mapRef.current.setCenter(center);
-  }, [center.lat, center.lng]);
+    // `status` isn't read here, but the map is constructed asynchronously
+    // and mapRef.current is a plain ref mutation (no re-render) — without
+    // this, a center set before the map finishes loading never actually
+    // gets applied once it's ready.
+  }, [center.lat, center.lng, status]);
 
   useEffect(() => {
     if (!mapRef.current || !window.google) return;
@@ -147,7 +151,10 @@ export function GoogleMap({
       if (m.onClick) marker.addListener("click", m.onClick);
       return marker;
     });
-  }, [markers]);
+    // Same async-map-load race as the center effect above: markers computed
+    // before "tilesloaded" fires would otherwise never get placed, since
+    // mapRef.current becoming non-null doesn't itself trigger a re-render.
+  }, [markers, status]);
 
   return (
     <div className={cn("relative w-full h-full", className)}>
