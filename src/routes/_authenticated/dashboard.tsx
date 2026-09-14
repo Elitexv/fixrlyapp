@@ -328,7 +328,15 @@ function DashboardPage() {
               <BarChart data={weeklyData} margin={{ left: -20 }}>
                 <CartesianGrid vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="week" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} interval="preserveStartEnd" minTickGap={16} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} fontSize={11} allowDecimals={false} width={28} />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  fontSize={11}
+                  allowDecimals={false}
+                  width={28}
+                  domain={[0, (max: number) => Math.max(4, Math.ceil(max))]}
+                />
                 <ChartTooltip cursor={{ fill: "var(--muted)" }} content={<ChartTooltipContent />} />
                 <Bar dataKey="bookings" fill="var(--color-bookings)" radius={[4, 4, 0, 0]} maxBarSize={28} />
               </BarChart>

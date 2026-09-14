@@ -179,7 +179,7 @@ function PayoutsPage() {
           <Eyebrow>Available to withdraw</Eyebrow>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <StatCard label="Available balance" value={formatMoney(balance, currency)} accent />
-            <StatCard label="Payout account" value={payoutAccount ? "Connected" : "Not set up"} />
+            <StatCard label="Payout account" value={<span className="text-lg">{payoutAccount ? "Connected" : "Not set up"}</span>} />
           </div>
         </Panel>
 

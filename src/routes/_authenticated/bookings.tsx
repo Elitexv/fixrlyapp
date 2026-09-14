@@ -229,7 +229,7 @@ function BookingsPage() {
         </div>
       </StickyHeader>
 
-      <div className="px-4 py-4 space-y-3 max-w-lg mx-auto">
+      <div className="px-4 py-4 space-y-3 max-w-lg mx-auto lg:max-w-4xl lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 lg:items-start">
         {(() => {
           const visible = bookings.filter((b) => {
             if (filter === "all") return true;
@@ -243,9 +243,13 @@ function BookingsPage() {
             if (filter === "failed") return b.payment_status === "failed" || b.status === "rejected" || b.status === "cancelled";
             return true;
           });
-          if (isLoading) return <InlineSpinner />;
+          if (isLoading) return <InlineSpinner className="lg:col-span-2" />;
           if (visible.length === 0)
-            return <EmptyState icon={CalendarCheck} title="No bookings in this view" description="Bookings you make or receive will show up here." />;
+            return (
+              <div className="lg:col-span-2">
+                <EmptyState icon={CalendarCheck} title="No bookings in this view" description="Bookings you make or receive will show up here." />
+              </div>
+            );
           return visible.map((b) => (
             <Panel key={b.id} className="rounded-[1.75rem] p-5">
               <div className="flex justify-between items-start gap-2">
