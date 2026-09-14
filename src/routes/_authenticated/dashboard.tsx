@@ -145,6 +145,20 @@ function DashboardPage() {
     return weeks.map((w) => ({ week: w.label, bookings: volume.get(w.key) ?? 0, earnings: earnings.get(w.key) ?? 0 }));
   }, [bookings]);
 
+  // recharts' auto tick algorithm picks a "nice" step size for the axis
+  // range (e.g. 0.2 for a 0-1 range), then allowDecimals={false} strips
+  // every non-integer candidate — for a low-volume week (max count 0 or 1)
+  // that strips ALL of them, leaving zero ticks and no gridlines at all.
+  // Booking counts are always whole numbers, so compute integer-only ticks
+  // ourselves instead of trusting that algorithm.
+  const bookingsTicks = useMemo(() => {
+    const max = Math.max(0, ...weeklyData.map((w) => w.bookings));
+    const top = Math.max(max, 4);
+    if (top <= 8) return Array.from({ length: top + 1 }, (_, i) => i);
+    const step = Math.ceil(top / 4);
+    return Array.from({ length: 5 }, (_, i) => i * step);
+  }, [weeklyData]);
+
   const bookingsChartConfig = { bookings: { label: "Bookings", color: "#ff5a1f" } } satisfies ChartConfig;
   const earningsChartConfig = { earnings: { label: "Earnings", color: "#ff5a1f" } } satisfies ChartConfig;
 
@@ -333,9 +347,9 @@ function DashboardPage() {
                   axisLine={false}
                   tickMargin={8}
                   fontSize={11}
-                  allowDecimals={false}
                   width={28}
-                  domain={[0, (max: number) => Math.max(4, Math.ceil(max))]}
+                  domain={[0, bookingsTicks[bookingsTicks.length - 1]]}
+                  ticks={bookingsTicks}
                 />
                 <ChartTooltip cursor={{ fill: "var(--muted)" }} content={<ChartTooltipContent />} />
                 <Bar dataKey="bookings" fill="var(--color-bookings)" radius={[4, 4, 0, 0]} maxBarSize={28} />
