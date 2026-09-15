@@ -347,7 +347,7 @@ function DashboardPage() {
                   axisLine={false}
                   tickMargin={8}
                   fontSize={11}
-                  width={28}
+                  width={32}
                   domain={[0, bookingsTicks[bookingsTicks.length - 1]]}
                   ticks={bookingsTicks}
                 />
