@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { ProviderCard, type ProviderCardData } from "@/components/ProviderCard";
-import { StickyHeader, InlineSpinner, EmptyState, Eyebrow } from "@/components/ui-kit";
+import { StickyHeader, InlineSpinner, EmptyState, ErrorState, Eyebrow } from "@/components/ui-kit";
 import { fetchActiveProviders, fetchCategories, fetchCategoryBySlug } from "@/lib/providers";
 import { haversineKm } from "@/lib/session";
 import { useUserLocation } from "@/lib/location";
@@ -78,7 +78,7 @@ function CategoryPage() {
   const navigate = useNavigate();
   const { category, initialProviders, categories } = Route.useLoaderData();
 
-  const { data: providers = [], isLoading } = useQuery({
+  const { data: providers = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["providers", category.id],
     initialData: initialProviders,
     queryFn: () => fetchActiveProviders(category.id),
@@ -113,6 +113,7 @@ function CategoryPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate({ to: "/" })}
+            aria-label="Back"
             className="size-9 rounded-full bg-brand/5 grid place-items-center transition hover:bg-brand/10 shrink-0"
           >
             <ArrowLeft className="size-4" />
@@ -159,6 +160,8 @@ function CategoryPage() {
 
           {isLoading ? (
             <InlineSpinner />
+          ) : isError ? (
+            <ErrorState description="Couldn't load providers." onRetry={() => refetch()} />
           ) : sortedProviders.length === 0 ? (
             <EmptyState
               icon={Compass}

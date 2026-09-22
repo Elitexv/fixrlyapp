@@ -10,7 +10,10 @@ export const Route = createFileRoute("/terms")({
     meta: [
       { title: "Terms and Conditions — Fixrly" },
       { name: "description", content: "The terms that govern your use of Fixrly." },
+      { property: "og:title", content: "Terms and Conditions — Fixrly" },
+      { property: "og:description", content: "The terms that govern your use of Fixrly." },
       { property: "og:url", content: `${SITE_URL}/terms` },
+      { property: "og:type", content: "website" },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/terms` }],
   }),

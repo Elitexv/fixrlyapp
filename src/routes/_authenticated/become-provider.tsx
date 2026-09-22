@@ -34,13 +34,14 @@ function BecomeProviderPage() {
     queryKey: ["my-provider-request", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("provider_requests")
         .select("*")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (error) throw error;
       return data;
     },
   });

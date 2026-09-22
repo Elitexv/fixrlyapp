@@ -418,7 +418,8 @@ function RequestsTab() {
   const { data: requests = [] } = useQuery({
     queryKey: ["admin-provider-requests"],
     queryFn: async () => {
-      const { data } = await supabase.from("provider_requests").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("provider_requests").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
       return (data ?? []) as any[];
     },
   });
@@ -723,10 +724,11 @@ function ProvidersTab() {
   const { data: providers = [] } = useQuery({
     queryKey: ["admin-providers"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("provider_profiles")
         .select("id,business_name,city,is_active,hourly_rate,created_at")
         .order("created_at", { ascending: false });
+      if (error) throw error;
       return (data ?? []) as any[];
     },
   });
@@ -766,11 +768,12 @@ function MapTab() {
   const { data: providers = [] } = useQuery({
     queryKey: ["admin-map-providers"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("provider_profiles")
         .select("id,business_name,city,latitude,longitude,is_active")
         .not("latitude", "is", null)
         .not("longitude", "is", null);
+      if (error) throw error;
       return (data ?? []) as any[];
     },
   });
@@ -868,10 +871,11 @@ function BookingsTab() {
   const { data: bookings = [] } = useQuery({
     queryKey: ["admin-bookings-all"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("bookings")
         .select("id,status,scheduled_at,created_at,total_price,duration_hours,address,payment_status,payment_provider,payment_reference,provider:provider_profiles!bookings_provider_id_fkey(business_name),customer:profiles!bookings_customer_id_profiles_fkey(full_name)")
         .order("created_at", { ascending: false });
+      if (error) throw error;
       return (data ?? []) as any[];
     },
   });

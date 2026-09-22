@@ -8,6 +8,9 @@ export const getRouter = () => {
     queryCache: new QueryCache({
       onError: notifyNetworkError,
     }),
+    // Without a default, every mount/focus refetched every query. A short
+    // window still keeps booking/payment data fresh while cutting churn.
+    defaultOptions: { queries: { staleTime: 30_000 } },
   });
 
   const router = createRouter({

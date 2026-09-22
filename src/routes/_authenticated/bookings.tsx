@@ -15,7 +15,7 @@ import { getOrCreateConversation, sendChatMessage } from "@/lib/chat";
 import { getCurrentPosition, startLocationSharing } from "@/lib/provider-tracking";
 import { formatRelativeTime } from "@/lib/time";
 import { ProviderTrackingMap } from "@/components/ProviderTrackingMap";
-import { StickyHeader, Panel, StatusBadge, InlineSpinner, EmptyState, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
+import { StickyHeader, Panel, StatusBadge, InlineSpinner, EmptyState, ErrorState, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   head: () => ({ meta: [{ title: "My bookings — Fixrly" }, { name: "robots", content: "noindex" }] }),
@@ -44,7 +44,7 @@ function BookingsPage() {
     setTab(isProvider ? "provider" : "customer");
   }, [user, isProvider, rolesLoading]);
 
-  const { data: bookings = [], isLoading: queryLoading } = useQuery({
+  const { data: bookings = [], isLoading: queryLoading, isError, refetch } = useQuery({
     queryKey: ["bookings", user?.id, tab],
     enabled: !!user && !rolesLoading,
     queryFn: async () => {
@@ -244,6 +244,12 @@ function BookingsPage() {
             return true;
           });
           if (isLoading) return <InlineSpinner className="lg:col-span-2" />;
+          if (isError)
+            return (
+              <div className="lg:col-span-2">
+                <ErrorState description="Couldn't load bookings." onRetry={() => refetch()} />
+              </div>
+            );
           if (visible.length === 0)
             return (
               <div className="lg:col-span-2">
@@ -389,17 +395,17 @@ function LeaveReviewButton({ booking }: { booking: any }) {
     <>
       <PrimaryButton onClick={() => setOpen(true)} className="flex-1 py-2 rounded-lg text-xs">Leave review</PrimaryButton>
       {open && (
-        <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center px-4" onClick={() => setOpen(false)}>
+        <div role="dialog" aria-modal="true" aria-label="Rate this provider" className="fixed inset-0 z-50 bg-black/50 grid place-items-center px-4" onClick={() => setOpen(false)}>
           <div onClick={(e) => e.stopPropagation()} className="light-surface w-full max-w-sm bg-white rounded-[2rem] p-6 shadow-soft">
             <h3 className="font-black text-lg">Rate this provider</h3>
             <div className="flex justify-center gap-1 my-4">
               {[1, 2, 3, 4, 5].map((n) => (
-                <button key={n} onClick={() => setRating(n)}>
+                <button type="button" key={n} onClick={() => setRating(n)} aria-label={`${n} star${n > 1 ? "s" : ""}`} aria-pressed={n <= rating}>
                   <Star className={`size-8 ${n <= rating ? "fill-yellow-500 text-yellow-500" : "text-brand/20"}`} />
                 </button>
               ))}
             </div>
-            <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional comment" rows={3} className="w-full bg-canvas rounded-xl py-2.5 px-3 text-sm outline-none resize-none focus:ring-2 focus:ring-accent/20" />
+            <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional comment" aria-label="Review comment" rows={3} className="w-full bg-canvas rounded-xl py-2.5 px-3 text-sm outline-none resize-none focus:ring-2 focus:ring-accent/20" />
             <div className="flex gap-2 mt-4">
               <SecondaryButton onClick={() => setOpen(false)} className="flex-1">Cancel</SecondaryButton>
               <PrimaryButton onClick={submit} loading={loading} className="flex-1">Submit</PrimaryButton>

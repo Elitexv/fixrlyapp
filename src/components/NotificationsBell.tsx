@@ -45,7 +45,11 @@ export function NotificationsBell({ className }: { className?: string }) {
   return (
     <div className={`relative ${className ?? ""}`}>
       <button
+        type="button"
         onClick={togglePanel}
+        aria-label="Notifications"
+        aria-haspopup="true"
+        aria-expanded={open}
         className="relative size-10 grid place-items-center rounded-full bg-brand/5 border border-brand/10 transition hover:bg-brand/10"
       >
         <Bell className="size-4 text-brand/70" />

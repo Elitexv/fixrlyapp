@@ -141,6 +141,7 @@ function BookPage() {
         <div className="max-w-lg mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate({ to: "/provider/$id", params: { id } })}
+            aria-label="Back"
             className="size-10 rounded-full bg-brand/5 grid place-items-center transition hover:bg-brand/10"
           >
             <ArrowLeft className="size-4" />

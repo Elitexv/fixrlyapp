@@ -10,7 +10,10 @@ export const Route = createFileRoute("/privacy")({
     meta: [
       { title: "Privacy Policy — Fixrly" },
       { name: "description", content: "How Fixrly collects, uses, and protects your information." },
+      { property: "og:title", content: "Privacy Policy — Fixrly" },
+      { property: "og:description", content: "How Fixrly collects, uses, and protects your information." },
       { property: "og:url", content: `${SITE_URL}/privacy` },
+      { property: "og:type", content: "website" },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/privacy` }],
   }),

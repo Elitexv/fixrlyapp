@@ -188,6 +188,8 @@ function JobsTab({ providerId, canManage, myRole, myId }: { providerId: string; 
 
   const visible = myRole === "technician" ? filtered.filter((b) => b.assigned_staff_id === myId) : filtered;
 
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
   const assign = async (bookingId: string, staffUserId: string | null) => {
     const { error } = await supabase.from("bookings").update({ assigned_staff_id: staffUserId }).eq("id", bookingId);
     if (error) return toast.error(error.message);
@@ -196,7 +198,9 @@ function JobsTab({ providerId, canManage, myRole, myId }: { providerId: string; 
   };
 
   const updateStatus = async (bookingId: string, status: "accepted" | "rejected" | "completed") => {
+    setPendingId(bookingId);
     const { error } = await supabase.from("bookings").update({ status }).eq("id", bookingId);
+    setPendingId(null);
     if (error) return toast.error(error.message);
     toast.success(`Job ${status}`);
     qc.invalidateQueries({ queryKey: ["business-jobs", providerId] });
@@ -243,6 +247,7 @@ function JobsTab({ providerId, canManage, myRole, myId }: { providerId: string; 
               <select
                 value={b.assigned_staff_id ?? ""}
                 onChange={(e) => assign(b.id, e.target.value || null)}
+                aria-label="Assign to"
                 className="w-full rounded-xl bg-canvas border border-transparent py-2 px-3 text-xs outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
               >
                 <option value="">Unassigned</option>
@@ -257,15 +262,15 @@ function JobsTab({ providerId, canManage, myRole, myId }: { providerId: string; 
             <div className="mt-3 flex flex-wrap gap-2">
               {b.status === "pending" && canManage && (
                 <>
-                  <PrimaryButton onClick={() => updateStatus(b.id, "accepted")} className="flex-1 min-w-[110px] py-2 text-xs">Accept</PrimaryButton>
-                  <SecondaryButton onClick={() => updateStatus(b.id, "rejected")} className="flex-1 min-w-[110px] py-2 text-xs">Reject</SecondaryButton>
+                  <PrimaryButton onClick={() => updateStatus(b.id, "accepted")} disabled={pendingId === b.id} loading={pendingId === b.id} className="flex-1 min-w-[110px] py-2 text-xs">Accept</PrimaryButton>
+                  <SecondaryButton onClick={() => updateStatus(b.id, "rejected")} disabled={pendingId === b.id} className="flex-1 min-w-[110px] py-2 text-xs">Reject</SecondaryButton>
                 </>
               )}
               {b.status === "accepted" && (canManage || b.assigned_staff_id === myId) && (
-                <PrimaryButton onClick={() => updateStatus(b.id, "completed")} className="w-full rounded-2xl py-2 text-xs">Mark completed</PrimaryButton>
+                <PrimaryButton onClick={() => updateStatus(b.id, "completed")} disabled={pendingId === b.id} loading={pendingId === b.id} className="w-full rounded-2xl py-2 text-xs">Mark completed</PrimaryButton>
               )}
               {b.status === "on_the_way" && (canManage || b.assigned_staff_id === myId) && (
-                <PrimaryButton onClick={() => updateStatus(b.id, "completed")} className="w-full rounded-2xl py-2 text-xs">Mark completed</PrimaryButton>
+                <PrimaryButton onClick={() => updateStatus(b.id, "completed")} disabled={pendingId === b.id} loading={pendingId === b.id} className="w-full rounded-2xl py-2 text-xs">Mark completed</PrimaryButton>
               )}
             </div>
           )}
@@ -360,7 +365,7 @@ function StaffTab({ providerId, isOwner }: { providerId: string; isOwner: boolea
               <p className="text-sm text-brand/70">Share this link with them:</p>
               <div className="flex items-center gap-2 rounded-xl bg-canvas p-3">
                 <span className="text-xs font-mono truncate flex-1">{inviteLink}</span>
-                <button type="button" onClick={() => copyLink(inviteLink)} className="shrink-0 rounded-lg bg-brand/5 p-2 hover:bg-brand/10">
+                <button type="button" onClick={() => copyLink(inviteLink)} aria-label="Copy invite link" className="shrink-0 rounded-lg bg-brand/5 p-2 hover:bg-brand/10">
                   <Copy className="size-3.5" />
                 </button>
               </div>
@@ -368,10 +373,11 @@ function StaffTab({ providerId, isOwner }: { providerId: string; isOwner: boolea
             </div>
           ) : (
             <form onSubmit={sendInvite} className="space-y-4">
-              <TextField type="email" required placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <TextField type="email" required placeholder="Email address" aria-label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as any)}
+                aria-label="Staff role"
                 className="w-full rounded-xl bg-canvas border border-transparent py-2.5 px-3 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
               >
                 <option value="technician">Technician — sees only their assigned jobs</option>
@@ -520,7 +526,7 @@ function ClientsTab({ providerId, myId }: { providerId: string; myId: string }) 
                 </div>
               ))}
               <div className="flex gap-2">
-                <TextField placeholder="Add a note…" value={noteText} onChange={(e) => setNoteText(e.target.value)} className="flex-1" />
+                <TextField placeholder="Add a note…" aria-label="Add a note" value={noteText} onChange={(e) => setNoteText(e.target.value)} className="flex-1" />
                 <SecondaryButton type="button" onClick={() => addNote(c.customerId)} className="px-4">Add</SecondaryButton>
               </div>
             </div>
@@ -532,14 +538,15 @@ function ClientsTab({ providerId, myId }: { providerId: string; myId: string }) 
 }
 
 /* ---------- Invoices ---------- */
-type LineItem = { description: string; quantity: number; unit_price: number };
+type LineItem = { id: string; description: string; quantity: number; unit_price: number };
+const newLineItem = (): LineItem => ({ id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0 });
 
 function InvoicesTab({ providerId, canManage }: { providerId: string; canManage: boolean }) {
   const qc = useQueryClient();
   const currency = useCurrency();
   const [creating, setCreating] = useState(false);
   const [bookingId, setBookingId] = useState("");
-  const [items, setItems] = useState<LineItem[]>([{ description: "", quantity: 1, unit_price: 0 }]);
+  const [items, setItems] = useState<LineItem[]>([newLineItem()]);
   const [taxPercent, setTaxPercent] = useState("0");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -574,14 +581,14 @@ function InvoicesTab({ providerId, canManage }: { providerId: string; canManage:
 
   const total = items.reduce((s, i) => s + i.quantity * i.unit_price, 0) * (1 + (Number(taxPercent) || 0) / 100);
 
-  const updateItem = (i: number, patch: Partial<LineItem>) => setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
-  const addItem = () => setItems((prev) => [...prev, { description: "", quantity: 1, unit_price: 0 }]);
-  const removeItem = (i: number) => setItems((prev) => prev.filter((_, idx) => idx !== i));
+  const updateItem = (id: string, patch: Partial<LineItem>) => setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+  const addItem = () => setItems((prev) => [...prev, newLineItem()]);
+  const removeItem = (id: string) => setItems((prev) => prev.filter((it) => it.id !== id));
 
   const pickBooking = (id: string) => {
     setBookingId(id);
     const b = completedBookings.find((x: any) => x.id === id);
-    if (b?.total_price) setItems([{ description: "Service", quantity: 1, unit_price: Number(b.total_price) }]);
+    if (b?.total_price) setItems([{ ...newLineItem(), description: "Service", unit_price: Number(b.total_price) }]);
   };
 
   const save = async (e: FormEvent) => {
@@ -600,7 +607,7 @@ function InvoicesTab({ providerId, canManage }: { providerId: string; canManage:
       toast.success("Invoice created");
       setCreating(false);
       setBookingId("");
-      setItems([{ description: "", quantity: 1, unit_price: 0 }]);
+      setItems([newLineItem()]);
       setTaxPercent("0");
       setNotes("");
       qc.invalidateQueries({ queryKey: ["business-invoices", providerId] });
@@ -645,6 +652,7 @@ function InvoicesTab({ providerId, canManage }: { providerId: string; canManage:
               required
               value={bookingId}
               onChange={(e) => pickBooking(e.target.value)}
+              aria-label="Completed job"
               className="w-full rounded-xl bg-canvas border border-transparent py-2.5 px-3 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
             >
               <option value="">Select a completed job…</option>
@@ -656,13 +664,13 @@ function InvoicesTab({ providerId, canManage }: { providerId: string; canManage:
             </select>
 
             <div className="space-y-2">
-              {items.map((item, i) => (
-                <div key={i} className="flex flex-col gap-2 rounded-xl bg-canvas/60 p-2 sm:flex-row sm:items-center sm:bg-transparent sm:p-0">
-                  <TextField placeholder="Description" value={item.description} onChange={(e) => updateItem(i, { description: e.target.value })} className="min-w-0 flex-1" />
+              {items.map((item) => (
+                <div key={item.id} className="flex flex-col gap-2 rounded-xl bg-canvas/60 p-2 sm:flex-row sm:items-center sm:bg-transparent sm:p-0">
+                  <TextField placeholder="Description" aria-label="Line item description" value={item.description} onChange={(e) => updateItem(item.id, { description: e.target.value })} className="min-w-0 flex-1" />
                   <div className="flex items-center gap-2">
-                    <TextField type="number" min={0} step="1" value={String(item.quantity)} onChange={(e) => updateItem(i, { quantity: Number(e.target.value) || 0 })} className="w-16" />
-                    <TextField type="number" min={0} step="0.01" value={String(item.unit_price)} onChange={(e) => updateItem(i, { unit_price: Number(e.target.value) || 0 })} className="w-24" />
-                    <button type="button" onClick={() => removeItem(i)} className="shrink-0 text-brand/40 hover:text-red-600"><Trash2 className="size-4" /></button>
+                    <TextField type="number" min={0} step="1" aria-label="Quantity" value={String(item.quantity)} onChange={(e) => updateItem(item.id, { quantity: Number(e.target.value) || 0 })} className="w-16" />
+                    <TextField type="number" min={0} step="0.01" aria-label="Unit price" value={String(item.unit_price)} onChange={(e) => updateItem(item.id, { unit_price: Number(e.target.value) || 0 })} className="w-24" />
+                    <button type="button" onClick={() => removeItem(item.id)} aria-label="Remove line item" className="shrink-0 text-brand/40 hover:text-red-600"><Trash2 className="size-4" /></button>
                   </div>
                 </div>
               ))}

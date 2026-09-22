@@ -253,7 +253,7 @@ function MessagesPage() {
           {selectedConversation ? (
             <>
               <div className="flex shrink-0 items-center gap-2.5 border-b border-brand/5 pb-3">
-                <button onClick={() => setMobileShowChat(false)} className="rounded-xl p-1.5 text-brand/60 hover:bg-brand/5 lg:hidden">
+                <button onClick={() => setMobileShowChat(false)} aria-label="Back to conversations" className="rounded-xl p-1.5 text-brand/60 hover:bg-brand/5 lg:hidden">
                   <ArrowLeft className="size-5" />
                 </button>
                 <ProviderAvatar
@@ -345,6 +345,7 @@ function MessagesPage() {
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder="Type a message…"
+                    aria-label="Message"
                     className="light-surface flex-1 rounded-full border border-brand/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-accent/30 focus:ring-2 focus:ring-accent/20"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
@@ -354,8 +355,10 @@ function MessagesPage() {
                     }}
                   />
                   <button
+                    type="button"
                     onClick={() => send()}
                     disabled={sending || !draft.trim()}
+                    aria-label="Send message"
                     className="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500 disabled:opacity-60"
                   >
                     {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}

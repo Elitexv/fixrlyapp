@@ -44,17 +44,18 @@ export function AvatarUpload({
   return (
     <div className={cn("relative inline-block shrink-0", className)}>
       <div className="size-20 rounded-3xl bg-accent/10 overflow-hidden grid place-items-center text-accent text-2xl font-black">
-        {avatarUrl ? <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" /> : label}
+        {avatarUrl ? <img src={avatarUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : label}
       </div>
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
+        aria-label="Change profile picture"
         className="absolute -bottom-1.5 -right-1.5 size-8 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-lg border-2 border-surface transition hover:bg-primary/90 disabled:opacity-60"
       >
         {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
       </button>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onChange} />
+      <input ref={inputRef} type="file" accept="image/*" aria-label="Upload profile picture" className="hidden" onChange={onChange} />
     </div>
   );
 }

@@ -10,7 +10,9 @@ import { ArrowLeft, Star, MapPin, Phone, Mail, Heart, Users, ThumbsUp, ThumbsDow
 import { toast } from "sonner";
 import { getOrCreateConversation } from "@/lib/chat";
 import { formatMoney, useCurrency } from "@/lib/currency";
-import { Panel, Eyebrow, PrimaryButton, PageSpinner } from "@/components/ui-kit";
+import { Panel, Eyebrow, PrimaryButton, PageSpinner, ErrorState } from "@/components/ui-kit";
+
+const SITE_URL = "https://fixrly.app";
 
 export const Route = createFileRoute("/provider/$id")({
   loader: async ({ params }) => {
@@ -35,7 +37,7 @@ export const Route = createFileRoute("/provider/$id")({
     };
   },
   head: ({ params, loaderData }) => {
-    const url = `https://fixrly.app/provider/${params.id}`;
+    const url = `${SITE_URL}/provider/${params.id}`;
     if (!loaderData) {
       return {
         meta: [{ title: "Provider profile — Fixrly" }, { name: "description", content: "Book this service provider on Fixrly." }],
@@ -87,7 +89,7 @@ function ProviderPage() {
   const currency = useCurrency();
   const [userCoords] = useUserLocation();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["provider", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -229,6 +231,13 @@ function ProviderPage() {
   if (isLoading) {
     return <PageSpinner />;
   }
+  if (isError) {
+    return (
+      <div className="min-h-screen grid place-items-center px-6">
+        <ErrorState description="Couldn't load this provider." onRetry={() => refetch()} />
+      </div>
+    );
+  }
   if (!data) {
     return <div className="min-h-screen grid place-items-center text-sm text-brand/60">Provider not found.</div>;
   }
@@ -253,6 +262,7 @@ function ProviderPage() {
         )}
         <button
           onClick={() => navigate({ to: "/" })}
+          aria-label="Back"
           className="absolute top-5 left-4 size-10 rounded-2xl bg-white/20 backdrop-blur-md grid place-items-center text-white shadow-lg"
         >
           <ArrowLeft className="size-4" />
@@ -352,7 +362,10 @@ function ProviderPage() {
           <Eyebrow>Reactions</Eyebrow>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => react("like")}
+              aria-label="Like"
+              aria-pressed={reactions?.mine === "like"}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
                 reactions?.mine === "like"
                   ? "bg-green-600 text-white"
@@ -363,7 +376,10 @@ function ProviderPage() {
               {reactions?.likes ?? 0}
             </button>
             <button
+              type="button"
               onClick={() => react("dislike")}
+              aria-label="Dislike"
+              aria-pressed={reactions?.mine === "dislike"}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
                 reactions?.mine === "dislike"
                   ? "bg-red-600 text-white"
@@ -386,9 +402,9 @@ function ProviderPage() {
                 <Panel key={r.id} className="rounded-[1.5rem] p-4">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold">{r.profiles?.full_name ?? "Customer"}</div>
-                    <div className="flex items-center gap-0.5">
+                    <div className="flex items-center gap-0.5" aria-label={`${r.rating} out of 5 stars`}>
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className={`size-3 ${i < r.rating ? "fill-yellow-500 text-yellow-500" : "text-brand/20"}`} />
+                        <Star key={i} aria-hidden="true" className={`size-3 ${i < r.rating ? "fill-yellow-500 text-yellow-500" : "text-brand/20"}`} />
                       ))}
                     </div>
                   </div>
@@ -404,7 +420,9 @@ function ProviderPage() {
       <div className="light-surface fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-soft p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
         <div className="max-w-lg mx-auto flex gap-2 items-center">
           <button
+            type="button"
             onClick={toggleFollow}
+            aria-pressed={followData?.following}
             className={`flex h-12 shrink-0 items-center gap-1.5 rounded-2xl px-4 text-xs font-bold transition ${
               followData?.following ? "bg-[#0f172a] text-white" : "bg-brand/5 text-brand hover:bg-brand/10"
             }`}

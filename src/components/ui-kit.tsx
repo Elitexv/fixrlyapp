@@ -108,7 +108,7 @@ export function ProviderAvatar({
   const initial = name?.[0]?.toUpperCase() ?? "?";
   return (
     <div className={cn("shrink-0 overflow-hidden bg-canvas grid place-items-center font-bold text-brand/40", className)}>
-      {image ? <img src={image} alt={name ?? ""} className="h-full w-full object-cover" /> : initial}
+      {image ? <img src={image} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : initial}
     </div>
   );
 }
@@ -254,8 +254,21 @@ export function Modal({
   children: React.ReactNode;
   className?: string;
 }) {
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 sm:place-items-center" onClick={onClose}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 grid place-items-end bg-black/50 sm:place-items-center"
+      onClick={onClose}
+    >
       <div
         onClick={(e) => e.stopPropagation()}
         className={cn("max-h-[90vh] w-full overflow-y-auto rounded-t-3xl bg-surface p-6 sm:max-w-md sm:rounded-3xl", className)}
@@ -344,6 +357,37 @@ export function EmptyState({
       <div className="text-sm font-semibold text-brand">{title}</div>
       {description && <p className="mt-1.5 text-sm text-brand/60">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
+    </div>
+  );
+}
+
+/* ---------- Error state: a failed query, distinct from a genuinely-empty
+   result — same shape as EmptyState but with a retry action, so a network
+   blip doesn't read as "there's nothing here." ---------- */
+export function ErrorState({
+  title = "Something went wrong",
+  description = "Check your connection and try again.",
+  onRetry,
+  className,
+}: {
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  onRetry?: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("text-center rounded-3xl border border-dashed border-red-200 bg-red-50/60 px-6 py-12", className)}>
+      <div className="text-sm font-semibold text-red-900">{title}</div>
+      {description && <p className="mt-1.5 text-sm text-red-700/70">{description}</p>}
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-4 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-red-700"
+        >
+          Try again
+        </button>
+      )}
     </div>
   );
 }

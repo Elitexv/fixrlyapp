@@ -11,7 +11,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { GoogleMap } from "@/components/GoogleMap";
 import { ProviderCard, type ProviderCardData } from "@/components/ProviderCard";
 import { NotificationsBell } from "@/components/NotificationsBell";
-import { StickyHeader, InlineSpinner, EmptyState, Eyebrow, ProviderAvatar } from "@/components/ui-kit";
+import { StickyHeader, InlineSpinner, EmptyState, ErrorState, Eyebrow, ProviderAvatar } from "@/components/ui-kit";
 import { Search, MapPin, Loader2, Compass, SearchX, LocateFixed, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 
@@ -93,7 +93,7 @@ function Home() {
     queryFn: fetchCategories,
   });
 
-  const { data: providers = [], isLoading } = useQuery({
+  const { data: providers = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["providers", selectedCat],
     initialData: selectedCat === null ? initialProviders : undefined,
     queryFn: (): Promise<ProviderCardData[]> => fetchActiveProviders(selectedCat) as unknown as Promise<ProviderCardData[]>,
@@ -191,11 +191,13 @@ function Home() {
           <div className="flex items-center gap-2 shrink-0">
             <NotificationsBell />
             <button
+              type="button"
               onClick={() => navigate({ to: user ? "/profile" : "/auth" })}
+              aria-label={user ? "Your profile" : "Sign in"}
               className="size-10 overflow-hidden bg-accent/10 rounded-full grid place-items-center border border-accent/20 text-sm font-bold text-accent shrink-0 transition hover:bg-accent/20"
             >
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                <img src={profile.avatar_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
                 user?.email?.[0]?.toUpperCase() ?? "?"
               )}
@@ -210,6 +212,7 @@ function Home() {
               value={locationText}
               onChange={(e) => setLocationText(e.target.value)}
               placeholder="City, ZIP, or address"
+              aria-label="Location"
               className="min-w-0 flex-1 bg-transparent text-sm outline-none"
             />
             <button
@@ -234,6 +237,7 @@ function Home() {
               onBlur={() => setSearchOpen(false)}
               onKeyDown={(e) => e.key === "Escape" && e.currentTarget.blur()}
               placeholder="Search for cleaning, plumbing, tutoring..."
+              aria-label="Search services"
               className="min-w-0 flex-1 bg-transparent text-sm outline-none"
             />
 
@@ -291,7 +295,7 @@ function Home() {
 
       <div className="max-w-lg mx-auto lg:max-w-6xl">
         <div className="flex gap-3.5 overflow-x-auto px-4 py-4 no-scrollbar">
-          <button onClick={() => setSelectedCat(null)} className="flex-none w-16 flex flex-col items-center gap-2">
+          <button type="button" onClick={() => setSelectedCat(null)} aria-pressed={!selectedCat} className="flex-none w-16 flex flex-col items-center gap-2">
             <div
               className={`grid size-14 place-items-center rounded-[20px] transition-all ${
                 !selectedCat ? "bg-[#0f172a] shadow-lg shadow-[#0f172a]/25" : "bg-surface shadow-sm"
@@ -302,7 +306,7 @@ function Home() {
             <span className={`text-[11px] font-semibold ${!selectedCat ? "text-brand" : "text-brand/60"}`}>All</span>
           </button>
           {categories.map((c) => (
-            <button key={c.id} onClick={() => setSelectedCat(c.id === selectedCat ? null : c.id)} className="flex-none w-16 flex flex-col items-center gap-2">
+            <button type="button" key={c.id} onClick={() => setSelectedCat(c.id === selectedCat ? null : c.id)} aria-pressed={selectedCat === c.id} className="flex-none w-16 flex flex-col items-center gap-2">
               <div
                 className={`grid size-14 place-items-center rounded-[20px] text-2xl transition-all ${
                   selectedCat === c.id ? "bg-[#0f172a] shadow-lg shadow-[#0f172a]/25" : "bg-surface shadow-sm"
@@ -340,6 +344,8 @@ function Home() {
 
             {isLoading ? (
               <InlineSpinner />
+            ) : isError ? (
+              <ErrorState description="Couldn't load providers." onRetry={() => refetch()} />
             ) : filtered.length === 0 ? (
               <EmptyState
                 icon={Compass}
