@@ -15,3 +15,7 @@ project_id = "wsxjjgeqalnnfquzddpe"
 # Called only from the notifications-insert DB trigger, authenticated via a
 # Vault-stored shared secret (X-Webhook-Secret) instead of a Supabase JWT.
 verify_jwt = false
+
+[functions.send-email]
+# Same reasoning as send-push above.
+verify_jwt = false
