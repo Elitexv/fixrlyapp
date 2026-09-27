@@ -183,5 +183,26 @@ export const approveWithdrawal = createServerFn({ method: "POST" })
       })
       .eq("id", data.withdrawalId);
 
+    // The async path (transfer settles later) gets this same notification
+    // from the paystack webhook's handleTransferEvent — mirror it here for
+    // the instant-settlement path so the provider isn't only notified
+    // sometimes depending on how fast Paystack processes the transfer.
+    if (instantlySuccessful) {
+      const { data: withdrawal } = await supabaseAdmin
+        .from("withdrawal_requests")
+        .select("provider_id")
+        .eq("id", data.withdrawalId)
+        .maybeSingle();
+      if (withdrawal?.provider_id) {
+        await supabaseAdmin.from("notifications").insert({
+          user_id: withdrawal.provider_id,
+          type: "withdrawal_paid",
+          title: "Withdrawal paid",
+          body: "Your withdrawal has been paid out to your bank account.",
+          data: { withdrawal_id: data.withdrawalId },
+        });
+      }
+    }
+
     return { status: instantlySuccessful ? "paid" : "processing" };
   });

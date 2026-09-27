@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
-import { notifyProviderOfBooking } from "@/lib/booking-notifications.functions";
 import { initializePaystackPayment } from "@/lib/payments.functions";
 import { geocodeLocation } from "@/lib/geocode.functions";
 import { ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
@@ -26,7 +25,6 @@ function BookPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { user } = useSession();
-  const notify = useServerFn(notifyProviderOfBooking);
   const initializePayment = useServerFn(initializePaystackPayment);
   const geocode = useServerFn(geocodeLocation);
   const currency = useCurrency();
@@ -100,9 +98,9 @@ function BookPage() {
         .select("id")
         .single();
       if (error) throw error;
-      notify({ data: { bookingId: inserted.id } }).catch((err) =>
-        console.warn("[booking] notify failed", err),
-      );
+      // Provider gets notified (in-app + push + email) via the
+      // booking_created row the notify_provider_on_new_booking Postgres
+      // trigger inserts on this same INSERT — no client call needed.
 
       if (settings.payment_enabled && settings.provider === "paystack" && total != null && total > 0) {
         try {
