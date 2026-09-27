@@ -16,6 +16,7 @@ import { Search, MapPin, Loader2, Compass, SearchX, LocateFixed, LayoutGrid } fr
 import { toast } from "sonner";
 
 const SITE_URL = "https://fixrly.app";
+const MAX_DISTANCE_KM = 40;
 
 // GeolocationPositionError.message is a raw, unfriendly browser string (e.g.
 // "User denied Geolocation"). PERMISSION_DENIED specifically means the
@@ -110,13 +111,18 @@ function Home() {
           (p.city ?? "").toLowerCase().includes(q),
       );
     }
-    const withDistance = list.map((p) => ({
-      ...p,
-      distance_km:
-        coords && p.latitude != null && p.longitude != null
-          ? haversineKm(coords, { lat: p.latitude, lng: p.longitude })
-          : null,
-    }));
+    const withDistance = list
+      .map((p) => ({
+        ...p,
+        distance_km:
+          coords && p.latitude != null && p.longitude != null
+            ? haversineKm(coords, { lat: p.latitude, lng: p.longitude })
+            : null,
+      }))
+      // Only filter out providers we know are too far — a null distance
+      // (no coords yet, or the provider hasn't been geocoded) stays visible
+      // rather than being hidden by a check we can't actually run.
+      .filter((p) => p.distance_km == null || p.distance_km <= MAX_DISTANCE_KM);
     withDistance.sort((a, b) => {
       if (a.distance_km == null && b.distance_km == null) return 0;
       if (a.distance_km == null) return 1;

@@ -10,6 +10,7 @@ import { useUserLocation } from "@/lib/location";
 import { ArrowLeft, Compass } from "lucide-react";
 
 const SITE_URL = "https://fixrly.app";
+const MAX_DISTANCE_KM = 40;
 
 export const Route = createFileRoute("/services/$categorySlug")({
   loader: async ({ params }) => {
@@ -91,13 +92,18 @@ function CategoryPage() {
 
   const sortedProviders = useMemo(() => {
     const list = providers as unknown as (ProviderCardData & { latitude: number | null; longitude: number | null })[];
-    const withDistance = list.map((p) => ({
-      ...p,
-      distance_km:
-        coords && p.latitude != null && p.longitude != null
-          ? haversineKm(coords, { lat: p.latitude, lng: p.longitude })
-          : null,
-    }));
+    const withDistance = list
+      .map((p) => ({
+        ...p,
+        distance_km:
+          coords && p.latitude != null && p.longitude != null
+            ? haversineKm(coords, { lat: p.latitude, lng: p.longitude })
+            : null,
+      }))
+      // Only filter out providers we know are too far — a null distance
+      // (no coords yet, or the provider hasn't been geocoded) stays visible
+      // rather than being hidden by a check we can't actually run.
+      .filter((p) => p.distance_km == null || p.distance_km <= MAX_DISTANCE_KM);
     withDistance.sort((a, b) => {
       if (a.distance_km == null && b.distance_km == null) return 0;
       if (a.distance_km == null) return 1;
