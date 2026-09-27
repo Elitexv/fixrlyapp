@@ -28,16 +28,22 @@ export function BottomNav() {
 
   return (
     <nav
-      className="light-surface fixed inset-x-4 z-40 mx-auto max-w-lg rounded-[26px] border border-black/5 bg-white/95 px-3 py-2.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-black/95 dark:shadow-black/50"
+      className="light-surface fixed inset-x-4 z-40 mx-auto max-w-lg rounded-[28px] border border-black/5 bg-white/95 p-1.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-black/95 dark:shadow-black/50"
       style={{ bottom: "max(env(safe-area-inset-bottom), 1rem)" }}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-1">
         {items.map(({ to, label, icon: Icon, badge }: any) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
           return (
-            <Link key={to} to={to} aria-label={label} className="flex flex-1 justify-center py-1 transition-transform duration-200 active:scale-90">
+            <Link
+              key={to}
+              to={to}
+              aria-label={label}
+              aria-current={active ? "page" : undefined}
+              className="relative flex flex-1 flex-col items-center gap-0.5 rounded-[22px] py-2 transition-all duration-200 active:scale-90"
+            >
               <span
-                className={`relative grid place-items-center rounded-2xl px-4 py-2 transition-all duration-200 ${
+                className={`relative grid place-items-center rounded-2xl px-4 py-1.5 transition-all duration-200 ${
                   active ? "bg-accent shadow-lg shadow-accent/30" : ""
                 }`}
               >
@@ -46,10 +52,17 @@ export function BottomNav() {
                   strokeWidth={active ? 2.4 : 2.1}
                 />
                 {!!badge && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-white text-[9px] font-bold grid place-items-center border-2 border-white">
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold grid place-items-center border-2 border-white dark:border-black">
                     {badge > 9 ? "9+" : badge}
                   </span>
                 )}
+              </span>
+              <span
+                className={`text-[10px] font-bold leading-none transition-colors duration-200 ${
+                  active ? "text-accent" : "text-brand/35 dark:text-white/40"
+                }`}
+              >
+                {label}
               </span>
             </Link>
           );
