@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -72,6 +72,12 @@ export function NotificationsBell({ className }: { className?: string }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  // A page can render more than one bell (e.g. the dashboard's mobile
+  // header plus the desktop top bar, one hidden by CSS). Supabase reuses a
+  // channel by name, so two bells sharing `notifications:<user>` would try
+  // to add a listener to an already-subscribed channel and throw — give each
+  // instance its own channel name.
+  const instanceId = useId();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
@@ -82,7 +88,7 @@ export function NotificationsBell({ className }: { className?: string }) {
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel(`notifications:${user.id}`)
+      .channel(`notifications:${user.id}:${instanceId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => {
         qc.invalidateQueries({ queryKey: ["notifications", user.id] });
       })
@@ -90,7 +96,7 @@ export function NotificationsBell({ className }: { className?: string }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, qc]);
+  }, [user, qc, instanceId]);
 
   if (!user) return null;
 

@@ -67,6 +67,15 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold">This page didn't load</h1>
         <p className="mt-2 text-sm text-muted-foreground">Something went wrong.</p>
+        {/* Dev-only: surface the actual error instead of making you dig
+            through the console for it. Production keeps the generic copy. */}
+        {import.meta.env.DEV && (
+          <pre className="mt-4 max-h-60 overflow-auto rounded-xl bg-red-950/90 p-3 text-left text-xs text-red-100">
+            {error?.message}
+            {"\n"}
+            {error?.stack?.split("\n").slice(1, 6).join("\n")}
+          </pre>
+        )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {

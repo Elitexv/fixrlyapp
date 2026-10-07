@@ -1,11 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, CalendarCheck, User, LayoutDashboard, MessageSquare } from "lucide-react";
+import { Home, CalendarCheck, User, LayoutDashboard, MessageSquare, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSession, useRoles, useMyBusiness } from "@/lib/session";
 import { fetchTotalUnreadCount } from "@/lib/chat";
+import { AppSidebar } from "@/components/AppSidebar";
+import { cn } from "@/lib/utils";
 
-export function BottomNav() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+function useNavState() {
   const { user } = useSession();
   const { data: roles = [] } = useRoles(user);
   const { data: business } = useMyBusiness(user, roles);
@@ -17,57 +18,70 @@ export function BottomNav() {
     queryFn: () => fetchTotalUnreadCount(user!.id),
     refetchInterval: 30_000,
   });
+  return { isProvider, hasBusiness: !!business, unreadMessages };
+}
 
+// Just the desktop sidebar, for pages that bring their own mobile action
+// bar instead of the bottom tab bar (e.g. the provider profile).
+export function DesktopSidebar() {
+  const { isProvider, hasBusiness, unreadMessages } = useNavState();
+  return <AppSidebar unreadMessages={unreadMessages} isProvider={isProvider} hasBusiness={hasBusiness} />;
+}
+
+export function BottomNav() {
+  const { pathname, hash } = useRouterState({ select: (s) => ({ pathname: s.location.pathname, hash: s.location.hash }) });
+  const { isProvider, hasBusiness, unreadMessages } = useNavState();
+
+  const onProviderList = pathname === "/" && hash === "providers";
+  // Providers get their dashboard in the fourth slot; everyone else gets a
+  // shortcut to the provider list on the home page.
   const items = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/bookings", label: "Bookings", icon: CalendarCheck },
-    { to: "/messages", label: "Messages", icon: MessageSquare, badge: unreadMessages },
-    ...(isProvider ? [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }] : []),
-    { to: "/profile", label: "Profile", icon: User },
-  ] as const;
+    { to: "/", label: "Home", icon: Home, active: pathname === "/" && !onProviderList },
+    { to: "/bookings", label: "Bookings", icon: CalendarCheck, active: pathname.startsWith("/bookings") },
+    { to: "/messages", label: "Messages", icon: MessageSquare, badge: unreadMessages, active: pathname.startsWith("/messages") },
+    isProvider
+      ? { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, active: pathname.startsWith("/dashboard") }
+      : { to: "/", hash: "providers", label: "Providers", icon: Users, active: onProviderList },
+    { to: "/profile", label: "Profile", icon: User, active: pathname.startsWith("/profile") },
+  ];
 
   return (
-    <nav
-      className="light-surface fixed inset-x-4 z-40 mx-auto max-w-lg rounded-[28px] border border-black/5 bg-white/95 p-1.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-black/95 dark:shadow-black/50"
-      style={{ bottom: "max(env(safe-area-inset-bottom), 1rem)" }}
-    >
-      <div className="flex items-center justify-between gap-1">
-        {items.map(({ to, label, icon: Icon, badge }: any) => {
-          const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
-          return (
+    <>
+      <AppSidebar unreadMessages={unreadMessages} isProvider={isProvider} hasBusiness={hasBusiness} />
+      <nav
+        aria-label="Main"
+        className="light-surface fixed inset-x-0 bottom-0 z-40 border-t border-black/5 bg-white/95 shadow-[0_-8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:hidden dark:border-white/10 dark:bg-black/95"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto flex max-w-lg items-stretch justify-between">
+          {items.map(({ to, hash: itemHash, label, icon: Icon, badge, active }) => (
             <Link
-              key={to}
+              key={label}
               to={to}
+              hash={itemHash}
               aria-label={label}
               aria-current={active ? "page" : undefined}
-              className="relative flex flex-1 flex-col items-center gap-0.5 rounded-[22px] py-2 transition-all duration-200 active:scale-90"
+              className="relative flex flex-1 flex-col items-center gap-1 pt-2.5 pb-2 transition active:scale-95"
             >
-              <span
-                className={`relative grid place-items-center rounded-2xl px-4 py-1.5 transition-all duration-200 ${
-                  active ? "bg-accent shadow-lg shadow-accent/30" : ""
-                }`}
-              >
+              <span className="relative">
                 <Icon
-                  className={`size-5 transition-colors duration-200 ${active ? "text-white" : "text-brand/40 dark:text-white/60"}`}
-                  strokeWidth={active ? 2.4 : 2.1}
+                  className={cn("size-6 transition-colors", active ? "fill-accent/15 text-accent" : "text-brand/45 dark:text-white/55")}
+                  strokeWidth={active ? 2.2 : 1.8}
                 />
                 {!!badge && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold grid place-items-center border-2 border-white dark:border-black">
+                  <span className="absolute -top-1.5 -right-2 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-white bg-accent px-1 text-[10px] font-bold text-white dark:border-black">
                     {badge > 9 ? "9+" : badge}
                   </span>
                 )}
               </span>
-              <span
-                className={`text-[10px] font-bold leading-none transition-colors duration-200 ${
-                  active ? "text-accent" : "text-brand/35 dark:text-white/40"
-                }`}
-              >
+              <span className={cn("text-[11px] leading-none", active ? "font-semibold text-accent" : "font-medium text-brand/55 dark:text-white/55")}>
                 {label}
               </span>
+              <span className={cn("mt-0.5 h-[3px] w-8 rounded-full", active ? "bg-accent" : "bg-transparent")} />
             </Link>
-          );
-        })}
-      </div>
-    </nav>
+          ))}
+        </div>
+      </nav>
+    </>
   );
 }

@@ -56,7 +56,7 @@
   --brand-foreground: #ffffff;
   --accent-orange: #ff5a1f;
   --surface: #ffffff;
-  --canvas: #f8fafc;
+  --canvas: #f5f7fb;
 
   /* Shadcn semantic (mapped to brand) */
   --background: #ffffff;
@@ -141,16 +141,12 @@
     outline-offset: 2px;
   }
   html, body { background: var(--canvas); color: var(--foreground); font-family: var(--font-sans); }
-  body {
-    -webkit-font-smoothing: antialiased;
-    background-image:
-      radial-gradient(circle at top left, rgba(255, 90, 31, 0.12), transparent 18%),
-      radial-gradient(circle at 80% 10%, rgba(59, 130, 246, 0.08), transparent 18%);
-  }
-  .dark body {
-    background-image:
-      radial-gradient(circle at top left, rgba(255, 90, 31, 0.1), transparent 18%),
-      radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.04), transparent 18%);
+  body { -webkit-font-smoothing: antialiased; }
+  /* Desktop app shell: AppSidebar (rendered by BottomNav) is fixed to the
+     left edge, so offset the whole page by its width whenever it's present
+     instead of every page having to know about it. */
+  @media (min-width: 1024px) {
+    body:has([data-app-sidebar]) { padding-left: 16.5rem; }
   }
 }
 

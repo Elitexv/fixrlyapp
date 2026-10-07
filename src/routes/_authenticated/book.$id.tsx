@@ -6,23 +6,43 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { initializePaystackPayment } from "@/lib/payments.functions";
 import { geocodeLocation } from "@/lib/geocode.functions";
-import { ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CalendarDays, CalendarCheck, Clock, MapPin, Minus, Plus, NotebookPen, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { buildBookingPaymentData, getBookingPaymentSettings } from "@/lib/booking-payment";
 import { formatMoney, useCurrency } from "@/lib/currency";
-import { PageSpinner, PrimaryButton, SecondaryButton } from "@/components/ui-kit";
+import { CategoryIcon } from "@/components/CategoryVisual";
+import { PageSpinner } from "@/components/ui-kit";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/book/$id")({
+  // `service` preselects a category — set when the user taps a specific
+  // service card on the provider's profile.
+  validateSearch: (search: Record<string, unknown>): { service?: string } => ({
+    service: typeof search.service === "string" ? search.service : undefined,
+  }),
   head: () => ({ meta: [{ title: "Book service — Fixrly" }, { name: "robots", content: "noindex" }] }),
   component: BookPage,
 });
 
-const fieldClass = "w-full bg-transparent text-sm outline-none";
-const fieldWrapClass = "light-surface flex items-center gap-2.5 bg-white rounded-2xl py-3 px-3.5 shadow-soft transition focus-within:ring-2 focus-within:ring-accent/30";
-const labelClass = "text-[10px] font-bold uppercase tracking-widest text-brand/40 block mb-1.5";
+const card = "rounded-2xl border border-soft bg-surface p-4 shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:p-5";
+const fieldWrapClass =
+  "flex items-center gap-3 rounded-xl border border-soft bg-canvas px-3.5 py-3 transition focus-within:border-accent/50 focus-within:ring-4 focus-within:ring-accent/10";
+const fieldClass = "w-full min-w-0 bg-transparent text-sm outline-none";
+
+function SectionTitle({ icon: Icon, children }: { icon: typeof Clock; children: React.ReactNode }) {
+  return (
+    <h2 className="mb-3 flex items-center gap-2.5 text-base font-bold">
+      <span className="grid size-8 place-items-center rounded-full bg-orange-50 text-accent dark:bg-orange-500/10">
+        <Icon className="size-4" />
+      </span>
+      {children}
+    </h2>
+  );
+}
 
 function BookPage() {
   const { id } = Route.useParams();
+  const { service } = Route.useSearch();
   const navigate = useNavigate();
   const { user } = useSession();
   const initializePayment = useServerFn(initializePaystackPayment);
@@ -34,7 +54,7 @@ function BookPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("provider_profiles")
-        .select("id,business_name,hourly_rate,city,photo_urls,provider_categories(service_categories(id,name,icon))")
+        .select("id,business_name,hourly_rate,city,photo_urls,provider_categories(service_categories(id,name,icon,slug))")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -47,7 +67,7 @@ function BookPage() {
     .filter(Boolean);
   const hourlyRate = provider?.hourly_rate ? Number(provider.hourly_rate) : null;
 
-  const [categoryId, setCategoryId] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<string>(service ?? "");
   const [scheduledAt, setScheduledAt] = useState<string>("");
   const [duration, setDuration] = useState<number>(1);
   const [address, setAddress] = useState("");
@@ -64,7 +84,7 @@ function BookPage() {
     }
     setLoading(true);
     try {
-      const cat = categoryId || categories[0]?.id || null;
+      const cat = (categories.some((c: any) => c.id === categoryId) ? categoryId : categories[0]?.id) || null;
       const total = hourlyRate ? hourlyRate * duration : null;
       // A hiccup reading payment settings shouldn't block the booking itself —
       // fall back to "no payment" so the request still goes through.
@@ -132,68 +152,99 @@ function BookPage() {
   }
 
   const total = hourlyRate ? hourlyRate * duration : null;
+  // An unknown ?service= id (e.g. a category the provider has since
+  // dropped) falls back to their first service rather than selecting nothing.
+  const selectedCategoryId = categories.some((c: any) => c.id === categoryId) ? categoryId : categories[0]?.id;
+  const selectedCategory = categories.find((c: any) => c.id === selectedCategoryId);
+  const changeDuration = (delta: number) => setDuration((d) => Math.min(24, Math.max(0.5, d + delta)));
 
   return (
-    <div className="min-h-screen bg-canvas pb-32">
-      <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-soft px-4 pt-6 pb-4">
-        <div className="max-w-lg mx-auto flex items-center gap-3">
-          <button
-            onClick={() => navigate({ to: "/provider/$id", params: { id } })}
-            aria-label="Back"
-            className="size-10 rounded-full bg-brand/5 grid place-items-center transition hover:bg-brand/10"
-          >
-            <ArrowLeft className="size-4" />
-          </button>
-          <div className="min-w-0">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-brand/40">Book service</div>
-            <h1 className="text-lg font-black truncate">{provider.business_name}</h1>
+    <div className="min-h-screen bg-canvas pb-28 text-brand">
+      <header className="relative overflow-hidden bg-[#0b1730] text-white">
+        {provider.photo_urls?.[0] && (
+          <img src={provider.photo_urls[0]} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0b1730] via-[#0b1730]/90 to-[#0b1730]/50" />
+        <div className="relative mx-auto max-w-2xl px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-5">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate({ to: "/provider/$id", params: { id } })}
+              aria-label="Back"
+              className="grid size-11 place-items-center rounded-full border border-white/20 bg-black/25 backdrop-blur-md transition hover:bg-black/40"
+            >
+              <ArrowLeft className="size-5" />
+            </button>
+            <h1 className="text-xl font-extrabold tracking-tight">Book a Service</h1>
+          </div>
+          <div className="mt-5 flex items-center gap-3.5">
+            <div className="relative shrink-0">
+              <div className="grid size-16 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-white/10 text-xl font-bold">
+                {provider.photo_urls?.[0] ? (
+                  <img src={provider.photo_urls[0]} alt="" onError={(e) => (e.currentTarget.style.display = "none")} className="h-full w-full object-cover" />
+                ) : (
+                  provider.business_name?.[0]
+                )}
+              </div>
+              <BadgeCheck className="absolute -bottom-0.5 -right-0.5 size-6 fill-blue-500 text-white" aria-hidden="true" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-lg font-bold">{provider.business_name}</div>
+              {provider.city && (
+                <div className="mt-0.5 flex items-center gap-1.5 text-sm text-white/80">
+                  <MapPin className="size-3.5" /> {provider.city}
+                </div>
+              )}
+            </div>
+            {hourlyRate && (
+              <div className="shrink-0 rounded-xl bg-white/10 px-3 py-2 text-right ring-1 ring-white/15">
+                <div className="text-base font-bold">{formatMoney(hourlyRate, currency)}</div>
+                <div className="text-[11px] text-white/70">per hour</div>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      <form onSubmit={submit} className="px-4 py-4 space-y-4 max-w-lg mx-auto">
-        <div className="light-surface bg-white/95 p-4 rounded-3xl border border-soft shadow-soft flex gap-3 items-center">
-          <div className="size-14 rounded-2xl bg-canvas overflow-hidden grid place-items-center text-brand/40 font-bold">
-            {provider.photo_urls?.[0] ? (
-              <img src={provider.photo_urls[0]} alt={provider.business_name} className="w-full h-full object-cover" />
-            ) : (
-              provider.business_name?.[0]
-            )}
-          </div>
-          <div className="min-w-0">
-            <div className="font-bold truncate">{provider.business_name}</div>
-            {provider.city && <div className="text-xs text-brand/60">{provider.city}</div>}
-          </div>
-          {hourlyRate && (
-            <div className="ml-auto text-right">
-              <div className="text-[10px] font-bold uppercase text-brand/40">Rate</div>
-              <div className="font-mono font-bold text-accent">{formatMoney(hourlyRate, currency)}/hr</div>
-            </div>
-          )}
-        </div>
-
+      <form onSubmit={submit} className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
         {categories.length > 0 && (
-          <div>
-            <label className={labelClass}>Service</label>
-            <div className={fieldWrapClass}>
-              <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-base">{categories.find((c: any) => c.id === (categoryId || categories[0]?.id))?.icon}</span>
-              <select
-                value={categoryId || categories[0]?.id}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className={fieldClass}
-              >
-                {categories.map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-                ))}
-              </select>
+          <section className={card} aria-labelledby="choose-service">
+            <h2 id="choose-service" className="mb-3 text-base font-bold">Choose a service</h2>
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Service">
+              {categories.map((c: any) => {
+                const active = c.id === selectedCategoryId;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setCategoryId(c.id)}
+                    className={cn(
+                      "relative flex items-center gap-2.5 rounded-xl border p-3 text-left transition",
+                      active ? "border-accent bg-orange-50/70 ring-2 ring-accent/15 dark:bg-orange-500/10" : "border-soft bg-surface hover:border-accent/30",
+                    )}
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-orange-50 dark:bg-orange-500/10">
+                      <CategoryIcon slug={c.slug} emoji={c.icon} className="size-[18px] text-lg" />
+                    </span>
+                    <span className="min-w-0 flex-1 text-sm font-semibold leading-snug">{c.name}</span>
+                    {active && (
+                      <span className="absolute right-2 top-2 grid size-4 place-items-center rounded-full bg-accent text-white">
+                        <Check className="size-3" strokeWidth={3} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          </div>
+          </section>
         )}
 
-        <div>
-          <label className={labelClass}>When</label>
-          <div className={fieldWrapClass}>
-            <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent"><Calendar className="size-4" /></span>
+        <section className={card}>
+          <SectionTitle icon={CalendarDays}>When do you need it?</SectionTitle>
+          <label className={fieldWrapClass}>
+            <span className="sr-only">Date and time</span>
             <input
               type="datetime-local"
               required
@@ -202,82 +253,124 @@ function BookPage() {
               onChange={(e) => setScheduledAt(e.target.value)}
               className={fieldClass}
             />
-          </div>
-        </div>
+          </label>
 
-        <div>
-          <label className={labelClass}>Duration (hours)</label>
-          <div className={fieldWrapClass}>
-            <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent"><Clock className="size-4" /></span>
-            <input
-              type="number"
-              min={0.5}
-              step={0.5}
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
-              className={fieldClass}
-            />
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="grid size-8 place-items-center rounded-full bg-orange-50 text-accent dark:bg-orange-500/10">
+                <Clock className="size-4" />
+              </span>
+              <div>
+                <div className="text-sm font-semibold">Duration</div>
+                <div className="text-xs text-brand/55">In hours</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 rounded-full border border-soft bg-canvas p-1">
+              <button
+                type="button"
+                onClick={() => changeDuration(-0.5)}
+                disabled={duration <= 0.5}
+                aria-label="Decrease duration"
+                className="grid size-9 place-items-center rounded-full bg-surface shadow-sm transition hover:bg-orange-50 disabled:opacity-40"
+              >
+                <Minus className="size-4" />
+              </button>
+              <span className="w-16 text-center text-sm font-bold" aria-live="polite">
+                {duration} {duration === 1 ? "hr" : "hrs"}
+              </span>
+              <button
+                type="button"
+                onClick={() => changeDuration(0.5)}
+                disabled={duration >= 24}
+                aria-label="Increase duration"
+                className="grid size-9 place-items-center rounded-full bg-surface shadow-sm transition hover:bg-orange-50 disabled:opacity-40"
+              >
+                <Plus className="size-4" />
+              </button>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div>
-          <label className={labelClass}>Service address</label>
-          <div className={fieldWrapClass}>
-            <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent"><MapPin className="size-4" /></span>
+        <section className={card}>
+          <SectionTitle icon={MapPin}>Where should the pro come?</SectionTitle>
+          <label className={fieldWrapClass}>
+            <span className="sr-only">Service address</span>
             <input
               required
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Where should the pro come?"
+              placeholder="Street, area, city"
               className={fieldClass}
             />
-          </div>
-        </div>
+          </label>
+        </section>
 
-        <div>
-          <label className={labelClass}>Notes (optional)</label>
-          <div className={fieldWrapClass}>
+        <section className={card}>
+          <SectionTitle icon={NotebookPen}>
+            Notes <span className="text-xs font-normal text-brand/50">(optional)</span>
+          </SectionTitle>
+          <label className={cn(fieldWrapClass, "items-start")}>
+            <span className="sr-only">Notes</span>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder="Anything the pro should know?"
-              className={`${fieldClass} resize-none`}
+              className={cn(fieldClass, "resize-none")}
             />
-          </div>
-        </div>
+          </label>
+        </section>
 
-        {total != null && (
-          <div className="light-surface bg-white/95 p-4 rounded-3xl border border-soft shadow-soft space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-bold uppercase text-brand/40">Estimated total</div>
-                <div className="text-xs text-brand/60">{duration}h × {formatMoney(hourlyRate, currency)}</div>
-              </div>
-              <div className="font-mono font-black text-xl text-accent">{formatMoney(total, currency)}</div>
+        <section className={card} aria-labelledby="summary">
+          <h2 id="summary" className="text-base font-bold">Booking summary</h2>
+          <dl className="mt-3 space-y-2.5 text-sm">
+            <div className="flex justify-between gap-3">
+              <dt className="text-brand/60">Service</dt>
+              <dd className="text-right font-medium">{selectedCategory?.name ?? "—"}</dd>
             </div>
-            <div className="text-xs text-brand/60">
-              Payments are handled by admin settings. If payments are enabled, your booking will be marked as pending payment until the admin confirms it.
+            <div className="flex justify-between gap-3">
+              <dt className="text-brand/60">When</dt>
+              <dd className="text-right font-medium">
+                {scheduledAt
+                  ? new Date(scheduledAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+                  : "Not set"}
+              </dd>
             </div>
-          </div>
-        )}
+            <div className="flex justify-between gap-3">
+              <dt className="text-brand/60">Rate</dt>
+              <dd className="text-right font-medium">
+                {hourlyRate ? `${formatMoney(hourlyRate, currency)} × ${duration}h` : "Price on request"}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-soft pt-3">
+              <dt className="font-semibold">Estimated total</dt>
+              <dd className="text-xl font-extrabold text-accent">{total != null ? formatMoney(total, currency) : "—"}</dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-xs text-brand/55">
+            If online payment is enabled, you'll be taken to checkout after confirming. Otherwise, settle with the provider directly.
+          </p>
+        </section>
       </form>
 
-      <div className="light-surface fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-border p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-        <div className="max-w-lg mx-auto flex gap-2">
-          <SecondaryButton type="button" onClick={() => navigate({ to: "/provider/$id", params: { id } })} className="px-5 h-12 rounded-xl">
-            Back
-          </SecondaryButton>
-          <PrimaryButton
-            onClick={submit}
-            loading={loading}
-            disabled={!scheduledAt || !address}
-            className="h-12 min-w-0 flex-1 rounded-xl"
+      <div className="light-surface fixed inset-x-0 bottom-0 z-40 border-t border-soft bg-white/95 p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] shadow-[0_-8px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-2xl items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/provider/$id", params: { id } })}
+            className="h-12 rounded-full bg-blue-50 px-6 text-sm font-semibold text-[#0b1730] transition hover:bg-blue-100"
           >
-            <span className="truncate">
-              Confirm booking{total != null ? ` — ${formatMoney(total, currency)}` : ""}
-            </span>
-          </PrimaryButton>
+            Back
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={loading || !scheduledAt || !address}
+            className="flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-orange-500 px-4 text-sm font-semibold text-white shadow-lg shadow-accent/30 transition hover:brightness-105 disabled:opacity-50 disabled:shadow-none"
+          >
+            {loading ? <Loader2 className="size-5 animate-spin" /> : <CalendarCheck className="size-5 shrink-0" />}
+            <span className="truncate">Confirm booking{total != null ? ` · ${formatMoney(total, currency)}` : ""}</span>
+          </button>
         </div>
       </div>
     </div>

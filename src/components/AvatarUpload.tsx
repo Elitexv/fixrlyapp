@@ -11,11 +11,14 @@ export function AvatarUpload({
   avatarUrl,
   label,
   className,
+  innerClassName,
 }: {
   userId: string;
   avatarUrl: string | null;
   label: string;
   className?: string;
+  // Overrides the picture frame's size/shape (default: 80px rounded square).
+  innerClassName?: string;
 }) {
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +46,7 @@ export function AvatarUpload({
 
   return (
     <div className={cn("relative inline-block shrink-0", className)}>
-      <div className="size-20 rounded-3xl bg-accent/10 overflow-hidden grid place-items-center text-accent text-2xl font-black">
+      <div className={cn("size-20 rounded-3xl bg-accent/10 overflow-hidden grid place-items-center text-accent text-2xl font-black", innerClassName)}>
         {avatarUrl ? <img src={avatarUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : label}
       </div>
       <button
