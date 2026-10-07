@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -55,8 +56,10 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
+  // The router types thrown values as `unknown` — anything can be thrown.
+  const err = error instanceof Error ? error : new Error(String(error));
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
@@ -71,9 +74,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             through the console for it. Production keeps the generic copy. */}
         {import.meta.env.DEV && (
           <pre className="mt-4 max-h-60 overflow-auto rounded-xl bg-red-950/90 p-3 text-left text-xs text-red-100">
-            {error?.message}
+            {err.message}
             {"\n"}
-            {error?.stack?.split("\n").slice(1, 6).join("\n")}
+            {err.stack?.split("\n").slice(1, 6).join("\n")}
           </pre>
         )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
