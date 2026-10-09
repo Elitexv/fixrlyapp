@@ -163,13 +163,13 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-canvas lg:flex">
       {/* Branded panel — desktop only. Real, current features, not filler. */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-black via-neutral-900 to-black px-12 py-14 text-white lg:flex lg:w-[42%] lg:flex-col lg:justify-between">
-        <div className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 right-0 size-96 rounded-full bg-accent/10 blur-3xl" />
+      <div className="relative hidden overflow-hidden bg-[#0b1730] px-12 py-14 text-white lg:flex lg:w-[42%] lg:flex-col lg:justify-between">
+        <div className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-accent/25 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 right-0 size-96 rounded-full bg-blue-500/15 blur-3xl" />
 
-        <div className="relative flex items-center gap-2.5">
-          <LogoMark className="size-8 text-accent" />
-          <span className="text-lg font-black tracking-tight">Fixrly</span>
+        <div className="relative flex items-center gap-1">
+          <LogoMark className="size-11 text-accent" />
+          <span className="text-[2rem] font-extrabold leading-none tracking-tight">fixrly</span>
         </div>
 
         <div className="relative">
@@ -194,10 +194,9 @@ function AuthPage() {
       {/* Form */}
       <div className="grid flex-1 place-items-center px-4 py-10">
         <div className="w-full max-w-sm">
-          <div className="mb-6 flex justify-center lg:hidden">
-            <span className="grid size-12 place-items-center rounded-2xl bg-accent/10">
-              <LogoMark className="size-6 text-accent" />
-            </span>
+          <div className="mb-8 flex items-center justify-center gap-1 lg:hidden">
+            <LogoMark className="size-11 text-accent" />
+            <span className="text-[2rem] font-extrabold leading-none tracking-tight text-brand">fixrly</span>
           </div>
 
           {mode === "forgot" ? (

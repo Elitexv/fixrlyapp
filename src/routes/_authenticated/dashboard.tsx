@@ -422,8 +422,12 @@ function DashboardPage() {
 
       {/* ---------- Mobile home ---------- */}
       <div className="lg:hidden">
-        <header className="relative overflow-hidden bg-[#0b1730] px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-24 text-white">
-          <div className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-accent/25 blur-3xl" />
+        {/* No overflow-hidden here: it would clip the notifications dropdown.
+            Only the decorative glow is clipped, via its own wrapper. */}
+        <header className="relative bg-[#0b1730] px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-24 text-white">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -right-20 -top-24 size-72 rounded-full bg-accent/25 blur-3xl" />
+          </div>
           <div className="relative flex items-center justify-between">
             <Link to="/" className="flex items-center gap-1" aria-label="Fixrly home">
               <LogoMark className="size-9 text-accent" />
@@ -441,7 +445,9 @@ function DashboardPage() {
           <div className="relative mt-4 flex items-center gap-3.5">
             <span className="relative grid size-16 shrink-0 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-white/10 text-xl font-bold">
               {firstName[0]?.toUpperCase()}
-              {account?.avatar_url && <img src={account.avatar_url} alt="" className="absolute inset-0 h-full w-full bg-white object-cover" />}
+              {account?.avatar_url && (
+                <img src={account.avatar_url} alt="" onError={(e) => (e.currentTarget.style.display = "none")} className="absolute inset-0 h-full w-full bg-white object-cover" />
+              )}
             </span>
             <div className="min-w-0">
               <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", form.is_active ? "bg-green-500" : "bg-white/20")}>
@@ -457,7 +463,7 @@ function DashboardPage() {
           </div>
         </header>
 
-        <div className="relative -mt-16 space-y-4 px-4">
+        <div className="relative z-10 -mt-16 space-y-4 px-4">
           <section className={cn(card, "p-4")} aria-label="Today at a glance">
             <div className="grid grid-cols-2 divide-x divide-[var(--soft-border)]">
               <div className="flex items-start gap-2.5 pr-3">

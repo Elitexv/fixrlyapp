@@ -81,7 +81,7 @@ export function ViewShell({
       {/* Screens with their own Save bar drop the bottom tab bar on mobile
           so the two fixed bars don't stack. */}
       {footer ? <DesktopSidebar /> : <BottomNav />}
-      <header className="sticky top-0 z-30 bg-[#0b1730] text-white lg:static lg:mx-auto lg:mt-6 lg:max-w-2xl lg:rounded-2xl">
+      <header className="sticky top-0 z-30 bg-[#0b1730] text-white lg:static lg:mx-auto lg:mt-6 lg:max-w-[40rem] lg:rounded-2xl">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-3.5 lg:pt-3.5">
           <button
             type="button"

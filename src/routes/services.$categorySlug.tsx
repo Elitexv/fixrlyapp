@@ -3,7 +3,9 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { ProviderCard, type ProviderCardData } from "@/components/ProviderCard";
-import { StickyHeader, InlineSpinner, EmptyState, ErrorState, Eyebrow } from "@/components/ui-kit";
+import { InlineSpinner, EmptyState, ErrorState } from "@/components/ui-kit";
+import { AppTopBar } from "@/components/AppTopBar";
+import { CategoryIcon } from "@/components/CategoryVisual";
 import { fetchActiveProviders, fetchCategories, fetchCategoryBySlug } from "@/lib/providers";
 import { haversineKm } from "@/lib/session";
 import { useUserLocation } from "@/lib/location";
@@ -114,54 +116,67 @@ function CategoryPage() {
   }, [providers, coords]);
 
   return (
-    <div className="min-h-screen bg-canvas font-sans text-brand pb-24">
-      <StickyHeader>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate({ to: "/" })}
-            aria-label="Back"
-            className="size-9 rounded-full bg-brand/5 grid place-items-center transition hover:bg-brand/10 shrink-0"
-          >
-            <ArrowLeft className="size-4" />
-          </button>
-          <div className="min-w-0">
-            <Eyebrow>Fixrly services</Eyebrow>
-            <h1 className="text-lg font-black tracking-tight truncate">
-              {category.icon} {category.name} near you
-            </h1>
-          </div>
-        </div>
-      </StickyHeader>
+    <div className="min-h-screen bg-canvas font-sans text-brand pb-28 lg:pb-12">
+      <AppTopBar />
 
-      <div className="max-w-lg mx-auto">
-        <p className="px-4 pt-4 text-sm text-brand/60">
-          Compare vetted {category.name.toLowerCase()} providers near you, check ratings and pricing, and book directly on Fixrly — no
-          phone calls needed.
-        </p>
+      <div className="mx-auto max-w-[1240px] lg:px-6 lg:pt-6">
+        <header className="relative overflow-hidden bg-[#0b1730] px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-6 text-white lg:rounded-2xl lg:p-8">
+          <div className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full bg-accent/25 blur-3xl" />
+          <div className="relative flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate({ to: "/" })}
+              aria-label="Back"
+              className="grid size-10 shrink-0 place-items-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20"
+            >
+              <ArrowLeft className="size-5" />
+            </button>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Fixrly services</span>
+          </div>
+          <div className="relative mt-5 flex items-center gap-4">
+            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-white shadow-lg lg:size-16">
+              <CategoryIcon slug={category.slug} emoji={category.icon} className="size-7 text-3xl lg:size-8" />
+            </span>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-extrabold tracking-tight lg:text-3xl">{category.name} near you</h1>
+              <p className="mt-1 max-w-2xl text-sm text-white/75">
+                Compare vetted {category.name.toLowerCase()} providers near you, check ratings and pricing, and book directly on Fixrly — no
+                phone calls needed.
+              </p>
+            </div>
+          </div>
+        </header>
 
         {categories.length > 1 && (
-          <div className="flex gap-2.5 overflow-x-auto px-4 py-4 no-scrollbar">
-            {categories.map((c) => (
-              <Link
-                key={c.id}
-                to="/services/$categorySlug"
-                params={{ categorySlug: c.slug }}
-                className={`flex-none px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-colors ${
-                  c.id === category.id
-                    ? "bg-accent text-white shadow-lg shadow-accent/20"
-                    : "bg-surface border border-brand/5 shadow-sm text-brand/70 hover:border-accent/20"
-                }`}
-              >
-                {c.icon} {c.name}
-              </Link>
-            ))}
-          </div>
+          <nav aria-label="Service categories" className="flex gap-2 overflow-x-auto px-4 py-4 no-scrollbar lg:px-0">
+            {categories.map((c) => {
+              const active = c.id === category.id;
+              return (
+                <Link
+                  key={c.id}
+                  to="/services/$categorySlug"
+                  params={{ categorySlug: c.slug }}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex flex-none items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+                    active ? "border-accent bg-accent text-white shadow-md shadow-accent/25" : "border-soft bg-surface hover:border-accent/30"
+                  }`}
+                >
+                  <CategoryIcon slug={c.slug} emoji={c.icon} className={`size-4 text-base ${active ? "text-white" : ""}`} />
+                  {c.name}
+                </Link>
+              );
+            })}
+          </nav>
         )}
 
-        <div className="px-4 pb-8 space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold">Top {category.name.toLowerCase()} pros</h2>
-            <span className="font-mono text-xs font-bold uppercase text-brand/40">{sortedProviders.length} results</span>
+        <section className="px-4 pb-8 lg:px-0" aria-labelledby="results">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 id="results" className="text-lg font-bold">
+              Top {category.name.toLowerCase()} pros
+            </h2>
+            <span className="text-xs font-semibold text-brand/50">
+              {sortedProviders.length} {sortedProviders.length === 1 ? "result" : "results"}
+            </span>
           </div>
 
           {isLoading ? (
@@ -180,9 +195,13 @@ function CategoryPage() {
               }
             />
           ) : (
-            sortedProviders.map((p) => <ProviderCard key={p.id} p={p} />)
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {sortedProviders.map((p) => (
+                <ProviderCard key={p.id} p={p} />
+              ))}
+            </div>
           )}
-        </div>
+        </section>
       </div>
 
       <BottomNav />

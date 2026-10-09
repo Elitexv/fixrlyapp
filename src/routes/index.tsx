@@ -147,6 +147,19 @@ function Home() {
     queryFn: fetchCategories,
   });
 
+  // Whether the category row has more tiles off to the right — drives the
+  // scroll arrow, which would otherwise sit on top of the last tile.
+  const [catHasMore, setCatHasMore] = useState(false);
+  const updateCatHasMore = () => {
+    const el = catScrollRef.current;
+    if (el) setCatHasMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+  useEffect(() => {
+    updateCatHasMore();
+    window.addEventListener("resize", updateCatHasMore);
+    return () => window.removeEventListener("resize", updateCatHasMore);
+  }, [categories.length]);
+
   const { data: providers = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["providers", selectedCat],
     initialData: selectedCat === null ? initialProviders : undefined,
@@ -458,7 +471,11 @@ function Home() {
 
         {/* ---------- Category filter ---------- */}
         <section className={cn(card, "relative px-3 py-4 sm:px-6")} aria-label="Filter by category">
-          <div ref={catScrollRef} className="grid grid-cols-5 gap-x-1.5 gap-y-3 sm:flex sm:gap-5 sm:overflow-x-auto sm:scroll-smooth sm:pr-12 sm:no-scrollbar">
+          <div
+            ref={catScrollRef}
+            onScroll={updateCatHasMore}
+            className="grid grid-cols-5 gap-x-1.5 gap-y-3 sm:flex sm:gap-5 sm:overflow-x-auto sm:scroll-smooth sm:no-scrollbar"
+          >
             <CategoryTile active={!selectedCat} label="All" onClick={() => setSelectedCat(null)}>
               <LayoutGrid className={cn("size-6", !selectedCat ? "text-white" : "text-brand/70")} strokeWidth={2} />
             </CategoryTile>
@@ -468,14 +485,18 @@ function Home() {
               </CategoryTile>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => catScrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
-            aria-label="Scroll categories"
-            className="absolute right-4 top-1/2 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-soft bg-surface shadow-md transition hover:bg-canvas sm:grid"
-          >
-            <ChevronRight className="size-5" />
-          </button>
+          {catHasMore && (
+            <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-24 items-center justify-end rounded-r-2xl bg-gradient-to-l from-surface via-surface/90 to-transparent pr-4 sm:flex">
+              <button
+                type="button"
+                onClick={() => catScrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
+                aria-label="Scroll categories"
+                className="pointer-events-auto grid size-10 place-items-center rounded-full border border-soft bg-surface shadow-md transition hover:bg-canvas"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            </div>
+          )}
         </section>
 
         {/* ---------- Location + quick actions ---------- */}
@@ -702,7 +723,7 @@ function Home() {
               description="Try a different search, category, or location."
               action={
                 !isProvider && (
-                  <button onClick={() => navigate({ to: "/dashboard" })} className="text-accent font-bold text-sm underline underline-offset-2">
+                  <button type="button" onClick={() => navigate({ to: "/become-provider" })} className="text-accent font-bold text-sm underline underline-offset-2">
                     Become a provider
                   </button>
                 )

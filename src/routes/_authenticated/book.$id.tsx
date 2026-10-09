@@ -179,11 +179,15 @@ function BookPage() {
           </div>
           <div className="mt-5 flex items-center gap-3.5">
             <div className="relative shrink-0">
-              <div className="grid size-16 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-white/10 text-xl font-bold">
-                {provider.photo_urls?.[0] ? (
-                  <img src={provider.photo_urls[0]} alt="" onError={(e) => (e.currentTarget.style.display = "none")} className="h-full w-full object-cover" />
-                ) : (
-                  provider.business_name?.[0]
+              <div className="relative grid size-16 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-white/10 text-xl font-bold">
+                {provider.business_name?.[0]}
+                {provider.photo_urls?.[0] && (
+                  <img
+                    src={provider.photo_urls[0]}
+                    alt=""
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                    className="absolute inset-0 h-full w-full bg-white object-cover"
+                  />
                 )}
               </div>
               <BadgeCheck className="absolute -bottom-0.5 -right-0.5 size-6 fill-blue-500 text-white" aria-hidden="true" />

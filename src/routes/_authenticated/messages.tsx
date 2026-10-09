@@ -196,11 +196,11 @@ function MessagesPage() {
             <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-brand/40">Messages</div>
             <h1 className="text-xl font-black">Chat</h1>
           </div>
-          <Link to="/" className="text-sm font-bold text-accent">Home</Link>
+          <Link to="/" className="text-sm font-bold text-accent lg:hidden">Home</Link>
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-6xl flex-1 min-h-0 flex-col gap-3 overflow-hidden px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:flex-row">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 min-h-0 flex-col gap-3 overflow-hidden px-4 py-4 pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:flex-row lg:pb-6">
         <aside className={`${mobileShowChat ? "hidden lg:flex" : "flex"} w-full flex-col overflow-y-auto rounded-3xl border border-brand/5 bg-surface p-2 lg:w-80`}>
           <div className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.24em] text-brand/40">Conversations</div>
           {isLoading ? (
