@@ -25,7 +25,7 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
     <Link
       to="/provider/$id"
       params={{ id: p.id }}
-      className="group flex flex-col gap-3.5 rounded-2xl border border-soft bg-surface p-4 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-[0_14px_36px_rgba(15,23,42,0.1)]"
+      className="group flex min-w-0 flex-col gap-3.5 rounded-2xl border border-soft bg-surface p-4 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-[0_14px_36px_rgba(15,23,42,0.1)]"
     >
       <div className="flex gap-3.5">
         <div className="relative shrink-0">

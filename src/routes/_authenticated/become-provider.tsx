@@ -359,7 +359,7 @@ function BecomeProviderPage() {
             <section className={cn(card, "space-y-3 p-5")}>
               <h2 className="text-base font-bold">Verification documents</h2>
               <p className="text-sm text-brand/60">Upload clear photos or scans. Only admins can view them (max 5 MB each).</p>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <UploadField
                   label="Service ID card"
                   required

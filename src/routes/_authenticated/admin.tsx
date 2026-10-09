@@ -222,7 +222,7 @@ function OverviewTab() {
         <StatCard label="Bookings" value={stats?.bookings ?? 0} />
         <StatCard label="Reviews" value={stats?.reviews ?? 0} />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-2xl bg-amber-500 p-5 text-white">
           <div className="text-xs font-medium text-white/80">Pending requests</div>
           <div className="mt-2 font-extrabold text-3xl">{stats?.pending ?? 0}</div>
@@ -339,7 +339,7 @@ function SettingsTab() {
       <Panel as="form" onSubmit={save} className="p-5 space-y-5">
         <div>
           <Eyebrow className="mb-2">Provider</Eyebrow>
-          <div className="grid sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {providers.map((p) => (
               <button
                 type="button"
@@ -356,7 +356,7 @@ function SettingsTab() {
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block">
             <Eyebrow className="mb-1.5">Mode</Eyebrow>
             <select

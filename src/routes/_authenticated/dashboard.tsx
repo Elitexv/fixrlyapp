@@ -787,7 +787,7 @@ function DashboardPage() {
                 <div className="mt-5 space-y-4">
                   <Input label="Business name" required value={form.business_name} onChange={(v) => setForm({ ...form, business_name: v })} />
                   <Input label="Bio" textarea value={form.bio} onChange={(v) => setForm({ ...form, bio: v })} placeholder="Tell customers what you do and why they should book you" />
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Input label={`Hourly rate (${currencySymbol(currency)})`} value={form.hourly_rate} type="number" onChange={(v) => setForm({ ...form, hourly_rate: v })} />
                     <Input label="Service radius (km)" value={String(form.service_radius_km)} type="number" onChange={(v) => setForm({ ...form, service_radius_km: Number(v) || 0 })} />
                   </div>
@@ -806,7 +806,7 @@ function DashboardPage() {
                 <h2 id="service-area-title" className="text-base font-bold">Service area</h2>
                 <div className="mt-5 space-y-4">
                   <Input id="address-input" label="Address" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Input label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
                     <Input label="ZIP" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
                   </div>

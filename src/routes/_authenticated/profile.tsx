@@ -229,7 +229,7 @@ function ProfilePage() {
 
               {section === "profile" && (
                 <form onSubmit={save} className="space-y-5">
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field icon={User} label="Full name" required value={fullName} onChange={setFullName} placeholder="Your name" />
                     <Field icon={Phone} label="Phone" type="tel" value={phone} onChange={setPhone} placeholder="e.g. 0803 000 0000" />
                   </div>
