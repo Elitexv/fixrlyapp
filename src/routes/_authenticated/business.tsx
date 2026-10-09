@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession, useRoles, useMyBusiness } from "@/lib/session";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { LogoMark } from "@/components/Logo";
 import { formatMoney, useCurrency, currencySymbol } from "@/lib/currency";
 import { formatRelativeTime } from "@/lib/time";
 import {
@@ -20,7 +21,7 @@ import {
 } from "lucide-react";
 import {
   Panel, Tile, StatusBadge, Eyebrow, PrimaryButton, SecondaryButton, TextField, TextAreaField,
-  EmptyState, PageSpinner, InlineSpinner, useNeutralSidebarSurface,
+  EmptyState, PageSpinner, InlineSpinner, useAppSidebarSurface,
 } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/business")({
@@ -41,7 +42,7 @@ function BusinessPage() {
   const { data: roles = [] } = useRoles(user);
   const { data: business, isLoading: businessLoading } = useMyBusiness(user, roles);
   const [tab, setTab] = useState<Tab>("jobs");
-  useNeutralSidebarSurface();
+  useAppSidebarSurface();
 
   if (sessionLoading || businessLoading) {
     return <PageSpinner />;
@@ -49,13 +50,16 @@ function BusinessPage() {
 
   if (!business) {
     return (
-      <div className="min-h-screen grid place-items-center px-6 text-center">
-        <div>
-          <h1 className="text-xl font-black tracking-tight">No business yet</h1>
+      <div className="min-h-screen grid place-items-center bg-canvas px-6 text-center">
+        <div className="w-full max-w-sm rounded-2xl border border-soft bg-surface p-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+          <span className="mx-auto grid size-14 place-items-center rounded-full bg-orange-50 text-accent dark:bg-orange-500/10">
+            <Briefcase className="size-6" />
+          </span>
+          <h1 className="mt-4 text-xl font-bold tracking-tight">No business yet</h1>
           <p className="text-sm text-brand/60 mt-2">
             You're not the owner or an active staff member of a provider business.
           </p>
-          <Link to="/dashboard" className="mt-4 inline-flex items-center justify-center rounded-2xl bg-accent px-5 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500">
+          <Link to="/dashboard" className="mt-5 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-accent to-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:brightness-105">
             Go to dashboard
           </Link>
         </div>
@@ -71,17 +75,17 @@ function BusinessPage() {
         <BusinessSidebarNav tab={tab} setTab={setTab} />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 flex items-center gap-3 border-b border-soft bg-surface/90 backdrop-blur sticky top-0 z-20 px-4">
+          <header className="h-16 flex items-center gap-3 border-b border-soft bg-surface/90 backdrop-blur-xl sticky top-0 z-20 px-4 lg:h-[4.75rem] lg:px-6">
             <SidebarTrigger />
             <div className="flex-1 min-w-0">
               <Eyebrow>Business</Eyebrow>
-              <h1 className="text-base font-black tracking-tight truncate">{tabs.find((t) => t.id === tab)?.label}</h1>
+              <h1 className="text-base font-bold tracking-tight truncate">{tabs.find((t) => t.id === tab)?.label}</h1>
             </div>
             <button
               type="button"
               onClick={async () => { await signOut(firebaseAuth); location.href = "/auth"; }}
               aria-label="Sign out"
-              className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider text-brand/60 transition hover:bg-canvas hover:text-red-600"
+              className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-brand/60 transition hover:bg-canvas hover:text-red-600"
             >
               <LogOut className="size-4" />
               <span className="hidden sm:inline">Sign out</span>
@@ -109,11 +113,13 @@ function BusinessSidebarNav({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => voi
   return (
     <Sidebar>
       <SidebarContent>
-        <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
-          <div className="size-9 rounded-xl bg-accent grid place-items-center text-white shadow-lg shadow-accent/20"><Briefcase className="size-4" /></div>
-          <div>
-            <Eyebrow>Fixrly</Eyebrow>
-            <div className="text-sm font-black tracking-tight">Business</div>
+        <div className="px-4 pt-6 pb-4">
+          <Link to="/" className="flex items-center gap-1" aria-label="Fixrly home">
+            <LogoMark className="size-9 text-accent" />
+            <span className="text-2xl font-extrabold leading-none tracking-tight text-white">fixrly</span>
+          </Link>
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white/80">
+            <Briefcase className="size-3.5" /> Business
           </div>
         </div>
         <SidebarGroup>
@@ -124,7 +130,11 @@ function BusinessSidebarNav({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => voi
                 const Icon = t.icon;
                 return (
                   <SidebarMenuItem key={t.id}>
-                    <SidebarMenuButton isActive={tab === t.id} onClick={() => selectTab(t.id)}>
+                    <SidebarMenuButton
+                        isActive={tab === t.id}
+                        onClick={() => selectTab(t.id)}
+                        className="h-10 data-[active=true]:bg-gradient-to-r data-[active=true]:from-accent data-[active=true]:to-orange-500 data-[active=true]:text-white data-[active=true]:shadow-lg data-[active=true]:shadow-accent/30"
+                      >
                       <Icon className="size-4" />
                       <span>{t.label}</span>
                     </SidebarMenuButton>
@@ -216,7 +226,7 @@ function JobsTab({ providerId, canManage, myRole, myId }: { providerId: string; 
             <button
               key={f.id}
               onClick={() => setStaffFilter(f.id)}
-              className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase ${staffFilter === f.id ? "bg-accent text-white" : "bg-surface border border-brand/10 text-brand/60"}`}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${staffFilter === f.id ? "bg-accent text-white" : "bg-surface border border-brand/10 text-brand/60"}`}
             >
               {f.label}
             </button>
@@ -237,7 +247,7 @@ function JobsTab({ providerId, canManage, myRole, myId }: { providerId: string; 
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">
               <StatusBadge status={b.status} />
-              {b.total_price != null && <span className="font-mono font-bold text-xs text-accent">{formatMoney(b.total_price, currency)}</span>}
+              {b.total_price != null && <span className="font-bold text-xs text-accent">{formatMoney(b.total_price, currency)}</span>}
               <span className="text-[10px] text-brand/50">{b.assignee?.full_name ?? "Unassigned"}</span>
             </div>
           </div>
@@ -345,7 +355,7 @@ function StaffTab({ providerId, isOwner }: { providerId: string; isOwner: boolea
           <div className="flex items-center justify-between gap-3">
             <div>
               <Eyebrow>Team</Eyebrow>
-              <h2 className="mt-1 text-lg font-black tracking-tight">Invite staff</h2>
+              <h2 className="mt-1 text-lg font-bold tracking-tight">Invite staff</h2>
             </div>
             <PrimaryButton onClick={() => { setInviting(true); setInviteLink(null); }} className="py-2.5 px-4 text-xs">
               <Plus className="size-4" /> Invite
@@ -402,7 +412,7 @@ function StaffTab({ providerId, isOwner }: { providerId: string; isOwner: boolea
               {s.status === "invited" && s.invite_token && (
                 <button
                   onClick={() => copyLink(`${window.location.origin}/join-team/${s.invite_token}`)}
-                  className="mt-1 text-[10px] font-bold uppercase text-accent flex items-center gap-1"
+                  className="mt-1 text-xs font-semibold capitalize text-accent flex items-center gap-1"
                 >
                   <Copy className="size-3" /> Copy invite link
                 </button>
@@ -410,26 +420,26 @@ function StaffTab({ providerId, isOwner }: { providerId: string; isOwner: boolea
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">
               <StatusBadge status={s.status} />
-              <span className="text-[10px] font-bold uppercase text-brand/40">{s.role}</span>
+              <span className="text-xs font-semibold capitalize text-brand/40">{s.role}</span>
             </div>
           </div>
           {isOwner && (
             <div className="mt-3 flex gap-1.5 flex-wrap">
               {s.role !== "dispatcher" ? (
-                <button onClick={() => setRoleFor(s.id, "dispatcher")} className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-canvas border border-brand/10 hover:border-brand/20">
+                <button onClick={() => setRoleFor(s.id, "dispatcher")} className="px-2.5 py-1.5 rounded-lg text-xs font-semibold capitalize bg-canvas border border-brand/10 hover:border-brand/20">
                   Make dispatcher
                 </button>
               ) : (
-                <button onClick={() => setRoleFor(s.id, "technician")} className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-canvas border border-brand/10 hover:border-brand/20">
+                <button onClick={() => setRoleFor(s.id, "technician")} className="px-2.5 py-1.5 rounded-lg text-xs font-semibold capitalize bg-canvas border border-brand/10 hover:border-brand/20">
                   Make technician
                 </button>
               )}
               {s.status === "removed" ? (
-                <button onClick={() => setStatus(s.id, "active")} className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-green-100 text-green-700 hover:bg-green-200">
+                <button onClick={() => setStatus(s.id, "active")} className="px-2.5 py-1.5 rounded-lg text-xs font-semibold capitalize bg-green-100 text-green-700 hover:bg-green-200">
                   Reactivate
                 </button>
               ) : s.status === "active" && (
-                <button onClick={() => setStatus(s.id, "removed")} className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-red-100 text-red-700 hover:bg-red-200">
+                <button onClick={() => setStatus(s.id, "removed")} className="px-2.5 py-1.5 rounded-lg text-xs font-semibold capitalize bg-red-100 text-red-700 hover:bg-red-200">
                   Revoke access
                 </button>
               )}
@@ -633,7 +643,7 @@ function InvoicesTab({ providerId, canManage }: { providerId: string; canManage:
         <Panel className="p-5 flex items-center justify-between gap-3">
           <div>
             <Eyebrow>Billing</Eyebrow>
-            <h2 className="mt-1 text-lg font-black tracking-tight">Invoices</h2>
+            <h2 className="mt-1 text-lg font-bold tracking-tight">Invoices</h2>
           </div>
           <PrimaryButton onClick={() => setCreating(true)} className="py-2.5 px-4 text-xs">
             <Plus className="size-4" /> Generate invoice
@@ -684,7 +694,7 @@ function InvoicesTab({ providerId, canManage }: { providerId: string; canManage:
               </label>
               <div className="flex flex-col items-end justify-end">
                 <Eyebrow>Total</Eyebrow>
-                <span className="font-mono font-black text-lg text-accent">{currencySymbol(currency)}{total.toFixed(2)}</span>
+                <span className="font-extrabold text-lg text-accent">{currencySymbol(currency)}{total.toFixed(2)}</span>
               </div>
             </div>
 
@@ -709,7 +719,7 @@ function InvoicesTab({ providerId, canManage }: { providerId: string; canManage:
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">
               <StatusBadge status={inv.status} />
-              <span className="font-mono font-bold text-sm text-accent">{formatMoney(inv.total, currency)}</span>
+              <span className="font-bold text-sm text-accent">{formatMoney(inv.total, currency)}</span>
             </div>
           </div>
           {canManage && inv.status !== "paid" && inv.status !== "void" && (

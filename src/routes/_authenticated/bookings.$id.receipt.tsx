@@ -6,6 +6,7 @@ import { formatMoney, useCurrency } from "@/lib/currency";
 import { getPaymentStatusLabel } from "@/lib/booking-payment";
 import { ArrowLeft, Printer } from "lucide-react";
 import { PageSpinner, EmptyState, PrimaryButton } from "@/components/ui-kit";
+import { LogoMark } from "@/components/Logo";
 
 export const Route = createFileRoute("/_authenticated/bookings/$id/receipt")({
   head: () => ({ meta: [{ title: "Receipt — Fixrly" }, { name: "robots", content: "noindex" }] }),
@@ -40,7 +41,7 @@ function ReceiptPage() {
       <div className="min-h-screen bg-canvas px-4 py-10">
         <EmptyState title="Receipt not found" description="This booking doesn't exist or you don't have access to it." />
         <div className="mt-4 text-center">
-          <Link to="/bookings" className="text-sm font-bold text-accent">Back to bookings</Link>
+          <Link to="/bookings" className="text-sm font-semibold text-accent">Back to bookings</Link>
         </div>
       </div>
     );
@@ -49,84 +50,88 @@ function ReceiptPage() {
   const issuedAt = new Date(booking.created_at).toLocaleString();
   const scheduledAt = new Date(booking.scheduled_at).toLocaleString();
 
+  const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div className="flex justify-between gap-4 py-2 text-sm">
+      <span className="text-slate-500">{label}</span>
+      <span className="text-right font-medium text-slate-900">{children}</span>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-canvas px-4 py-6">
-      <style>{`@media print { .no-print { display: none !important; } body { background: white !important; } }`}</style>
+      <style>{`@media print { .no-print { display: none !important; } body { background: white !important; padding: 0 !important; } }`}</style>
 
-      <div className="no-print mx-auto max-w-lg mb-4 flex items-center justify-between">
-        <Link to="/bookings" className="inline-flex items-center gap-1.5 text-sm font-bold text-brand/60 hover:text-brand">
-          <ArrowLeft className="size-4" /> Back
+      <div className="no-print mx-auto mb-4 flex max-w-lg items-center justify-between">
+        <Link to="/bookings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand/60 hover:text-brand">
+          <ArrowLeft className="size-4" /> Back to bookings
         </Link>
-        <PrimaryButton onClick={() => window.print()} className="px-4 py-2 text-xs rounded-xl">
+        <PrimaryButton onClick={() => window.print()} className="px-4 py-2 text-xs">
           <Printer className="size-3.5" /> Print
         </PrimaryButton>
       </div>
 
-      <div className="light-surface mx-auto max-w-lg rounded-[2rem] border border-soft bg-white/95 p-8 shadow-soft">
-        <div className="flex items-center justify-between border-b border-dashed border-brand/15 pb-5">
-          <div>
-            <div className="text-xl font-black tracking-tight">Fixrly</div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-brand/40">Payment receipt</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand/40">Booking ID</div>
-            <div className="font-mono font-bold text-accent">{booking.booking_number}</div>
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-brand/40">Issued</div>
-            <div className="mt-0.5 font-medium">{issuedAt}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-brand/40">Booking status</div>
-            <div className="mt-0.5 font-medium capitalize">{booking.status}</div>
-          </div>
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-brand/40">Customer</div>
-            <div className="mt-0.5 font-medium">{booking.customer?.full_name ?? "—"}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-brand/40">Provider</div>
-            <div className="mt-0.5 font-medium">{booking.provider?.business_name ?? "—"}</div>
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-2xl bg-canvas p-4 space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-brand/60">Service</span><span className="font-medium">{booking.category?.icon} {booking.category?.name ?? "Service"}</span></div>
-          <div className="flex justify-between"><span className="text-brand/60">Scheduled</span><span className="font-medium">{scheduledAt}</span></div>
-          <div className="flex justify-between"><span className="text-brand/60">Duration</span><span className="font-medium">{booking.duration_hours}h</span></div>
-          <div className="flex justify-between"><span className="text-brand/60">Address</span><span className="font-medium text-right">{booking.address}</span></div>
-        </div>
-
-        <div className="mt-6 border-t border-dashed border-brand/15 pt-5 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-brand/60">Payment status</span>
-            <span className="font-bold">{getPaymentStatusLabel(booking.payment_status)}</span>
-          </div>
-          {booking.payment_reference && (
-            <div className="flex justify-between text-sm">
-              <span className="text-brand/60">Payment reference</span>
-              <span className="font-mono text-xs">{booking.payment_reference}</span>
+      {/* Always light, in-app and on paper — it's a document. */}
+      <article className="light-surface mx-auto max-w-lg overflow-hidden rounded-2xl border border-soft bg-white shadow-[0_8px_30px_rgba(15,23,42,0.08)]">
+        <header className="flex items-center justify-between bg-[#0b1730] px-6 py-5 text-white">
+          <div className="flex items-center gap-1">
+            <LogoMark className="size-9 text-accent" />
+            <div>
+              <div className="text-xl font-extrabold leading-none tracking-tight">fixrly</div>
+              <div className="mt-1 text-[11px] font-medium text-white/60">Payment receipt</div>
             </div>
-          )}
-          {booking.paid_at && (
-            <div className="flex justify-between text-sm">
-              <span className="text-brand/60">Paid on</span>
-              <span className="font-medium">{new Date(booking.paid_at).toLocaleString()}</span>
-            </div>
-          )}
-          <div className="flex justify-between items-baseline pt-2">
-            <span className="text-sm font-bold uppercase tracking-wider text-brand/60">Total</span>
-            <span className="font-mono font-black text-2xl text-accent">
+          </div>
+          <div className="text-right">
+            <div className="text-[11px] text-white/60">Booking ID</div>
+            <div className="font-bold text-orange-300">#{booking.booking_number ?? booking.id.slice(0, 8)}</div>
+          </div>
+        </header>
+
+        <div className="p-6">
+          <div className="text-center">
+            <div className="text-xs font-medium text-slate-500">Total</div>
+            <div className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
               {formatMoney(booking.total_price, booking.payment_currency ?? currency)}
+            </div>
+            <span
+              className={`mt-2 inline-block rounded-full px-3 py-0.5 text-xs font-semibold ${
+                booking.payment_status === "paid" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"
+              }`}
+            >
+              {getPaymentStatusLabel(booking.payment_status)}
             </span>
           </div>
-        </div>
 
-        <p className="mt-6 text-center text-[10px] text-brand/40">Thank you for using Fixrly. Keep this receipt for your records.</p>
-      </div>
+          <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-4 text-sm">
+            <div>
+              <div className="text-xs text-slate-500">Customer</div>
+              <div className="mt-0.5 font-semibold text-slate-900">{booking.customer?.full_name ?? "—"}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-slate-500">Provider</div>
+              <div className="mt-0.5 font-semibold text-slate-900">{booking.provider?.business_name ?? "—"}</div>
+            </div>
+          </div>
+
+          <div className="mt-5 divide-y divide-dashed divide-slate-200">
+            <Row label="Service">{booking.category?.name ?? "Service"}</Row>
+            <Row label="Scheduled">{scheduledAt}</Row>
+            <Row label="Duration">{booking.duration_hours}h</Row>
+            <Row label="Address">{booking.address}</Row>
+            <Row label="Booking status">
+              <span className="capitalize">{String(booking.status).replace(/_/g, " ")}</span>
+            </Row>
+            <Row label="Issued">{issuedAt}</Row>
+            {booking.paid_at && <Row label="Paid on">{new Date(booking.paid_at).toLocaleString()}</Row>}
+            {booking.payment_reference && (
+              <Row label="Payment reference">
+                <span className="break-all text-xs">{booking.payment_reference}</span>
+              </Row>
+            )}
+          </div>
+
+          <p className="mt-6 text-center text-xs text-slate-400">Thank you for using Fixrly. Keep this receipt for your records.</p>
+        </div>
+      </article>
     </div>
   );
 }

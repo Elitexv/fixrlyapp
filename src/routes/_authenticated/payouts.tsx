@@ -7,16 +7,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { listPaystackBanks, resolvePayoutAccount, savePayoutAccount } from "@/lib/withdrawals.functions";
 import { BottomNav } from "@/components/BottomNav";
 import { toast } from "sonner";
-import { Loader2, Landmark } from "lucide-react";
+import { Loader2, Landmark, Wallet, CheckCircle2, CircleAlert, ArrowUpRight } from "lucide-react";
+import { AppTopBar } from "@/components/AppTopBar";
 import { formatMoney, useCurrency } from "@/lib/currency";
 import { formatRelativeTime } from "@/lib/time";
 import {
-  PageHero,
   Panel,
-  Tile,
-  StatCard,
   StatusBadge,
-  Eyebrow,
   FormField,
   PrimaryButton,
   SecondaryButton,
@@ -156,13 +153,19 @@ function PayoutsPage() {
   if (!isProvider) {
     return (
       <div className="min-h-screen bg-canvas grid place-items-center px-6 pb-24">
-        <div className="text-center max-w-sm">
-          <h1 className="text-xl font-black tracking-tight">Payouts are for providers</h1>
-          <p className="text-sm text-brand/60 mt-2">Enable provider mode from your profile to earn and withdraw.</p>
-          <Link to="/profile" className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-accent px-5 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500">
-            Go to profile
+        <Panel className="max-w-sm p-8 text-center">
+          <span className="mx-auto grid size-14 place-items-center rounded-full bg-orange-50 text-accent dark:bg-orange-500/10">
+            <Wallet className="size-6" />
+          </span>
+          <h1 className="mt-4 text-xl font-bold tracking-tight">Payouts are for providers</h1>
+          <p className="text-sm text-brand/60 mt-2">List your services on Fixrly to earn and withdraw.</p>
+          <Link
+            to="/become-provider"
+            className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:brightness-105"
+          >
+            Become a Provider
           </Link>
-        </div>
+        </Panel>
         <BottomNav />
       </div>
     );
@@ -171,21 +174,39 @@ function PayoutsPage() {
   const showAccountForm = editingAccount || !payoutAccount;
 
   return (
-    <div className="min-h-screen bg-canvas pb-32">
-      <PageHero eyebrow="Payouts" title="Withdraw your earnings" description="Manage your payout bank account and request withdrawals from your available balance." />
+    <div className="min-h-screen bg-canvas pb-32 text-brand lg:pb-12">
+      <AppTopBar />
 
-      <main className="mx-auto max-w-3xl px-4 -mt-10 space-y-4">
-        <Panel>
-          <Eyebrow>Available to withdraw</Eyebrow>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <StatCard label="Available balance" value={formatMoney(balance, currency)} accent />
-            <StatCard label="Payout account" value={<span className="text-lg">{payoutAccount ? "Connected" : "Not set up"}</span>} />
+      <div className="mx-auto max-w-[1240px] lg:px-6 lg:pt-6">
+        <header className="relative overflow-hidden bg-[#0b1730] px-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-6 text-white lg:rounded-2xl lg:p-7">
+          <div className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full bg-accent/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-28 left-1/3 size-64 rounded-full bg-blue-500/15 blur-3xl" />
+          <div className="relative flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Payouts</p>
+              <h1 className="mt-1 text-2xl font-extrabold tracking-tight lg:text-3xl">Withdraw your earnings</h1>
+              <p className="mt-1 max-w-md text-sm text-white/70">Manage your payout bank account and request withdrawals from your available balance.</p>
+            </div>
+            <div className="flex w-full gap-3 sm:w-auto">
+              <div className="flex-1 rounded-xl bg-gradient-to-br from-[#ff5a1f] to-[#ff8a3d] px-5 py-3.5 shadow-lg shadow-accent/30 sm:flex-none">
+                <div className="text-xs font-medium text-white/85">Available balance</div>
+                <div className="mt-0.5 text-2xl font-extrabold tracking-tight">{formatMoney(balance, currency)}</div>
+              </div>
+              <div className="flex-1 rounded-xl bg-white/10 px-5 py-3.5 ring-1 ring-white/15 sm:flex-none">
+                <div className="text-xs font-medium text-white/70">Payout account</div>
+                <div className="mt-0.5 flex items-center gap-1.5 text-base font-bold">
+                  {payoutAccount ? <CheckCircle2 className="size-4 text-green-400" /> : <CircleAlert className="size-4 text-amber-300" />}
+                  {payoutAccount ? "Connected" : "Not set up"}
+                </div>
+              </div>
+            </div>
           </div>
-        </Panel>
+        </header>
 
+      <main className="grid grid-cols-1 items-start gap-4 px-4 pt-4 lg:grid-cols-2 lg:gap-5 lg:px-0 lg:pt-5">
         <Panel>
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-lg font-semibold">Payout bank account</h2>
+            <h2 className="text-base font-bold">Payout bank account</h2>
             {payoutAccount && !editingAccount && (
               <SecondaryButton type="button" onClick={() => setEditingAccount(true)} className="py-2 px-4 text-xs">
                 Change bank details
@@ -196,8 +217,10 @@ function PayoutsPage() {
           {accountLoading ? (
             <InlineSpinner />
           ) : !showAccountForm && payoutAccount ? (
-            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-canvas p-4">
-              <Landmark className="size-8 text-brand/40 shrink-0" />
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-soft bg-canvas p-4">
+              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10">
+                <Landmark className="size-5" />
+              </span>
               <div className="min-w-0">
                 <div className="text-sm font-bold text-brand truncate">{payoutAccount.bank_name}</div>
                 <div className="text-xs text-brand/60">{maskAccountNumber(payoutAccount.account_number)} · {payoutAccount.account_name}</div>
@@ -206,12 +229,12 @@ function PayoutsPage() {
           ) : (
             <div className="mt-5 space-y-4">
               <label className="block">
-                <Eyebrow className="mb-1.5">Bank</Eyebrow>
+                <span className="mb-1.5 block text-sm font-medium">Bank</span>
                 <select
                   value={bankCode}
                   onChange={(e) => { setBankCode(e.target.value); setResolvedName(null); }}
                   disabled={banksLoading}
-                  className="w-full bg-canvas rounded-xl border border-transparent py-2.5 px-3 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                  className="w-full bg-canvas rounded-xl border border-soft py-2.5 px-3.5 text-sm outline-none transition focus:border-accent/50 focus:ring-4 focus:ring-accent/10"
                 >
                   <option value="">{banksLoading ? "Loading banks…" : "Select a bank"}</option>
                   {banks.map((b) => (
@@ -225,11 +248,12 @@ function PayoutsPage() {
                 onChange={(v) => { setAccountNumber(v); setResolvedName(null); }}
                 placeholder="0123456789"
               />
-              <SecondaryButton type="button" onClick={verifyAccount} disabled={resolving} className="w-full uppercase tracking-[0.18em]">
+              <SecondaryButton type="button" onClick={verifyAccount} disabled={resolving} className="w-full">
                 {resolving ? <Loader2 className="size-4 animate-spin" /> : "Verify account"}
               </SecondaryButton>
               {resolvedName && (
-                <div className="rounded-xl bg-green-50 p-3 text-sm text-green-800">
+                <div className="flex items-center gap-2 rounded-xl bg-green-50 p-3 text-sm text-green-800 dark:bg-green-500/15 dark:text-green-300">
+                  <CheckCircle2 className="size-4 shrink-0" />
                   Account name: <span className="font-bold">{resolvedName}</span>
                 </div>
               )}
@@ -248,7 +272,7 @@ function PayoutsPage() {
         </Panel>
 
         <Panel as="form" onSubmit={requestWithdrawal}>
-          <h2 className="text-lg font-semibold">Request a withdrawal</h2>
+          <h2 className="text-base font-bold">Request a withdrawal</h2>
           {!payoutAccount ? (
             <p className="mt-4 text-sm text-brand/60">Add your payout bank account above before requesting a withdrawal.</p>
           ) : balance <= 0 ? (
@@ -269,30 +293,34 @@ function PayoutsPage() {
           )}
         </Panel>
 
-        <Panel>
-          <h2 className="text-lg font-semibold">Withdrawal history</h2>
+        <Panel className="lg:col-span-2">
+          <h2 className="text-base font-bold">Withdrawal history</h2>
           {history.length === 0 ? (
-            <EmptyState icon={Landmark} title="No withdrawals yet" description="Your withdrawal requests will show up here." />
+            <EmptyState icon={Landmark} title="No withdrawals yet" description="Your withdrawal requests will show up here." className="mt-4" />
           ) : (
-            <div className="mt-5 space-y-3">
+            <ul className="mt-3 divide-y divide-[var(--soft-border)]">
               {history.map((w: any) => (
-                <Tile key={w.id} className="hover:shadow-none">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-mono text-sm font-bold text-brand">{formatMoney(w.amount, w.currency)}</div>
-                      <div className="mt-1 text-xs text-brand/50">{formatRelativeTime(w.created_at)}</div>
+                <li key={w.id} className="py-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-orange-50 text-accent dark:bg-orange-500/10">
+                      <ArrowUpRight className="size-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold">{formatMoney(w.amount, w.currency)}</div>
+                      <div className="text-xs text-brand/50">{formatRelativeTime(w.created_at)}</div>
                     </div>
                     <StatusBadge status={w.status} />
                   </div>
                   {(w.status === "rejected" || w.status === "failed") && w.admin_notes && (
-                    <div className="mt-3 text-[11px] text-red-700 bg-red-50 rounded-lg p-2.5">Note: {w.admin_notes}</div>
+                    <div className="ml-[3.25rem] mt-2 rounded-lg bg-red-50 p-2.5 text-xs text-red-700 dark:bg-red-500/15 dark:text-red-300">Note: {w.admin_notes}</div>
                   )}
-                </Tile>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </Panel>
       </main>
+      </div>
 
       <BottomNav />
     </div>

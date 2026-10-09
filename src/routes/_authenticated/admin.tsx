@@ -9,6 +9,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { approveWithdrawal } from "@/lib/withdrawals.functions";
 import { GoogleMap } from "@/components/GoogleMap";
 import { toast } from "sonner";
+import { LogoMark } from "@/components/Logo";
 import { getPaymentStatusBadge, getPaymentStatusLabel } from "@/lib/booking-payment";
 import { formatMoney, useCurrency } from "@/lib/currency";
 import { formatRelativeTime } from "@/lib/time";
@@ -23,7 +24,7 @@ import {
   Check, X, FileText, IdCard, LayoutDashboard, Users, MapPin, Banknote,
   Briefcase, CalendarCheck, ClipboardList, Shield, ShieldOff, Power, CreditCard, Home, LogOut, Inbox,
 } from "lucide-react";
-import { Panel, Tile, StatCard, StatusBadge, Eyebrow, PrimaryButton, SecondaryButton, FormField, TextAreaField, EmptyState, PageSpinner, InlineSpinner, useNeutralSidebarSurface } from "@/components/ui-kit";
+import { Panel, Tile, StatCard, StatusBadge, Eyebrow, PrimaryButton, SecondaryButton, FormField, TextAreaField, EmptyState, PageSpinner, InlineSpinner, useAppSidebarSurface } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Fixrly" }, { name: "robots", content: "noindex" }] }),
@@ -48,18 +49,21 @@ function AdminPage() {
   const { data: roles = [], isLoading: rolesLoading } = useRoles(user);
   const isAdmin = roles.includes("admin");
   const [tab, setTab] = useState<Tab>("overview");
-  useNeutralSidebarSurface();
+  useAppSidebarSurface();
 
   if (rolesLoading) {
     return <PageSpinner />;
   }
   if (!isAdmin) {
     return (
-      <div className="min-h-screen grid place-items-center px-6 text-center">
-        <div>
-          <h1 className="text-xl font-black tracking-tight">Admins only</h1>
+      <div className="min-h-screen grid place-items-center bg-canvas px-6 text-center">
+        <div className="w-full max-w-sm rounded-2xl border border-soft bg-surface p-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+          <span className="mx-auto grid size-14 place-items-center rounded-full bg-orange-50 text-accent dark:bg-orange-500/10">
+            <Shield className="size-6" />
+          </span>
+          <h1 className="mt-4 text-xl font-bold tracking-tight">Admins only</h1>
           <p className="text-sm text-brand/60 mt-2">Ask a workspace admin to grant you the admin role.</p>
-          <Link to="/" className="mt-4 inline-flex items-center justify-center rounded-2xl bg-accent px-5 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500">
+          <Link to="/" className="mt-5 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-accent to-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:brightness-105">
             Home
           </Link>
         </div>
@@ -79,17 +83,17 @@ function AdminPage() {
         <AdminSidebarNav tab={tab} setTab={setTab} groups={groups} />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 flex items-center gap-3 border-b border-soft bg-surface/90 backdrop-blur sticky top-0 z-20 px-4">
+          <header className="h-16 flex items-center gap-3 border-b border-soft bg-surface/90 backdrop-blur-xl sticky top-0 z-20 px-4 lg:h-[4.75rem] lg:px-6">
             <SidebarTrigger />
             <div className="flex-1 min-w-0">
               <Eyebrow>Admin</Eyebrow>
-              <h1 className="text-base font-black tracking-tight truncate">{tabs.find((t) => t.id === tab)?.label}</h1>
+              <h1 className="text-base font-bold tracking-tight truncate">{tabs.find((t) => t.id === tab)?.label}</h1>
             </div>
             <button
               type="button"
               onClick={async () => { await signOut(firebaseAuth); location.href = "/auth"; }}
               aria-label="Sign out"
-              className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider text-brand/60 transition hover:bg-canvas hover:text-red-600"
+              className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-brand/60 transition hover:bg-canvas hover:text-red-600"
             >
               <LogOut className="size-4" />
               <span className="hidden sm:inline">Sign out</span>
@@ -132,11 +136,13 @@ function AdminSidebarNav({
   return (
     <Sidebar>
       <SidebarContent>
-        <div className="px-4 pt-5 pb-3 flex items-center gap-2.5">
-          <div className="size-9 rounded-xl bg-accent grid place-items-center text-white shadow-lg shadow-accent/20"><Shield className="size-4" /></div>
-          <div>
-            <Eyebrow>Fixrly</Eyebrow>
-            <div className="text-sm font-black tracking-tight">Admin Console</div>
+        <div className="px-4 pt-6 pb-4">
+          <Link to="/" className="flex items-center gap-1" aria-label="Fixrly home">
+            <LogoMark className="size-9 text-accent" />
+            <span className="text-2xl font-extrabold leading-none tracking-tight text-white">fixrly</span>
+          </Link>
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white/80">
+            <Shield className="size-3.5" /> Admin Console
           </div>
         </div>
         {groups.map((g) => (
@@ -148,7 +154,11 @@ function AdminSidebarNav({
                   const Icon = t.icon;
                   return (
                     <SidebarMenuItem key={t.id}>
-                      <SidebarMenuButton isActive={tab === t.id} onClick={() => selectTab(t.id)}>
+                      <SidebarMenuButton
+                        isActive={tab === t.id}
+                        onClick={() => selectTab(t.id)}
+                        className="h-10 data-[active=true]:bg-gradient-to-r data-[active=true]:from-accent data-[active=true]:to-orange-500 data-[active=true]:text-white data-[active=true]:shadow-lg data-[active=true]:shadow-accent/30"
+                      >
                         <Icon className="size-4" />
                         <span>{t.label}</span>
                       </SidebarMenuButton>
@@ -213,13 +223,13 @@ function OverviewTab() {
         <StatCard label="Reviews" value={stats?.reviews ?? 0} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-3xl bg-amber-500 p-5 text-white">
-          <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">Pending requests</div>
-          <div className="mt-2 font-mono font-black text-3xl">{stats?.pending ?? 0}</div>
+        <div className="rounded-2xl bg-amber-500 p-5 text-white">
+          <div className="text-xs font-medium text-white/80">Pending requests</div>
+          <div className="mt-2 font-extrabold text-3xl">{stats?.pending ?? 0}</div>
         </div>
-        <div className="rounded-3xl bg-accent p-5 text-white">
-          <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">Revenue (completed)</div>
-          <div className="mt-2 font-mono font-black text-3xl">{formatMoney(stats?.revenue ?? 0, currency)}</div>
+        <div className="rounded-2xl bg-accent p-5 text-white">
+          <div className="text-xs font-medium text-white/80">Revenue (completed)</div>
+          <div className="mt-2 font-extrabold text-3xl">{formatMoney(stats?.revenue ?? 0, currency)}</div>
         </div>
       </div>
     </div>
@@ -318,7 +328,7 @@ function SettingsTab() {
     <div className="space-y-4 max-w-2xl">
       <Panel className="p-5">
         <Eyebrow>Payment Provider</Eyebrow>
-        <h2 className="mt-1 text-lg font-black tracking-tight">Configure how customers pay</h2>
+        <h2 className="mt-1 text-lg font-bold tracking-tight">Configure how customers pay</h2>
         <p className="mt-1 text-sm text-brand/60">
           Live status: <span className={`font-bold ${form.payment_enabled ? "text-green-600" : "text-brand/60"}`}>
             {form.payment_enabled ? `${form.provider.toUpperCase()} · ${form.mode}` : "Payments off"}
@@ -492,12 +502,12 @@ function RequestsTab() {
           {r.bio && <p className="text-xs text-brand/70 line-clamp-2">{r.bio}</p>}
           <div className="flex gap-2 flex-wrap">
             {r.service_id_url && (
-              <button onClick={() => viewDoc(r.service_id_url)} className="text-[10px] font-bold uppercase flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-canvas border border-brand/10">
+              <button onClick={() => viewDoc(r.service_id_url)} className="text-xs font-semibold capitalize flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-canvas border border-brand/10">
                 <IdCard className="size-3" /> Service ID
               </button>
             )}
             {r.national_id_url && (
-              <button onClick={() => viewDoc(r.national_id_url)} className="text-[10px] font-bold uppercase flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-canvas border border-brand/10">
+              <button onClick={() => viewDoc(r.national_id_url)} className="text-xs font-semibold capitalize flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-canvas border border-brand/10">
                 <FileText className="size-3" /> National ID
               </button>
             )}
@@ -607,7 +617,7 @@ function WithdrawalsTab() {
           <div className="flex justify-between items-start gap-2">
             <div className="min-w-0">
               <div className="font-bold text-sm truncate">{w.provider?.business_name ?? "Provider"}</div>
-              <div className="font-mono text-sm font-bold text-accent">{formatMoney(w.amount, w.currency)}</div>
+              <div className="text-sm font-bold text-accent">{formatMoney(w.amount, w.currency)}</div>
               <div className="text-xs text-brand/60 truncate">
                 {w.payout_account?.bank_name} · {w.payout_account?.account_number ? maskAccountNumber(w.payout_account.account_number) : "—"}
               </div>
@@ -692,7 +702,7 @@ function UsersTab() {
               </div>
               <div className="flex gap-1 flex-wrap justify-end">
                 {(u.roles ?? []).map((r: string) => (
-                  <span key={r} className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-brand/5">{r}</span>
+                  <span key={r} className="text-[10px] font-semibold capitalize px-1.5 py-0.5 rounded bg-brand/5">{r}</span>
                 ))}
               </div>
             </div>
@@ -701,7 +711,7 @@ function UsersTab() {
                 <button
                   key={r}
                   onClick={() => setRole(u.id, r, !has(r))}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
                     has(r) ? "bg-accent text-white" : "bg-canvas border border-brand/10 text-brand/60 hover:border-brand/20"
                   }`}
                 >
@@ -752,7 +762,7 @@ function ProvidersTab() {
           </div>
           <button
             onClick={() => toggle(p.id, p.is_active)}
-            className={`flex items-center gap-1.5 shrink-0 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg transition ${p.is_active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
+            className={`flex items-center gap-1.5 shrink-0 text-xs font-semibold capitalize px-2.5 py-1.5 rounded-lg transition ${p.is_active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
           >
             <Power className="size-3" /> {p.is_active ? "Active" : "Suspended"}
           </button>
@@ -821,7 +831,7 @@ function MapTab() {
       <Panel as="form" onSubmit={saveKey} className="p-5 space-y-3">
         <div>
           <Eyebrow>Google Maps</Eyebrow>
-          <h2 className="mt-1 text-lg font-black tracking-tight">Manual API key</h2>
+          <h2 className="mt-1 text-lg font-bold tracking-tight">Manual API key</h2>
           <p className="text-xs text-brand/60 mt-1">
             Paste a browser-restricted Google Maps JavaScript API key. Leave blank to fall back to the built-in Lovable connector key.
           </p>
@@ -830,7 +840,7 @@ function MapTab() {
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="AIza..."
-          className="w-full rounded-xl bg-canvas border border-transparent py-2.5 px-3 text-sm font-mono outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+          className="w-full rounded-xl bg-canvas border border-soft py-2.5 px-3.5 text-sm font-mono outline-none transition focus:border-accent/50 focus:ring-4 focus:ring-accent/10"
         />
         <div className="flex items-center gap-2">
           <PrimaryButton type="submit" disabled={saving} loading={saving} className="py-2.5">
@@ -840,7 +850,7 @@ function MapTab() {
             <button
               type="button"
               onClick={() => { setApiKey(""); }}
-              className="rounded-2xl border border-brand/10 px-4 py-2.5 text-xs font-bold uppercase transition hover:bg-brand/5"
+              className="rounded-2xl border border-brand/10 px-4 py-2.5 text-xs font-semibold transition hover:bg-brand/5"
             >
               Clear
             </button>
@@ -848,7 +858,7 @@ function MapTab() {
         </div>
       </Panel>
 
-      <div className="h-[380px] rounded-3xl overflow-hidden border border-soft shadow-soft">
+      <div className="h-[380px] rounded-2xl overflow-hidden border border-soft shadow-soft">
         <GoogleMap
           center={center}
           zoom={6}
@@ -895,7 +905,7 @@ function BookingsTab() {
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase ${filter === s ? "bg-accent text-white" : "bg-surface border border-brand/10 text-brand/60"}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${filter === s ? "bg-accent text-white" : "bg-surface border border-brand/10 text-brand/60"}`}
           >
             {s}
           </button>
@@ -914,13 +924,13 @@ function BookingsTab() {
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">
               <StatusBadge status={b.status} />
-              {b.total_price && <span className="font-mono font-bold text-xs text-accent">{formatMoney(b.total_price, currency)}</span>}
-              <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${getPaymentStatusBadge(b.payment_status)}`}>
+              {b.total_price && <span className="font-bold text-xs text-accent">{formatMoney(b.total_price, currency)}</span>}
+              <span className={`text-xs font-semibold capitalize px-2.5 py-1 rounded-full ${getPaymentStatusBadge(b.payment_status)}`}>
                 {getPaymentStatusLabel(b.payment_status)}
               </span>
               {b.payment_reference && <span className="text-[10px] text-brand/50">Ref: {b.payment_reference}</span>}
               {b.payment_status === "pending" && (
-                <button onClick={() => markPayment(b.id)} className="rounded-lg bg-green-600 px-2.5 py-1.5 text-[10px] font-bold uppercase text-white transition hover:bg-green-500">
+                <button onClick={() => markPayment(b.id)} className="rounded-lg bg-green-600 px-2.5 py-1.5 text-xs font-semibold capitalize text-white transition hover:bg-green-500">
                   Mark paid
                 </button>
               )}
