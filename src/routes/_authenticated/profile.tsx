@@ -148,7 +148,7 @@ function ProfilePage() {
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-6">
           <main className="space-y-4">
             {/* ---------- Identity ---------- */}
-            <section className="relative overflow-hidden rounded-2xl bg-[#0b1730] text-white shadow-[0_18px_40px_rgba(11,23,48,0.25)]">
+            <section className="relative overflow-hidden bg-[#0b1730] text-white max-lg:-mx-4 max-lg:-mt-4 max-lg:pt-[env(safe-area-inset-top)] lg:rounded-2xl lg:shadow-[0_18px_40px_rgba(11,23,48,0.25)]">
               <div className="pointer-events-none absolute -right-16 -top-20 size-72 rounded-full bg-accent/20 blur-2xl" />
               <div className="pointer-events-none absolute -bottom-24 right-40 size-56 rounded-full bg-blue-500/15 blur-2xl" />
               <div className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-7">

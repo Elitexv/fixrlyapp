@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { buildBookingPaymentData, getBookingPaymentSettings } from "@/lib/booking-payment";
 import { formatMoney, useCurrency } from "@/lib/currency";
 import { CategoryIcon } from "@/components/CategoryVisual";
+import { DesktopSidebar } from "@/components/BottomNav";
+import { AppTopBar } from "@/components/AppTopBar";
 import { PageSpinner } from "@/components/ui-kit";
 import { cn } from "@/lib/utils";
 
@@ -160,12 +162,15 @@ function BookPage() {
 
   return (
     <div className="min-h-screen bg-canvas pb-28 text-brand">
-      <header className="relative overflow-hidden bg-[#0b1730] text-white">
+      <DesktopSidebar />
+      <AppTopBar />
+      <div className="mx-auto max-w-2xl lg:pt-6">
+      <header className="relative overflow-hidden bg-[#0b1730] text-white lg:rounded-2xl">
         {provider.photo_urls?.[0] && (
           <img src={provider.photo_urls[0]} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b1730] via-[#0b1730]/90 to-[#0b1730]/50" />
-        <div className="relative mx-auto max-w-2xl px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-5">
+        <div className="relative mx-auto max-w-2xl px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-5 lg:px-7 lg:pt-6 lg:pb-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -209,8 +214,9 @@ function BookPage() {
           </div>
         </div>
       </header>
+      </div>
 
-      <form onSubmit={submit} className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
+      <form onSubmit={submit} className="mx-auto max-w-2xl space-y-4 px-4 pt-4 lg:px-0">
         {categories.length > 0 && (
           <section className={card} aria-labelledby="choose-service">
             <h2 id="choose-service" className="mb-3 text-base font-bold">Choose a service</h2>
@@ -357,7 +363,7 @@ function BookPage() {
         </section>
       </form>
 
-      <div className="light-surface fixed inset-x-0 bottom-0 z-40 border-t border-soft bg-white/95 p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] shadow-[0_-8px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <div className="light-surface fixed inset-x-0 bottom-0 z-40 lg:left-[16.5rem] border-t border-soft bg-white/95 p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] shadow-[0_-8px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-2xl items-center gap-2.5">
           <button
             type="button"

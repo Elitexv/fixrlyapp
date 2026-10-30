@@ -341,7 +341,7 @@ function Home() {
       </div>
 
       {searchOpen && query.trim() && (
-        <div className="light-surface absolute inset-x-0 top-[calc(100%+0.5rem)] z-40 max-h-[70vh] overflow-y-auto rounded-2xl border border-soft bg-white shadow-soft">
+        <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-40 max-h-[70vh] overflow-y-auto rounded-2xl border border-soft bg-surface text-brand shadow-2xl shadow-black/15">
           {searchSuggestions.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <SearchX className="size-5 text-brand/30" />
@@ -375,7 +375,7 @@ function Home() {
                     setSearchOpen(false);
                     scrollToProviders();
                   }}
-                  className="w-full border-t border-soft py-2.5 text-center text-xs font-bold uppercase tracking-wider text-accent hover:bg-brand/5"
+                  className="w-full border-t border-soft py-2.5 text-center text-sm font-semibold text-accent hover:bg-brand/5"
                 >
                   See all {filtered.length} results
                 </button>
@@ -425,7 +425,7 @@ function Home() {
                 <ChevronRight className="size-4 text-brand/50 lg:hidden" /><ChevronDown className="hidden size-4 text-brand/50 lg:block" />
               </button>
             ) : (
-              <Link to="/auth" className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:bg-orange-500">
+              <Link to="/auth" className="rounded-full bg-gradient-to-r from-accent to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:brightness-105">
                 Sign in
               </Link>
             )}
@@ -544,7 +544,7 @@ function Home() {
                 >
                   {geoLoading ? <Loader2 className="size-4 animate-spin" /> : <LocateFixed className="size-4" />}
                 </button>
-                <button type="submit" disabled={geoLoading} className="rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-orange-500 disabled:opacity-60">
+                <button type="submit" disabled={geoLoading} className="rounded-lg bg-gradient-to-r from-accent to-orange-500 px-3.5 py-2 text-sm font-semibold text-white transition hover:brightness-105 disabled:opacity-60">
                   Search
                 </button>
               </form>
@@ -663,7 +663,7 @@ function Home() {
             {!user ? (
               <div className="mt-4 rounded-xl border border-dashed border-brand/10 px-4 py-8 text-center">
                 <p className="text-sm text-brand/60">Sign in to see and track your bookings.</p>
-                <Link to="/auth" className="mt-3 inline-flex rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-500">
+                <Link to="/auth" className="mt-3 inline-flex rounded-xl bg-gradient-to-r from-accent to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-accent/20 transition hover:brightness-105">
                   Sign in
                 </Link>
               </div>
@@ -709,7 +709,9 @@ function Home() {
             <h2 id="providers-heading" className="text-lg font-bold">
               {coords ? "Nearest to you" : "Top providers"}
             </h2>
-            <span className="font-mono text-xs font-bold uppercase text-brand/40">{filtered.length} results</span>
+            <span className="text-xs font-semibold text-brand/50">
+              {filtered.length} {filtered.length === 1 ? "result" : "results"}
+            </span>
           </div>
 
           {isLoading ? (

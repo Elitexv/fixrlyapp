@@ -26,34 +26,34 @@ import { cn } from "@/lib/utils";
 // somewhere relevant instead of just sitting there as read-only text.
 function notificationVisual(type: string): { icon: typeof Bell; className: string } {
   if (type.startsWith("booking_status_accepted") || type === "booking_status_completed") {
-    return { icon: CheckCircle2, className: "bg-green-50 text-green-600" };
+    return { icon: CheckCircle2, className: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" };
   }
   if (type === "booking_status_rejected" || type === "booking_status_cancelled") {
-    return { icon: XCircle, className: "bg-red-50 text-red-600" };
+    return { icon: XCircle, className: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" };
   }
   if (type === "booking_status_on_the_way") {
-    return { icon: Navigation, className: "bg-orange-50 text-orange-600" };
+    return { icon: Navigation, className: "bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400" };
   }
   if (type === "booking_created" || type === "booking_requested") {
-    return { icon: Calendar, className: "bg-blue-50 text-blue-600" };
+    return { icon: Calendar, className: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" };
   }
   if (type === "new_message") {
-    return { icon: MessageSquare, className: "bg-purple-50 text-purple-600" };
+    return { icon: MessageSquare, className: "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400" };
   }
   if (type === "provider_approved") {
-    return { icon: ShieldCheck, className: "bg-green-50 text-green-600" };
+    return { icon: ShieldCheck, className: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" };
   }
   if (type === "provider_rejected") {
-    return { icon: ShieldX, className: "bg-red-50 text-red-600" };
+    return { icon: ShieldX, className: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" };
   }
   if (type === "withdrawal_paid") {
-    return { icon: Wallet, className: "bg-green-50 text-green-600" };
+    return { icon: Wallet, className: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" };
   }
   if (type === "withdrawal_failed" || type === "withdrawal_rejected") {
-    return { icon: AlertTriangle, className: "bg-red-50 text-red-600" };
+    return { icon: AlertTriangle, className: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" };
   }
   if (type === "withdrawal_requested") {
-    return { icon: Wallet, className: "bg-amber-50 text-amber-600" };
+    return { icon: Wallet, className: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" };
   }
   return { icon: Bell, className: "bg-brand/5 text-brand/60" };
 }
@@ -146,12 +146,12 @@ export function NotificationsBell({ className }: { className?: string }) {
           <div
             role="dialog"
             aria-label="Notifications"
-            className="light-surface absolute right-0 top-12 z-30 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-3xl border border-soft bg-white shadow-soft"
+            className="absolute right-0 top-12 z-30 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-soft bg-surface text-brand shadow-2xl shadow-black/15"
           >
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-brand/5">
-              <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-brand/40">Notifications</span>
+              <span className="text-base font-bold">Notifications</span>
               {notifications.length > 0 && (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-brand/30">{notifications.length}</span>
+                <span className="rounded-full bg-canvas px-2 py-0.5 text-[11px] font-semibold text-brand/55">{notifications.length}</span>
               )}
             </div>
             <div className="max-h-96 overflow-y-auto">

@@ -47,12 +47,12 @@ function JoinTeamPage() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas grid place-items-center px-6 text-center">
-      <div className="max-w-sm">
-        <div className="mx-auto size-14 rounded-2xl bg-accent grid place-items-center text-white shadow-lg shadow-accent/20 mb-4">
+    <div className="min-h-screen bg-canvas grid place-items-center px-6 text-center text-brand">
+      <div className="w-full max-w-sm rounded-2xl border border-soft bg-surface p-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+        <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-gradient-to-br from-orange-400 to-accent text-white shadow-lg shadow-accent/25">
           <Briefcase className="size-6" />
         </div>
-        <h1 className="text-xl font-black tracking-tight">Join your team</h1>
+        <h1 className="text-xl font-bold tracking-tight">Join your team</h1>
 
         {status === "checking" && <Loader2 className="size-5 animate-spin mx-auto mt-4 text-brand/40" />}
 

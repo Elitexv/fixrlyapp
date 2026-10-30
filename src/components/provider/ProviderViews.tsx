@@ -228,7 +228,7 @@ export function JobsView({
                       <div className="truncate font-semibold">{b.customer?.full_name ?? "Customer"}</div>
                       <div className="text-xs text-brand/55">{b.customer?.phone ?? "No phone on file"}</div>
                     </div>
-                    <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", getPaymentStatusBadge(b.payment_status))}>
+                    <span className={cn("whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold", getPaymentStatusBadge(b.payment_status))}>
                       {getPaymentStatusLabel(b.payment_status)}
                     </span>
                   </div>
@@ -262,7 +262,7 @@ export function JobsView({
                   </div>
                   {b.status === "pending" && (
                     <div className="grid grid-cols-2 gap-2">
-                      <button type="button" onClick={() => updateStatus(b.id, "accepted")} className="h-10 rounded-xl bg-accent font-semibold text-white transition hover:bg-orange-500">
+                      <button type="button" onClick={() => updateStatus(b.id, "accepted")} className="h-10 rounded-xl bg-gradient-to-r from-accent to-orange-500 font-semibold text-white shadow-md shadow-accent/20 transition hover:brightness-105">
                         Accept
                       </button>
                       <button type="button" onClick={() => updateStatus(b.id, "rejected")} className="h-10 rounded-xl border border-soft font-semibold transition hover:bg-canvas">

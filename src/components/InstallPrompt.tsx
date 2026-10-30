@@ -83,7 +83,7 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed inset-x-4 bottom-20 z-40 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[380px] animate-in slide-in-from-bottom-4 fade-in duration-300">
-      <div className="flex items-start gap-3 rounded-2xl border border-border bg-white p-4 shadow-xl shadow-black/10 dark:border-white/10 dark:bg-neutral-900">
+      <div className="flex items-start gap-3 rounded-2xl border border-soft bg-surface p-4 text-brand shadow-2xl shadow-black/15">
         <img src="/pwa-192x192.png" alt="" className="size-11 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold">Get the Fixrly app</p>

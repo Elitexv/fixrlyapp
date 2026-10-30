@@ -34,7 +34,7 @@ function PrivacyPage() {
           </Link>
           <div className="min-w-0">
             <Eyebrow>Legal</Eyebrow>
-            <h1 className="truncate text-base font-black tracking-tight">Privacy Policy</h1>
+            <h1 className="truncate text-base font-bold tracking-tight">Privacy Policy</h1>
           </div>
         </div>
       </StickyHeader>

@@ -38,7 +38,7 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-brand">404</h1>
+        <h1 className="text-7xl font-extrabold tracking-tight text-brand">404</h1>
         <h2 className="mt-4 text-xl font-semibold">Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           The page you're looking for doesn't exist.
@@ -46,7 +46,7 @@ function NotFoundComponent() {
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/20 hover:opacity-90"
+            className="inline-flex items-center rounded-xl bg-gradient-to-r from-accent to-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:brightness-105"
           >
             Go home
           </Link>
@@ -85,13 +85,13 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
               router.invalidate();
               reset();
             }}
-            className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/20"
+            className="rounded-xl bg-gradient-to-r from-accent to-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:brightness-105"
           >
             Try again
           </button>
           <a
             href="/"
-            className="light-surface rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-medium"
+            className="rounded-xl border border-soft bg-surface px-5 py-2.5 text-sm font-semibold transition hover:bg-canvas"
           >
             Go home
           </a>

@@ -76,7 +76,7 @@ export function AppTopBar() {
               <ChevronDown className="size-4 text-brand/50" />
             </button>
           ) : (
-            <Link to="/auth" className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:bg-orange-500">
+            <Link to="/auth" className="rounded-full bg-gradient-to-r from-accent to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:brightness-105">
               Sign in
             </Link>
           )}

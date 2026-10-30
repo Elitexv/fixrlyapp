@@ -673,7 +673,7 @@ function DashboardPage() {
                           </div>
                           <div className="flex flex-col items-end gap-1">
                             <StatusBadge status={b.status} />
-                            <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", getPaymentStatusBadge(b.payment_status))}>
+                            <span className={cn("whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold", getPaymentStatusBadge(b.payment_status))}>
                               {getPaymentStatusLabel(b.payment_status)}
                             </span>
                           </div>
@@ -685,7 +685,7 @@ function DashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() => updateStatus(b.id, "accepted")}
-                                  className="rounded-lg bg-accent px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-500"
+                                  className="rounded-lg bg-gradient-to-r from-accent to-orange-500 px-4 py-1.5 text-xs font-semibold text-white shadow-sm shadow-accent/20 transition hover:brightness-105"
                                 >
                                   Accept
                                 </button>

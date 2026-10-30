@@ -110,10 +110,19 @@ export function ProviderAvatar({
   const candidates = [avatarUrl, photoUrl].filter((u): u is string => !!u);
   const [failed, setFailed] = React.useState(0);
   const image = candidates[failed];
+  // On server-rendered pages the <img> can finish failing before React
+  // hydrates and attaches onError, so that event is missed. Check the
+  // element's state once mounted (and whenever the URL changes) as well.
+  const imgRef = React.useRef<HTMLImageElement>(null);
+  React.useEffect(() => {
+    const el = imgRef.current;
+    if (el && el.complete && el.naturalWidth === 0) setFailed((n) => n + 1);
+  }, [image]);
   return (
     <div className={cn("shrink-0 overflow-hidden bg-canvas grid place-items-center font-bold text-brand/40", className)}>
       {image ? (
         <img
+          ref={imgRef}
           key={image}
           src={image}
           alt=""

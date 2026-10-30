@@ -96,7 +96,7 @@ export function AppSidebar({
           <p className="mt-1 text-sm text-white/70">Our support team is here 24/7</p>
           <a
             href={`mailto:${SUPPORT_EMAIL}`}
-            className="mt-4 flex items-center justify-center rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:bg-orange-500"
+            className="mt-4 flex items-center justify-center rounded-xl bg-gradient-to-r from-accent to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:brightness-105"
           >
             Contact Support
           </a>

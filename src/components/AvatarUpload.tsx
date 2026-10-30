@@ -46,7 +46,7 @@ export function AvatarUpload({
 
   return (
     <div className={cn("relative inline-block shrink-0", className)}>
-      <div className={cn("size-20 rounded-3xl bg-accent/10 overflow-hidden grid place-items-center text-accent text-2xl font-black", innerClassName)}>
+      <div className={cn("size-20 rounded-2xl bg-accent/10 overflow-hidden grid place-items-center text-accent text-2xl font-bold", innerClassName)}>
         {avatarUrl ? <img src={avatarUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : label}
       </div>
       <button

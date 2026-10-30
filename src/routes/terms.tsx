@@ -34,7 +34,7 @@ function TermsPage() {
           </Link>
           <div className="min-w-0">
             <Eyebrow>Legal</Eyebrow>
-            <h1 className="truncate text-base font-black tracking-tight">Terms and Conditions</h1>
+            <h1 className="truncate text-base font-bold tracking-tight">Terms and Conditions</h1>
           </div>
         </div>
       </StickyHeader>

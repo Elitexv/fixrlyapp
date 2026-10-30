@@ -81,7 +81,7 @@ async function completeSignIn(user: FirebaseUser, opts: { fullName?: string | nu
   if (error) throw error;
 }
 
-const fieldWrap = "light-surface flex items-center gap-2.5 bg-white rounded-2xl py-3 px-3.5 shadow-soft transition focus-within:ring-2 focus-within:ring-accent/30";
+const fieldWrap = "flex items-center gap-2.5 rounded-xl border border-soft bg-surface py-3 px-3.5 shadow-sm transition focus-within:border-accent/50 focus-within:ring-4 focus-within:ring-accent/10";
 const fieldInput = "w-full bg-transparent text-sm outline-none placeholder:text-brand/40";
 
 const HIGHLIGHTS = [
@@ -173,7 +173,7 @@ function AuthPage() {
         </div>
 
         <div className="relative">
-          <h2 className="text-3xl font-black leading-tight tracking-tight">
+          <h2 className="text-3xl font-extrabold leading-tight tracking-tight">
             Local service pros,<br />booked in minutes.
           </h2>
           <div className="mt-8 space-y-4">
@@ -203,23 +203,23 @@ function AuthPage() {
             <button
               type="button"
               onClick={() => { setMode("signin"); setResetSent(false); }}
-              className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand/50 hover:text-brand"
+              className="mb-4 flex items-center gap-1.5 text-sm font-medium text-brand/60 hover:text-brand"
             >
               <ChevronLeft className="size-3.5" /> Back to sign in
             </button>
           ) : (
-            <div className="mx-auto mb-6 flex max-w-[280px] gap-1 rounded-2xl bg-brand/5 p-1.5">
+            <div className="mx-auto mb-6 flex max-w-[280px] gap-1 rounded-xl border border-soft bg-canvas p-1">
               <button
                 type="button"
                 onClick={() => setMode("signin")}
-                className={`flex-1 rounded-xl py-2 text-xs font-bold uppercase tracking-wider transition ${mode === "signin" ? "light-surface bg-white text-brand shadow-soft" : "text-brand/50 hover:text-brand/70"}`}
+                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${mode === "signin" ? "bg-surface text-accent shadow-sm" : "text-brand/55 hover:text-brand"}`}
               >
                 Sign in
               </button>
               <button
                 type="button"
                 onClick={() => setMode("signup")}
-                className={`flex-1 rounded-xl py-2 text-xs font-bold uppercase tracking-wider transition ${mode === "signup" ? "light-surface bg-white text-brand shadow-soft" : "text-brand/50 hover:text-brand/70"}`}
+                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${mode === "signup" ? "bg-surface text-accent shadow-sm" : "text-brand/55 hover:text-brand"}`}
               >
                 Sign up
               </button>
@@ -227,7 +227,7 @@ function AuthPage() {
           )}
 
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-black tracking-tight">
+            <h1 className="text-2xl font-extrabold tracking-tight">
               {mode === "signin" ? "Welcome back" : mode === "signup" ? "Create your account" : "Reset your password"}
             </h1>
             <p className="text-sm text-brand/60 mt-1">
@@ -241,7 +241,7 @@ function AuthPage() {
 
           {mode === "forgot" ? (
             resetSent ? (
-              <div className="light-surface rounded-[2rem] bg-white p-6 text-center shadow-soft">
+              <div className="rounded-2xl border border-soft bg-surface shadow-[0_8px_30px_rgba(15,23,42,0.06)] p-6 text-center">
                 <p className="text-sm text-brand/70">
                   If an account exists for <span className="font-semibold">{email}</span>, a reset link is on its way. Check your inbox (and spam folder).
                 </p>
@@ -261,7 +261,7 @@ function AuthPage() {
             <div className="space-y-4">
               <button
                 onClick={handleGoogle}
-                className="light-surface flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold shadow-soft transition hover:bg-canvas"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-soft bg-surface px-4 py-3 text-sm font-semibold shadow-sm transition hover:bg-canvas"
               >
                 <svg className="size-4" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.4 5.4 2.5 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.6c0-1.7-.2-3.3-.5-4.9H24v9.3h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.3 28.7c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7l-7.8-6.1C.8 16.5 0 20.1 0 24s.8 7.5 2.5 10.8l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.7-3.7-13.7-8.9l-7.8 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
                 Continue with Google
@@ -269,7 +269,7 @@ function AuthPage() {
 
               <div className="flex items-center gap-3">
                 <div className="h-px bg-border flex-1" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-brand/40">or</span>
+                <span className="text-xs text-brand/45">or</span>
                 <div className="h-px bg-border flex-1" />
               </div>
 
@@ -319,7 +319,7 @@ function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setRole("customer")}
-                      className={`flex flex-col items-center gap-2 rounded-2xl border-2 py-4 text-xs font-bold uppercase tracking-wider transition ${role === "customer" ? "border-accent bg-accent/5 text-accent" : "light-surface border-transparent bg-white text-brand/60 shadow-soft hover:text-brand"}`}
+                      className={`flex flex-col items-center gap-2 rounded-xl border-2 py-4 text-sm font-semibold transition ${role === "customer" ? "border-accent bg-orange-50/70 text-accent dark:bg-orange-500/10" : "border-soft bg-surface text-brand/60 shadow-sm hover:text-brand"}`}
                     >
                       <Home className="size-5" />
                       I need services
@@ -327,7 +327,7 @@ function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setRole("provider")}
-                      className={`flex flex-col items-center gap-2 rounded-2xl border-2 py-4 text-xs font-bold uppercase tracking-wider transition ${role === "provider" ? "border-accent bg-accent/5 text-accent" : "light-surface border-transparent bg-white text-brand/60 shadow-soft hover:text-brand"}`}
+                      className={`flex flex-col items-center gap-2 rounded-xl border-2 py-4 text-sm font-semibold transition ${role === "provider" ? "border-accent bg-orange-50/70 text-accent dark:bg-orange-500/10" : "border-soft bg-surface text-brand/60 shadow-sm hover:text-brand"}`}
                     >
                       <Briefcase className="size-5" />
                       I offer services

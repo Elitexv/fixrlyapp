@@ -57,7 +57,7 @@ function ResetPasswordPage() {
     return (
       <div className="min-h-screen bg-canvas grid place-items-center px-4 text-center">
         <div>
-          <h1 className="text-xl font-black">Reset link expired</h1>
+          <h1 className="text-xl font-bold tracking-tight">Reset link expired</h1>
           <p className="text-sm text-brand/60 mt-2">Please request a new password reset link and try again.</p>
           <PrimaryButton onClick={() => navigate({ to: "/auth" })} className="mt-4 inline-flex">
             Back to sign in
@@ -75,14 +75,14 @@ function ResetPasswordPage() {
     <div className="min-h-screen bg-canvas grid place-items-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-6">
-          <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-accent/10">
+          <span className="mx-auto grid size-12 place-items-center rounded-full bg-orange-50 dark:bg-orange-500/10">
             <LogoMark className="size-6 text-accent" />
           </span>
-          <h1 className="mt-3 text-2xl font-black tracking-tight">Set a new password</h1>
+          <h1 className="mt-3 text-2xl font-extrabold tracking-tight">Set a new password</h1>
           <p className="text-sm text-brand/60 mt-1">Choose a new password for your account.</p>
         </div>
 
-        <div className="light-surface bg-white/95 p-6 rounded-[2rem] border border-soft shadow-soft">
+        <div className="rounded-2xl border border-soft bg-surface shadow-[0_8px_30px_rgba(15,23,42,0.06)] p-6">
           <form onSubmit={submit} className="space-y-3">
             <TextField
               type="password"

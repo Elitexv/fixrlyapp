@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
+import { AppTopBar } from "@/components/AppTopBar";
 import { useSession } from "@/lib/session";
 import {
   fetchConversationMessages,
@@ -189,24 +190,25 @@ function MessagesPage() {
   const quickReplies = isProviderSide ? PROVIDER_QUICK_REPLIES : CUSTOMER_QUICK_REPLIES;
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-canvas">
-      <header className="shrink-0 border-b border-brand/5 bg-surface px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-brand/40">Messages</div>
-            <h1 className="text-xl font-black">Chat</h1>
-          </div>
-          <Link to="/" className="text-sm font-bold text-accent lg:hidden">Home</Link>
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-canvas text-brand">
+      <div className="shrink-0">
+        <AppTopBar />
+      </div>
+      <header className="relative shrink-0 overflow-hidden bg-[#0b1730] px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-4 text-white lg:hidden">
+        <div className="pointer-events-none absolute -right-16 -top-24 size-60 rounded-full bg-accent/25 blur-3xl" />
+        <div className="relative">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Messages</p>
+          <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight">Chat</h1>
         </div>
       </header>
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 min-h-0 flex-col gap-3 overflow-hidden px-4 py-4 pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:flex-row lg:pb-6">
-        <aside className={`${mobileShowChat ? "hidden lg:flex" : "flex"} w-full flex-col overflow-y-auto rounded-3xl border border-brand/5 bg-surface p-2 lg:w-80`}>
-          <div className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.24em] text-brand/40">Conversations</div>
+        <aside className={`${mobileShowChat ? "hidden lg:flex" : "flex"} w-full flex-col overflow-y-auto rounded-2xl border border-soft bg-surface shadow-[0_8px_30px_rgba(15,23,42,0.06)] p-2 lg:w-80`}>
+          <h2 className="px-2.5 pb-2 pt-1.5 text-base font-bold">Conversations</h2>
           {isLoading ? (
             <div className="grid place-items-center py-8"><Loader2 className="size-5 animate-spin text-brand/40" /></div>
           ) : conversations.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-brand/10 p-4 text-sm text-brand/60">No conversations yet. Start from a provider profile to begin chatting.</div>
+            <div className="m-1 rounded-xl border border-dashed border-brand/15 p-4 text-sm text-brand/60">No conversations yet. Start from a provider profile to begin chatting.</div>
           ) : (
             <div className="space-y-1">
               {conversations.map((c: ChatConversation) => {
@@ -228,7 +230,7 @@ function MessagesPage() {
                     <ProviderAvatar name={name} avatarUrl={avatarUrl} photoUrl={photoUrl} className="size-12 rounded-full text-base" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <div className={`truncate text-sm ${unread > 0 ? "font-black text-brand" : "font-semibold text-brand"}`}>{name}</div>
+                        <div className={`truncate text-sm ${unread > 0 ? "font-bold text-brand" : "font-semibold text-brand"}`}>{name}</div>
                         <div className={`shrink-0 text-[10px] ${unread > 0 ? "font-bold text-accent" : "text-brand/40"}`}>{formatListTime(c.last_message_at)}</div>
                       </div>
                       <div className="mt-0.5 flex items-center justify-between gap-2">
@@ -249,7 +251,7 @@ function MessagesPage() {
           )}
         </aside>
 
-        <section className={`${mobileShowChat ? "flex" : "hidden lg:flex"} min-h-0 flex-1 flex-col rounded-3xl border border-brand/5 bg-surface p-3`}>
+        <section className={`${mobileShowChat ? "flex" : "hidden lg:flex"} min-h-0 flex-1 flex-col rounded-2xl border border-soft bg-surface shadow-[0_8px_30px_rgba(15,23,42,0.06)] p-3`}>
           {selectedConversation ? (
             <>
               <div className="flex shrink-0 items-center gap-2.5 border-b border-brand/5 pb-3">
@@ -268,13 +270,13 @@ function MessagesPage() {
                       ? (selectedConversation.customer_name ?? "Customer")
                       : (selectedConversation.provider_name ?? "Provider")}
                   </div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-brand/40">
+                  <div className="text-xs text-brand/50">
                     {isProviderSide ? "Customer" : "Provider"}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-3 flex-1 min-h-0 space-y-0.5 overflow-y-auto rounded-2xl bg-canvas p-3">
+              <div className="mt-3 flex-1 min-h-0 space-y-0.5 overflow-y-auto rounded-xl bg-canvas p-3">
                 {messagesLoading && messages.length === 0 ? (
                   <div className="grid place-items-center py-8"><Loader2 className="size-5 animate-spin text-brand/40" /></div>
                 ) : messages.length === 0 ? (
@@ -298,7 +300,7 @@ function MessagesPage() {
                       <div key={m.id}>
                         {showDateSeparator && (
                           <div className="my-3 flex justify-center">
-                            <span className="rounded-full bg-brand/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-brand/40">
+                            <span className="rounded-full bg-surface px-3 py-1 text-[11px] font-medium text-brand/50 shadow-sm">
                               {formatDateSeparator(m.created_at)}
                             </span>
                           </div>
@@ -307,8 +309,8 @@ function MessagesPage() {
                           <div
                             className={`max-w-[80%] px-3.5 py-2 text-sm shadow-sm ${
                               own
-                                ? `bg-accent text-white rounded-2xl ${isLastInGroup ? "rounded-br-md" : ""}`
-                                : `light-surface bg-white border border-brand/10 text-brand rounded-2xl ${isLastInGroup ? "rounded-bl-md" : ""}`
+                                ? `bg-gradient-to-br from-accent to-orange-500 text-white rounded-2xl ${isLastInGroup ? "rounded-br-md" : ""}`
+                                : `bg-surface border border-soft text-brand rounded-2xl ${isLastInGroup ? "rounded-bl-md" : ""}`
                             } ${m._optimistic ? "opacity-70" : ""}`}
                           >
                             {m.content}
@@ -334,7 +336,7 @@ function MessagesPage() {
                       key={q}
                       onClick={() => send(q)}
                       disabled={sending}
-                      className="light-surface flex-none rounded-full border border-brand/10 bg-white px-3 py-1.5 text-xs font-semibold text-brand/70 transition hover:border-accent/30 hover:text-accent disabled:opacity-50"
+                      className="flex-none rounded-full border border-soft bg-surface px-3 py-1.5 text-xs font-medium text-brand/70 transition hover:border-accent/30 hover:text-accent disabled:opacity-50"
                     >
                       {q}
                     </button>
@@ -346,7 +348,7 @@ function MessagesPage() {
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder="Type a message…"
                     aria-label="Message"
-                    className="light-surface flex-1 rounded-full border border-brand/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-accent/30 focus:ring-2 focus:ring-accent/20"
+                    className="min-w-0 flex-1 rounded-full border border-soft bg-canvas px-4 py-3 text-sm outline-none transition focus:border-accent/50 focus:ring-4 focus:ring-accent/10"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
@@ -359,7 +361,7 @@ function MessagesPage() {
                     onClick={() => send()}
                     disabled={sending || !draft.trim()}
                     aria-label="Send message"
-                    className="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-white shadow-lg shadow-accent/20 transition hover:bg-orange-500 disabled:opacity-60"
+                    className="grid size-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-accent to-orange-500 text-white shadow-lg shadow-accent/25 transition hover:brightness-105 disabled:opacity-60"
                   >
                     {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                   </button>

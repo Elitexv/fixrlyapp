@@ -65,7 +65,7 @@ export const Route = createFileRoute("/services/$categorySlug")({
   notFoundComponent: () => (
     <div className="min-h-screen bg-canvas grid place-items-center px-6 text-center pb-24">
       <div>
-        <h1 className="text-xl font-black tracking-tight">Service not found</h1>
+        <h1 className="text-xl font-bold tracking-tight">Service not found</h1>
         <p className="mt-2 text-sm text-brand/60">That service category doesn't exist.</p>
         <Link to="/" className="mt-4 inline-block text-accent font-bold text-sm underline underline-offset-2">
           Browse all services

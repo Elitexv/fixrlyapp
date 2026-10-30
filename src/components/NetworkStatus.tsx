@@ -59,7 +59,7 @@ export function NetworkStatus() {
     // Deliberately the literal navy, not bg-brand — --brand flips to white
     // in dark mode (it's a text-color token), which turned this into an
     // invisible white-on-white bar there.
-    <div className="fixed inset-x-0 top-0 z-[150] flex items-center justify-center gap-2 bg-[#0f172a] px-4 py-2 text-center text-xs font-semibold text-white">
+    <div className="fixed inset-x-0 top-0 z-[150] flex items-center justify-center gap-2 bg-[#0b1730] px-4 py-2 text-center text-xs font-semibold text-white">
       <WifiOff className="size-3.5 shrink-0" />
       You're offline — check your connection. We'll keep trying.
     </div>
